@@ -1,6 +1,6 @@
 ## Overview
 
-The ose-scanner provides integration between Black Duck Hub and OpenShift v3 or Kubernetes. In the current implementation, pre-existing images and pods are automatically discovered and monitored. When a new image or pod is discovered, the integration kicks off a scan engine container to perform the scan and upload the results to your Black Duck Hub instance.
+The opssight-connector provides integration between Black Duck Hub and OpenShift v3 or Kubernetes. In the current implementation, pre-existing images and pods are automatically discovered and monitored. When a new image or pod is discovered, the integration kicks off a scan engine container to perform the scan and upload the results to your Black Duck Hub instance.
 
 ## Release Status
 
