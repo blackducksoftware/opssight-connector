@@ -1,0 +1,5 @@
+FROM scratch
+
+COPY ./perceptor-imagefacade ./perceptor-imagefacade
+
+CMD ["./perceptor-imagefacade"]

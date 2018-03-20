@@ -1,0 +1,5 @@
+FROM registry.access.redhat.com/rhel7/rhel
+
+COPY ./perceptor-scanner ./perceptor-scanner
+
+CMD ["./perceptor-scanner"]
