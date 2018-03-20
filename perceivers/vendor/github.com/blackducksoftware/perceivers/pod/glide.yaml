@@ -1,0 +1,28 @@
+package: github.com/blackducksoftware/perceivers/pod
+import:
+- package: github.com/blackducksoftware/perceptor
+  repo: git@github.com:blackducksoftware/perceptor
+  subpackages:
+  - pkg/api
+- package: github.com/sirupsen/logrus
+- package: k8s.io/api
+  subpackages:
+  - core/v1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/apis/meta/v1
+  - pkg/fields
+  - pkg/util/runtime
+  - pkg/util/wait
+- package: k8s.io/client-go
+  subpackages:
+  - kubernetes
+  - rest
+  - tools/cache
+  - tools/clientcmd
+  - util/workqueue
+ignore:
+- github.com/blackducksoftware/perceivers/pkg/annotations
+- github.com/blackducksoftware/perceivers/pkg/communicator
+- github.com/blackducksoftware/perceivers/pkg/docker
+- github.com/blackducksoftware/perceivers/pkg/utils

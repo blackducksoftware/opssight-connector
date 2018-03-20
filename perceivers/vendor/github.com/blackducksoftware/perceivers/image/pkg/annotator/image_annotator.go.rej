@@ -1,0 +1,67 @@
+***************
+*** 27,33 ****
+  	"strings"
+  	"time"
+  
+- 	bdannotations "github.com/blackducksoftware/perceivers/pkg/annotations"
+  	"github.com/blackducksoftware/perceivers/pkg/communicator"
+  	"github.com/blackducksoftware/perceivers/pkg/docker"
+  	"github.com/blackducksoftware/perceivers/pkg/utils"
+--- 27,33 ----
+  	"strings"
+  	"time"
+  
++ 	"github.com/blackducksoftware/perceivers/pkg/annotations"
+  	"github.com/blackducksoftware/perceivers/pkg/communicator"
+  	"github.com/blackducksoftware/perceivers/pkg/docker"
+  	"github.com/blackducksoftware/perceivers/pkg/utils"
+***************
+*** 182,192 ****
+  	}
+  
+  	// Generate the annotations that should be on the image
+- 	newAnnotations := bdannotations.CreateImageAnnotations(imageAnnotations, "", 0)
+  
+  	// Apply updated annotations to the image if the existing annotations don't
+  	// contain the expected entries
+- 	if !bdannotations.MapContainsBlackDuckEntries(currentAnnotations, newAnnotations) {
+  		log.Infof("annotations are missing or incorrect on image %s.  Expected %v to contain %v", name, currentAnnotations, newAnnotations)
+  		image.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
+  		return true
+--- 184,194 ----
+  	}
+  
+  	// Generate the annotations that should be on the image
++ 	newAnnotations := ia.h.CreateImageAnnotations(imageAnnotations, "", 0)
+  
+  	// Apply updated annotations to the image if the existing annotations don't
+  	// contain the expected entries
++ 	if !ia.h.CompareMaps(currentAnnotations, newAnnotations) {
+  		log.Infof("annotations are missing or incorrect on image %s.  Expected %v to contain %v", name, currentAnnotations, newAnnotations)
+  		image.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
+  		return true
+***************
+*** 205,215 ****
+  	}
+  
+  	// Generate the labels that should be on the image
+- 	newLabels := bdannotations.CreateImageLabels(imageAnnotations, "", 0)
+  
+  	// Apply updated labels to the image if the existing annotations don't
+  	// contain the expected entries
+- 	if !bdannotations.MapContainsBlackDuckEntries(currentLabels, newLabels) {
+  		log.Infof("labels are missing or incorrect on image %s.  Expected %v to contain %v", name, currentLabels, newLabels)
+  		image.SetLabels(utils.MapMerge(currentLabels, newLabels))
+  		return true
+--- 207,217 ----
+  	}
+  
+  	// Generate the labels that should be on the image
++ 	newLabels := ia.h.CreateImageLabels(imageAnnotations, "", 0)
+  
+  	// Apply updated labels to the image if the existing annotations don't
+  	// contain the expected entries
++ 	if !ia.h.CompareMaps(currentLabels, newLabels) {
+  		log.Infof("labels are missing or incorrect on image %s.  Expected %v to contain %v", name, currentLabels, newLabels)
+  		image.SetLabels(utils.MapMerge(currentLabels, newLabels))
+  		return true

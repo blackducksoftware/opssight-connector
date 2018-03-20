@@ -1,0 +1,8 @@
+package: github.com/blackducksoftware/opssight-connector/perceivers
+import:
+- package: github.com/blackducksoftware/perceivers
+  subpackages:
+  - image/cmd/app
+  - pkg/annotations
+  - pod/cmd/app
+- package: github.com/sirupsen/logrus

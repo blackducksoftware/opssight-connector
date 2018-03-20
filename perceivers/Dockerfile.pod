@@ -1,0 +1,4 @@
+FROM scratch
+
+COPY ./_output/pod-perceiver ./pod-perceiver
+CMD ["./pod-perceiver"]

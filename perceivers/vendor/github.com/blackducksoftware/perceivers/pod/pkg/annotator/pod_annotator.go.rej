@@ -1,0 +1,34 @@
+***************
+*** 155,161 ****
+  
+  	// Apply updated annotations to the pod if the existing annotations don't
+  	// contain the expected entries
+- 	if !bdannotations.MapContainsBlackDuckEntries(currentAnnotations, newAnnotations) {
+  		log.Infof("annotations are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentAnnotations, newAnnotations)
+  		pod.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
+  		return true
+--- 157,163 ----
+  
+  	// Apply updated annotations to the pod if the existing annotations don't
+  	// contain the expected entries
++ 	if !pa.h.CompareMaps(currentAnnotations, newAnnotations) {
+  		log.Infof("annotations are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentAnnotations, newAnnotations)
+  		pod.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
+  		return true
+***************
+*** 193,199 ****
+  
+  	// Apply updated labels to the pod if the existing labels don't
+  	// contain the expected entries
+- 	if !bdannotations.MapContainsBlackDuckEntries(currentLabels, newLabels) {
+  		log.Infof("labels are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentLabels, newLabels)
+  		pod.SetLabels(utils.MapMerge(currentLabels, newLabels))
+  		return true
+--- 195,201 ----
+  
+  	// Apply updated labels to the pod if the existing labels don't
+  	// contain the expected entries
++ 	if !pa.h.CompareMaps(currentLabels, newLabels) {
+  		log.Infof("labels are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentLabels, newLabels)
+  		pod.SetLabels(utils.MapMerge(currentLabels, newLabels))
+  		return true

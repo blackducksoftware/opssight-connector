@@ -1,0 +1,32 @@
+package: github.com/blackducksoftware/perceivers/image
+import:
+- package: github.com/blackducksoftware/perceptor
+  repo: git@github.com:blackducksoftware/perceptor
+  subpackages:
+  - pkg/api
+  - pkg/common
+- package: github.com/openshift/api
+  subpackages:
+  - image/v1
+- package: github.com/openshift/client-go
+  subpackages:
+  - image/clientset/versioned/typed/image/v1
+  - image/listers/image/v1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/api/errors
+  - pkg/apis/meta/v1
+  - pkg/runtime
+  - pkg/util/runtime
+  - pkg/util/wait
+- package: k8s.io/client-go
+  version: kubernetes-1.9.1
+  subpackages:
+  - tools/cache
+  - util/workqueue
+- package: github.com/sirupsen/logrus
+ignore:
+- github.com/blackducksoftware/perceivers/pkg/annotations
+- github.com/blackducksoftware/perceivers/pkg/communicator
+- github.com/blackducksoftware/perceivers/pkg/docker
+- github.com/blackducksoftware/perceivers/pkg/utils

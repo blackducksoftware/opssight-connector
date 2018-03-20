@@ -1,0 +1,29 @@
+steps:
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', './image/_output/image-perceiver', './image/cmd/image-perceiver.go']
+  env:
+  - 'PROJECT_ROOT=github.com/blackducksoftware/perceivers'
+  - 'CGO_ENABLED=0'
+  - 'GOOS=linux'
+  - 'GOARCH=amd64'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/image-perceiver:$BRANCH_NAME', './image/.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/blackducksoftware/image-perceiver:$BRANCH_NAME']
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', './pod/_output/pod-perceiver', './pod/cmd/pod-perceiver.go']
+  env:
+  - 'PROJECT_ROOT=github.com/blackducksoftware/perceivers'
+  - 'CGO_ENABLED=0'
+  - 'GOOS=linux'
+  - 'GOARCH=amd64'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/pod-perceiver:$BRANCH_NAME', './pod/.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/blackducksoftware/pod-perceiver:$BRANCH_NAME']
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    curl -d "" -X POST http://ec2-54-205-198-237.compute-1.amazonaws.com:8081/webhook-perceptor
