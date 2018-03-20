@@ -1,5 +1,5 @@
 hash: b907330dee89f806ac0d9549299a9483f3475c919535e4f442894213c546a5b8
-updated: 2018-03-19T11:48:40.632192-04:00
+updated: 2018-03-20T15:25:26.608693-04:00
 imports:
 - name: github.com/alecthomas/template
   version: a0175ee3bccc567396460bf5acd36800cb10c49c
@@ -12,7 +12,7 @@ imports:
   subpackages:
   - quantile
 - name: github.com/blackducksoftware/perceivers
-  version: c2b5a3fe186d2203292455986226dbe996c14fa0
+  version: abf29c109d334aee88a1e7b507f55da320ec1f45
   subpackages:
   - image/cmd/app
   - image/pkg/annotator
@@ -31,7 +31,7 @@ imports:
   - pod/pkg/mapper
   - pod/pkg/metrics
 - name: github.com/blackducksoftware/perceptor
-  version: 6906488f11f8a1c9848d8584bde3076e1b9edee8
+  version: e688abb1954f6cf67fb31cedb0b39baf92a06b5b
   subpackages:
   - pkg/api
 - name: github.com/davecgh/go-spew
@@ -88,7 +88,7 @@ imports:
   subpackages:
   - simplelru
 - name: github.com/hashicorp/hcl
-  version: 23c074d0eceb2b8a5bfdbb271ab780cde70f05a8
+  version: b1738d9053e05547fce5e3111b7ed28582f70692
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -171,7 +171,7 @@ imports:
 - name: github.com/spf13/pflag
   version: ee5fd03fd6acfd43e44aea0b4135958546ed8e73
 - name: github.com/spf13/viper
-  version: aafc9e6bc7b7bb53ddaa75a5ef49a17d6e654be5
+  version: b5e8006cbee93ec955a89ab31e0e3ce3204f3736
 - name: golang.org/x/crypto
   version: c3a3ad6d03f7a915c0f7e194b7152974bb73d287
   subpackages:

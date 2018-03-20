@@ -65,6 +65,9 @@ var results = perceptorapi.ScanResults{
 	Images:               scannedImages,
 }
 
+var imageAnnotations = map[string]string{"imageannotationkey1": "imagevalue1", "imageannotationkey2": "imagevalue2", "imageannotationkey3": "imagevalue3"}
+var imageLabels = map[string]string{"imagelabelkey1": "imagevalue1", "imagelabelkey2": "imagevalue2", "imagelabelkey3": "imagevalue3"}
+
 func makeImageAnnotationObj() *annotations.ImageAnnotationData {
 	image := scannedImages[0]
 	return annotations.NewImageAnnotationData(image.PolicyViolations, image.Vulnerabilities, image.OverallStatus, image.ComponentsURL, results.HubVersion, results.HubScanClientVersion)
@@ -77,6 +80,24 @@ func makeImage(name string, sha string) *v1.Image {
 		},
 		DockerImageReference: fmt.Sprintf("%s@sha256:%s", name, sha),
 	}
+}
+
+func imageLabelGenerator(obj interface{}, name string, count int) map[string]string {
+	return imageLabels
+}
+
+func imageAnnotationGenerator(obj interface{}, name string, count int) map[string]string {
+	return imageAnnotations
+}
+
+func createIA() *ImageAnnotator {
+	return &ImageAnnotator{h: annotations.ImageAnnotatorHandlerFuncs{
+		ImageLabelCreationFunc:      imageLabelGenerator,
+		ImageAnnotationCreationFunc: imageAnnotationGenerator,
+		MapCompareHandlerFuncs: annotations.MapCompareHandlerFuncs{
+			MapCompareFunc: annotations.StringMapContains,
+		},
+	}}
 }
 
 func TestGetScanResults(t *testing.T) {
@@ -142,49 +163,51 @@ func TestGetScanResults(t *testing.T) {
 }
 
 func TestAddImageAnnotations(t *testing.T) {
-	fullAnnotationSet := func() map[string]string {
-		annotationObj := makeImageAnnotationObj()
-		return bdannotations.CreateImageAnnotations(annotationObj, "", 0)
-	}
-
 	partialAnnotationSet := func() map[string]string {
-		annotations := fullAnnotationSet()
-		for k := range annotations {
-			if strings.Contains(k, "blackducksoftware") {
-				delete(annotations, k)
+		annotations := make(map[string]string)
+		for k, v := range imageAnnotations {
+			if !strings.Contains(k, "imageannotationkey2") {
+				annotations[k] = v
 			}
 		}
 		return annotations
 	}
 
+	otherAnnotations := map[string]string{"key1": "value1", "key2": "value2"}
+
 	testcases := []struct {
 		description         string
 		image               *v1.Image
 		existingAnnotations map[string]string
+		expectedAnnotations map[string]string
 		shouldAdd           bool
 	}{
 		{
 			description:         "image with no annotations",
 			image:               makeImage(scannedImages[0].Name, scannedImages[0].Sha),
 			existingAnnotations: make(map[string]string),
+			expectedAnnotations: imageAnnotations,
 			shouldAdd:           true,
 		},
 		{
 			description:         "image with existing annotations, no overlap",
 			image:               makeImage(scannedImages[0].Name, scannedImages[0].Sha),
-			existingAnnotations: map[string]string{"key1": "value1", "key2": "value2"},
+			existingAnnotations: otherAnnotations,
+			expectedAnnotations: utils.MapMerge(otherAnnotations, imageAnnotations),
 			shouldAdd:           true,
 		},
 		{
 			description:         "pod with existing annotations, some overlap",
 			image:               makeImage(scannedImages[0].Name, scannedImages[0].Sha),
 			existingAnnotations: partialAnnotationSet(),
+			expectedAnnotations: imageAnnotations,
 			shouldAdd:           true,
 		},
 		{
 			description:         "image with exact existing annotations",
 			image:               makeImage(scannedImages[0].Name, scannedImages[0].Sha),
-			existingAnnotations: fullAnnotationSet(),
+			existingAnnotations: imageAnnotations,
+			expectedAnnotations: imageAnnotations,
 			shouldAdd:           false,
 		},
 	}
@@ -193,67 +216,67 @@ func TestAddImageAnnotations(t *testing.T) {
 		annotationObj := makeImageAnnotationObj()
 		fullName := fmt.Sprintf("%s@sha256:%s", scannedImages[0].Name, scannedImages[0].Sha)
 		tc.image.SetAnnotations(tc.existingAnnotations)
-		ia := ImageAnnotator{}
-		result := ia.addImageAnnotations(fullName, tc.image, annotationObj)
+		result := createIA().addImageAnnotations(fullName, tc.image, annotationObj)
 		if result != tc.shouldAdd {
 			t.Fatalf("[%s] expected %t, got %t", tc.description, tc.shouldAdd, result)
 		}
-		new := bdannotations.CreateImageAnnotations(annotationObj, "", 0)
 		updated := tc.image.GetAnnotations()
-		for k, v := range new {
+		for k, v := range tc.expectedAnnotations {
 			if val, ok := updated[k]; !ok {
 				t.Errorf("[%s] key %s doesn't exist in image annotations %v", tc.description, k, updated)
 			} else if val != v {
-				t.Errorf("[%s] key %s has wrong value in image annotation.  Expected %s got %s", tc.description, k, new[k], updated[k])
+				t.Errorf("[%s] key %s has wrong value in image annotation.  Expected %s got %s", tc.description, k, tc.expectedAnnotations[k], updated[k])
 			}
 		}
 	}
 }
 
 func TestAddPodLabels(t *testing.T) {
-	fullLabelSet := func() map[string]string {
-		annotationObj := makeImageAnnotationObj()
-		return bdannotations.CreateImageLabels(annotationObj, "", 0)
-	}
-
 	partialLabelSet := func() map[string]string {
-		labels := fullLabelSet()
-		for k := range labels {
-			if strings.Contains(k, "violations") {
-				delete(labels, k)
+		labels := make(map[string]string)
+		for k, v := range imageLabels {
+			if !strings.Contains(k, "imagelabelkey2") {
+				labels[k] = v
 			}
 		}
 		return labels
 	}
 
+	otherLabels := map[string]string{"key1": "value1", "key2": "value2"}
+
 	testcases := []struct {
 		description    string
 		image          *v1.Image
 		existingLabels map[string]string
+		expectedLabels map[string]string
 		shouldAdd      bool
 	}{
 		{
 			description:    "image with no labels",
 			image:          makeImage(scannedImages[0].Name, scannedImages[0].Sha),
 			existingLabels: make(map[string]string),
+			expectedLabels: imageLabels,
 			shouldAdd:      true,
 		},
 		{
 			description:    "image with existing labels, no overlap",
 			image:          makeImage(scannedImages[0].Name, scannedImages[0].Sha),
-			existingLabels: map[string]string{"key1": "value1", "key2": "value2"},
+			existingLabels: otherLabels,
+			expectedLabels: utils.MapMerge(otherLabels, imageLabels),
 			shouldAdd:      true,
 		},
 		{
 			description:    "image with existing labels, some overlap",
 			image:          makeImage(scannedImages[0].Name, scannedImages[0].Sha),
 			existingLabels: partialLabelSet(),
+			expectedLabels: imageLabels,
 			shouldAdd:      true,
 		},
 		{
 			description:    "image with exact existing labels",
 			image:          makeImage(scannedImages[0].Name, scannedImages[0].Sha),
-			existingLabels: fullLabelSet(),
+			existingLabels: imageLabels,
+			expectedLabels: imageLabels,
 			shouldAdd:      false,
 		},
 	}
@@ -262,19 +285,17 @@ func TestAddPodLabels(t *testing.T) {
 		annotationObj := makeImageAnnotationObj()
 		fullName := fmt.Sprintf("%s@sha256:%s", scannedImages[0].Name, scannedImages[0].Sha)
 		tc.image.SetLabels(tc.existingLabels)
-		ia := ImageAnnotator{}
-		result := ia.addImageLabels(fullName, tc.image, annotationObj)
+		result := createIA().addImageLabels(fullName, tc.image, annotationObj)
 		if result != tc.shouldAdd {
 			t.Fatalf("[%s] expected %t, got %t", tc.description, tc.shouldAdd, result)
 		}
 
-		new := bdannotations.CreateImageLabels(annotationObj, "", 0)
 		updated := tc.image.GetLabels()
-		for k, v := range new {
+		for k, v := range tc.expectedLabels {
 			if val, ok := updated[k]; !ok {
 				t.Errorf("[%s] key %s doesn't exist in image labels %v", tc.description, k, updated)
 			} else if val != v {
-				t.Errorf("[%s] key %s has wrong value in image label.  Expected %s got %s", tc.description, k, new[k], updated[k])
+				t.Errorf("[%s] key %s has wrong value in image label.  Expected %s got %s", tc.description, k, tc.expectedLabels[k], updated[k])
 			}
 		}
 	}

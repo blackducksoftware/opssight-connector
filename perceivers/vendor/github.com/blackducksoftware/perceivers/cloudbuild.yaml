@@ -6,6 +6,8 @@ steps:
   - 'CGO_ENABLED=0'
   - 'GOOS=linux'
   - 'GOARCH=amd64'
+  
+# Openshift
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/image-perceiver:$BRANCH_NAME', './image/.']
 - name: 'gcr.io/cloud-builders/docker'
@@ -17,6 +19,8 @@ steps:
   - 'CGO_ENABLED=0'
   - 'GOOS=linux'
   - 'GOARCH=amd64'
+
+# Kubernetes 
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/pod-perceiver:$BRANCH_NAME', './pod/.']
 - name: 'gcr.io/cloud-builders/docker'
@@ -26,4 +30,4 @@ steps:
   args:
   - '-c'
   - |
-    curl -d "" -X POST http://ec2-54-205-198-237.compute-1.amazonaws.com:8081/webhook-perceptor
+    curl -d "" -X POST http://ec2-54-205-198-237.compute-1.amazonaws.com:8081/webhook-perceptor/$REPO_NAME || echo "Success"

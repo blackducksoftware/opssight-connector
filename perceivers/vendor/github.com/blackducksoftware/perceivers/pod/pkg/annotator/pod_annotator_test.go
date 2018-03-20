@@ -82,6 +82,11 @@ var results = perceptorapi.ScanResults{
 	Images:               scannedImages,
 }
 
+var podAnnotations = map[string]string{"podannotationkey1": "podvalue1", "podannotationkey2": "podvalue2", "podannotationkey3": "podvalue3"}
+var podLabels = map[string]string{"podlabelkey1": "podvalue1", "podlabelkey2": "podvalue2", "podlabelkey3": "podvalue3"}
+var imageAnnotations = map[string]string{"imageannotationkey1": "imagevalue1", "imageannotationkey2": "imagevalue2", "imageannotationkey3": "imagevalue3"}
+var imageLabels = map[string]string{"imagelabelkey1": "imagevalue1", "imagelabelkey2": "imagevalue2", "imagelabelkey3": "imagevalue3"}
+
 func makePodAnnotationObj() *annotations.PodAnnotationData {
 	pod := scannedPods[0]
 	return annotations.NewPodAnnotationData(pod.PolicyViolations, pod.Vulnerabilities, pod.OverallStatus, results.HubVersion, results.HubScanClientVersion)
@@ -108,6 +113,36 @@ func makePodWithImage(name string, sha string) *v1.Pod {
 func makePod() *v1.Pod {
 	scannedImage := scannedImages[0]
 	return makePodWithImage(scannedImage.Name, scannedImage.Sha)
+}
+
+func imageLabelGenerator(obj interface{}, name string, count int) map[string]string {
+	return imageLabels
+}
+
+func imageAnnotationGenerator(obj interface{}, name string, count int) map[string]string {
+	return imageAnnotations
+}
+
+func podLabelGenerator(obj interface{}) map[string]string {
+	return podLabels
+}
+
+func podAnnotationGenerator(obj interface{}) map[string]string {
+	return podAnnotations
+}
+
+func createPA() *PodAnnotator {
+	return &PodAnnotator{h: annotations.PodAnnotatorHandlerFuncs{
+		PodLabelCreationFunc:      podLabelGenerator,
+		PodAnnotationCreationFunc: podAnnotationGenerator,
+		ImageAnnotatorHandlerFuncs: annotations.ImageAnnotatorHandlerFuncs{
+			ImageLabelCreationFunc:      imageLabelGenerator,
+			ImageAnnotationCreationFunc: imageAnnotationGenerator,
+			MapCompareHandlerFuncs: annotations.MapCompareHandlerFuncs{
+				MapCompareFunc: annotations.StringMapContains,
+			},
+		},
+	}}
 }
 
 func TestGetScanResults(t *testing.T) {
@@ -173,79 +208,82 @@ func TestGetScanResults(t *testing.T) {
 }
 
 func TestAddPodAnnotations(t *testing.T) {
-	fullAnnotationSet := func() map[string]string {
-		pod := makePod()
-		annotationObj := makePodAnnotationObj()
-		pa := PodAnnotator{}
-		return pa.createNewAnnotations(pod, annotationObj, scannedImages)
-	}
-
 	partialPodAnnotationSet := func() map[string]string {
-		annotations := fullAnnotationSet()
-		for k := range annotations {
-			if strings.Contains(k, fmt.Sprintf("%s/vulnerability", bdannotations.BDPodAnnotationPrefix)) {
-				delete(annotations, k)
+		annotations := make(map[string]string)
+		for k, v := range podAnnotations {
+			if !strings.Contains(k, "podannotationkey2") {
+				annotations[k] = v
 			}
 		}
 		return annotations
 	}
 
 	partialImageAnnotationSet := func() map[string]string {
-		annotations := fullAnnotationSet()
-		for k := range annotations {
-			if strings.Contains(k, "blackducksoftware") {
-				delete(annotations, k)
+		annotations := make(map[string]string)
+		for k, v := range imageAnnotations {
+			if !strings.Contains(k, "imageannotationkey2") {
+				annotations[k] = v
 			}
 		}
 		return annotations
 	}
 
+	otherAnnotations := map[string]string{"key1": "value1", "key2": "value2"}
+
 	testcases := []struct {
 		description         string
 		pod                 *v1.Pod
 		existingAnnotations map[string]string
+		expectedAnnotations map[string]string
 		shouldAdd           bool
 	}{
 		{
 			description:         "pod with no annotations",
 			pod:                 makePod(),
 			existingAnnotations: make(map[string]string),
+			expectedAnnotations: utils.MapMerge(podAnnotations, imageAnnotations),
 			shouldAdd:           true,
 		},
 		{
 			description:         "pod with existing annotations, no overlap",
 			pod:                 makePod(),
-			existingAnnotations: map[string]string{"key1": "value1", "key2": "value2"},
+			existingAnnotations: otherAnnotations,
+			expectedAnnotations: utils.MapMerge(otherAnnotations, utils.MapMerge(podAnnotations, imageAnnotations)),
 			shouldAdd:           true,
 		},
 		{
 			description:         "pod with existing annotations, some pod overlap",
 			pod:                 makePod(),
 			existingAnnotations: partialPodAnnotationSet(),
+			expectedAnnotations: utils.MapMerge(podAnnotations, imageAnnotations),
 			shouldAdd:           true,
 		},
 		{
 			description:         "pod with existing annotations, some image overlap",
 			pod:                 makePod(),
 			existingAnnotations: partialImageAnnotationSet(),
+			expectedAnnotations: utils.MapMerge(podAnnotations, imageAnnotations),
 			shouldAdd:           true,
 		},
 		{
 			description:         "pod with exact existing annotations",
 			pod:                 makePod(),
-			existingAnnotations: fullAnnotationSet(),
+			existingAnnotations: utils.MapMerge(podAnnotations, imageAnnotations),
+			expectedAnnotations: utils.MapMerge(podAnnotations, imageAnnotations),
 			shouldAdd:           false,
 		},
 		{
-			description:         "pod with no scanned images",
+			description:         "pod with image that hasn't been scanned",
 			pod:                 makePodWithImage("imageName", "234F8sdgj235jsdf923"),
 			existingAnnotations: make(map[string]string),
+			expectedAnnotations: podAnnotations,
 			shouldAdd:           true,
 		},
 		{
-			description:         "pod with no scanned images, existing pod annotations",
+			description:         "pod with image that hasn't been scanned, existing pod annotations",
 			pod:                 makePodWithImage("imageName", "234F8sdgj235jsdf923"),
-			existingAnnotations: bdannotations.CreatePodAnnotations(makePodAnnotationObj()),
+			existingAnnotations: podAnnotations,
+			expectedAnnotations: podAnnotations,
 			shouldAdd:           false,
 		},
 	}
@@ -253,97 +291,98 @@ func TestAddPodAnnotations(t *testing.T) {
 	for _, tc := range testcases {
 		annotationObj := makePodAnnotationObj()
 		tc.pod.SetAnnotations(tc.existingAnnotations)
-		pa := PodAnnotator{}
-		result := pa.addPodAnnotations(tc.pod, annotationObj, scannedImages)
+		result := createPA().addPodAnnotations(tc.pod, annotationObj, scannedImages)
 		if result != tc.shouldAdd {
 			t.Fatalf("[%s] expected %t, got %t", tc.description, tc.shouldAdd, result)
 		}
-		new := pa.createNewAnnotations(tc.pod, annotationObj, scannedImages)
 		updated := tc.pod.GetAnnotations()
-		for k, v := range new {
+		for k, v := range tc.expectedAnnotations {
 			if val, ok := updated[k]; !ok {
 				t.Errorf("[%s] key %s doesn't exist in pod annotations %v", tc.description, k, updated)
 			} else if val != v {
-				t.Errorf("[%s] key %s has wrong value in pod annotation.  Expected %s got %s", tc.description, k, new[k], updated[k])
+				t.Errorf("[%s] key %s has wrong value in pod annotation.  Expected %s got %s", tc.description, k, tc.expectedAnnotations[k], updated[k])
 			}
 		}
 	}
 }
 
 func TestAddPodLabels(t *testing.T) {
-	fullLabelSet := func() map[string]string {
-		pod := makePod()
-		annotationObj := makePodAnnotationObj()
-		pa := PodAnnotator{}
-		return pa.createNewLabels(pod, annotationObj, scannedImages)
-	}
-
 	partialPodLabelSet := func() map[string]string {
-		labels := fullLabelSet()
-		for k := range labels {
-			if strings.Contains(k, "violations") {
-				delete(labels, k)
+		labels := make(map[string]string)
+		for k, v := range podLabels {
+			if !strings.Contains(k, "podlabelkey2") {
+				labels[k] = v
 			}
 		}
 		return labels
 	}
 
 	partialImageLabelSet := func() map[string]string {
-		labels := fullLabelSet()
-		for k := range labels {
-			if strings.Contains(k, "violations") {
-				delete(labels, k)
+		labels := make(map[string]string)
+		for k, v := range imageLabels {
+			if !strings.Contains(k, "imagelabelkey2") {
+				labels[k] = v
 			}
 		}
 		return labels
 	}
 
+	otherLabels := map[string]string{"key1": "value1", "key2": "value2"}
+
 	testcases := []struct {
 		description    string
 		pod            *v1.Pod
 		existingLabels map[string]string
+		expectedLabels map[string]string
 		shouldAdd      bool
 	}{
 		{
 			description:    "pod with no labels",
 			pod:            makePod(),
 			existingLabels: make(map[string]string),
+			expectedLabels: utils.MapMerge(podLabels, imageLabels),
 			shouldAdd:      true,
 		},
 		{
 			description:    "pod with existing labels, no overlap",
 			pod:            makePod(),
-			existingLabels: map[string]string{"key1": "value1", "key2": "value2"},
+			existingLabels: otherLabels,
+			expectedLabels: utils.MapMerge(otherLabels, utils.MapMerge(podLabels, imageLabels)),
 			shouldAdd:      true,
 		},
 		{
 			description:    "pod with existing labels, some pod overlap",
 			pod:            makePod(),
 			existingLabels: partialPodLabelSet(),
+			expectedLabels: utils.MapMerge(partialPodLabelSet(), imageLabels),
 			shouldAdd:      true,
 		},
 		{
 			description:    "pod with existing labels, some image overlap",
 			pod:            makePod(),
 			existingLabels: partialImageLabelSet(),
+			expectedLabels: utils.MapMerge(podLabels, partialImageLabelSet()),
 			shouldAdd:      true,
 		},
 		{
 			description:    "pod with exact existing labels",
 			pod:            makePod(),
-			existingLabels: fullLabelSet(),
+			existingLabels: utils.MapMerge(podLabels, imageLabels),
+			expectedLabels: utils.MapMerge(podLabels, imageLabels),
 			shouldAdd:      false,
 		},
 		{
 			description:    "pod with no scanned images",
 			pod:            makePodWithImage("imageName", "234F8sdgj235jsdf923"),
 			existingLabels: make(map[string]string),
+			expectedLabels: podLabels,
 			shouldAdd:      true,
 		},
 		{
 			description:    "pod with no scanned images, existing pod labels",
 			pod:            makePodWithImage("imageName", "234F8sdgj235jsdf923"),
-			existingLabels: bdannotations.CreatePodLabels(makePodAnnotationObj()),
+			existingLabels: podLabels,
+			expectedLabels: podLabels,
 			shouldAdd:      false,
 		},
 	}
@@ -351,25 +390,23 @@ func TestAddPodLabels(t *testing.T) {
 	for _, tc := range testcases {
 		annotationObj := makePodAnnotationObj()
 		tc.pod.SetLabels(tc.existingLabels)
-		pa := PodAnnotator{}
-		result := pa.addPodLabels(tc.pod, annotationObj, scannedImages)
+		result := createPA().addPodLabels(tc.pod, annotationObj, scannedImages)
 		if result != tc.shouldAdd {
 			t.Fatalf("[%s] expected %t, got %t", tc.description, tc.shouldAdd, result)
 		}
-		new := pa.createNewLabels(tc.pod, annotationObj, scannedImages)
 		updated := tc.pod.GetLabels()
-		for k, v := range new {
+		for k, v := range tc.expectedLabels {
 			if val, ok := updated[k]; !ok {
 				t.Errorf("[%s] key %s doesn't exist in pod labels %v", tc.description, k, updated)
 			} else if val != v {
-				t.Errorf("[%s] key %s has wrong value in pod label.  Expected %s got %s", tc.description, k, new[k], updated[k])
+				t.Errorf("[%s] key %s has wrong value in pod label.  Expected %s got %s", tc.description, k, tc.expectedLabels[k], updated[k])
 			}
 		}
 	}
 }
 
 func TestGetPodContainerMap(t *testing.T) {
-	generator := func(obj *annotations.ImageAnnotationData, name string, count int) map[string]string {
+	generator := func(obj interface{}, name string, count int) map[string]string {
 		return map[string]string{fmt.Sprintf("key%d", count): fmt.Sprintf("%s%d", name, count)}
 	}
 	imageWithoutPrefix := v1.ContainerStatus{
@@ -409,11 +446,10 @@ func TestGetPodContainerMap(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		pa := PodAnnotator{}
 		for _, image := range tc.additionalImages {
 			tc.pod.Status.ContainerStatuses = append(tc.pod.Status.ContainerStatuses, image)
 		}
-		new := pa.getPodContainerMap(tc.pod, scannedImages, "hub version", "scan client version", generator)
+		new := createPA().getPodContainerMap(tc.pod, scannedImages, "hub version", "scan client version", generator)
 		if !reflect.DeepEqual(new, tc.resultMap) {
 			t.Errorf("[%s] container maps are different.  Expected %v got %v", tc.description, tc.resultMap, new)
 		}
@@ -454,8 +490,7 @@ func TestFindImageAnnotations(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		pa := PodAnnotator{}
-		result := pa.findImageAnnotations(tc.name, tc.sha, scannedImages)
+		result := createPA().findImageAnnotations(tc.name, tc.sha, scannedImages)
 		if result != tc.result && !reflect.DeepEqual(*result, *tc.result) {
 			t.Errorf("[%s] expected %v got %v: name %s, sha %s", tc.description, tc.result, result, tc.name, tc.sha)
 		}
@@ -493,9 +528,8 @@ func TestAnnotate(t *testing.T) {
 		server := httptest.NewServer(&handler)
 		defer server.Close()
 
-		annotator := PodAnnotator{
-			scanResultsURL: fmt.Sprintf("%s/%s", server.URL, endpoint),
-		}
+		annotator := createPA()
+		annotator.scanResultsURL = fmt.Sprintf("%s/%s", server.URL, endpoint)
 		err := annotator.annotate()
 		if err != nil && tc.shouldPass {
 			t.Fatalf("[%s] unexpected error: %v", tc.description, err)
