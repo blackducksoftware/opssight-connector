@@ -21,10 +21,14 @@ under the License.
 
 package annotations
 
+// MapCompareHandler handles comparing 2 maps
 type MapCompareHandler interface {
 	CompareMaps(map[string]string, map[string]string) bool
 }
 
+// MapCompareHandlerFuncs is an adapter to let you easily define
+// a function to use to compare 2 maps if desired while still
+// implementing MapCompareHandler
 type MapCompareHandlerFuncs struct {
 	MapCompareFunc func(map[string]string, map[string]string) bool
 }
@@ -37,12 +41,16 @@ func (m MapCompareHandlerFuncs) CompareMaps(bigMap map[string]string, subset map
 	return true
 }
 
+// ImageAnnotatorHandler provides the functions needed to annotate images
 type ImageAnnotatorHandler interface {
 	MapCompareHandler
 	CreateImageLabels(interface{}, string, int) map[string]string
 	CreateImageAnnotations(interface{}, string, int) map[string]string
 }
 
+// ImageAnnotatorHandlerFuncs is an adapter to let you easily define
+// as many of the image annotation functions as desired while still implementing
+// ImageAnnotatorHandler
 type ImageAnnotatorHandlerFuncs struct {
 	MapCompareHandlerFuncs
 	ImageLabelCreationFunc      func(interface{}, string, int) map[string]string
@@ -65,12 +73,16 @@ func (i ImageAnnotatorHandlerFuncs) CreateImageAnnotations(data interface{}, nam
 	return make(map[string]string)
 }
 
+// PodAnnotatorHandler provides the functions needed to annotate pods
 type PodAnnotatorHandler interface {
 	ImageAnnotatorHandler
 	CreatePodLabels(interface{}) map[string]string
 	CreatePodAnnotations(interface{}) map[string]string
 }
 
+// PodAnnotatorHandlerFuncs is an adapter to let you easily define
+// as many of the pod annotation functions as desired while still implementing
+// PodAnnotatorHandler
 type PodAnnotatorHandlerFuncs struct {
 	ImageAnnotatorHandlerFuncs
 	PodLabelCreationFunc      func(interface{}) map[string]string
