@@ -66,7 +66,8 @@ items:
       HubHost: "$_arg_hub_host"
       HubUser: "$_arg_hub_user"
       HubPort: "$_arg_hub_port"
-      HubClientTimeoutSeconds: "$_arg_hub_client_timeout_seconds"
+      HubClientTimeoutPerceptorSeconds: "$_arg_hub_client_timeout_perceptor_seconds"
+      HubClientTimeoutScannerSeconds: "$_arg_hub_client_timeout_scanner_seconds"
       ConcurrentScanLimit: "$_arg_hub_max_concurrent_scans"
       # TODO, the Docker username is hardcoded, it is not required as of now.
       DockerUsername: "admin"
