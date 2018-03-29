@@ -100,7 +100,7 @@ print_help ()
 	printf '\t%s\n' "-c,--container-registry: Base docker repo for the applicaition. (default: 'gcr.io')"
 	printf '\t%s\n' "-I,--image-repository: Image repository for the applicaition. (default: 'gke-verification/blackducksoftware ')"
 	printf '\t%s\n' "-v,--default-container-version: Default container version (default: 'master')"
-	printf '\t%s\n' "-n,--pcp-namespace: The namespace perceptor containers run in. (default: 'nginx-webapp-logstash')"
+	printf '\t%s\n' "-n,--pcp-namespace: The namespace perceptor containers run in. (default: 'bds-perceptor')"
 	printf '\t%s\n' "-U,--hub-user: hub user (default: 'master')"
 	printf '\t%s\n' "-W,--hub-password: hub password (default: 'master')"
 	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'nginx-webapp-logstash')"
