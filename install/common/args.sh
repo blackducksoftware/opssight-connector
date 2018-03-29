@@ -91,7 +91,7 @@ _arg_developer_mode="off"
 print_help ()
 {
 	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-p|--(no-)pod-perceiver] [-i|--(no-)image-perceiver] [-M|--(no-)prometheus-metrics] [--private-registry <arg>] [-t|--private-registry-token <arg>] [-c|--container-registry <arg>] [-v|--default-container-version <arg>] [-n|--pcp-namespace <arg>] [-U|--hub-user <arg>] [-W|--hub-password <arg>] [-H|--hub-host <arg>] [-P|--hub-port <arg>] [-C|--hub-max-concurrent-scans <arg>] [-u|--container-default-cpu <arg>] [-m|--container-default-memory <arg>] [-i|--(no-)prompt] [-h|--help]\n' "$0"
+	printf 'Usage: %s [-p|--(no-)pod-perceiver] [-i|--(no-)image-perceiver] [-M|--(no-)prometheus-metrics] [--private-registry <arg>] [-t|--private-registry-token <arg>] [-c|--container-registry <arg>] [-I|--image-repository <arg>] [-v|--default-container-version <arg>] [-n|--pcp-namespace <arg>] [-U|--hub-user <arg>] [-W|--hub-password <arg>] [-H|--hub-host <arg>] [-P|--hub-port <arg>] [-T|--hub-client-timeout-perceptor-seconds <arg>] [-s|--hub-client-timeout-scanner-seconds <arg>] [-C|--hub-max-concurrent-scans <arg>] [-u|--container-default-cpu <arg>] [-m|--container-default-memory <arg>] [-l|--container-default-log-level <arg>] [-d|--developer-mode <arg>] [--(no-)prompt] [-h|--help]\n' "$0"
 	printf '\t%s\n' "-p,--pod-perceiver,--no-pod-perceiver: Whether the pod perceiver is enabled. (on by default)"
 	printf '\t%s\n' "-i,--image-perceiver,--no-image-perceiver: Whether the image perceiver is enabled. (off by default)"
 	printf '\t%s\n' "-M,--prometheus-metrics,--no-prometheus-metrics: Whether the prometheus metrics is enabled. (off by default)"
