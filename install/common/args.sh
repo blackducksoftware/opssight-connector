@@ -19,12 +19,13 @@
 # ARG_OPTIONAL_SINGLE([hub-password],[W],[hub password],[master])
 # ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname ],[nginx-webapp-logstash])
 # ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port ],[8443])
-# ARG_OPTIONAL_SINGLE([hub-client-timeout-seconds],[T],[hub client timeout seconds ],[5])
+# ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[5])
+# ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[T],[hub client timeout for perceptor scanner in seconds ],[5])
 # ARG_OPTIONAL_SINGLE([hub-max-concurrent-scans],[C],[maximum scans at a time for the hub],[7])
 # ARG_OPTIONAL_SINGLE([container-default-cpu],[u],[All containers default cpu],[300m])
 # ARG_OPTIONAL_SINGLE([container-default-memory],[m],[All containers default memory],[1300Mi])
 # ARG_OPTIONAL_SINGLE([container-default-log-level],[l],[All containers default log level],[info])
-# ARG_OPTIONAL_BOOLEAN([interactive],[i],[prompt for values rather then expecting them all at the command line],[off])
+# ARG_OPTIONAL_SINGLE([prompt],[--prompt],[prompt for values rather then expecting them all at the command line],[off])
 
 # ARG_HELP([The general script's help msg])
 # ARGBASH_GO()
@@ -75,7 +76,8 @@ _arg_hub_user="sysadmin"
 _arg_hub_password=""
 _arg_hub_host="nginx-webapp-logstash"
 _arg_hub_port="8443"
-_arg_hub_client_timeout_seconds="5"
+_arg_hub_client_timeout_perceptor_seconds="5"
+_arg_hub_client_timeout_scanner_seconds="5"
 _arg_hub_max_concurrent_scans="7"
 _arg_prompt="off"
 _arg_container_default_cpu="300m"
@@ -103,7 +105,8 @@ print_help ()
 	printf '\t%s\n' "-W,--hub-password: hub password (default: 'master')"
 	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'nginx-webapp-logstash')"
 	printf '\t%s\n' "-P,--hub-port: hub port  (default: '8443')"
-	printf '\t%s\n' "-T,--hub-client-timeout-seconds: hub client timeout in seconds  (default: '5')"
+	printf '\t%s\n' "-T,--hub-client-timeout-perceptor-seconds: hub client timeout for perceptor in seconds  (default: '5')"
+	printf '\t%s\n' "-s,--hub-client-timeout-scanner-seconds: hub client timeout for perceptor scanner in seconds  (default: '5')"
 	printf '\t%s\n' "-C,--hub-max-concurrent-scans: maximum scans at a time for the hub (default: '7')"
 	printf '\t%s\n' "-u,--container-default-cpu: All container's default cpu (default: '300m')"
 	printf '\t%s\n' "-m,--container-default-memory: All container's default memory (default: '1300Mi')"
@@ -310,18 +313,32 @@ parse_commandline ()
 				_arg_hub_port="${_key##-P}"
 				;;
 			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
-			-T|--hub-client-timeout-seconds)
+			-T|--hub-client-timeout-perceptor-seconds)
 				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_hub_client_timeout_seconds="$2"
+				_arg_hub_client_timeout_perceptor_seconds="$2"
 				shift
 				;;
 			# See the comment of option '--private-registry=' to see what's going on here - principle is the same.
-			--hub-client-timeout-seconds=*)
-				_arg_hub_client_timeout_seconds="${_key##--hub-client-timeout-seconds=}"
+			--hub-client-timeout-perceptor-seconds=*)
+				_arg_hub_client_timeout_perceptor-seconds="${_key##--hub-client-timeout-perceptor-seconds=}"
 				;;
 			# See the comment of option '-p' to see what's going on here - principle is the same.
 			-T*)
-				_arg_hub_client_timeout_seconds="${_key##-T}"
+				_arg_hub_client_timeout_perceptor_seconds="${_key##-T}"
+				;;
+			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
+			-s|--hub-client-timeout-scanner-seconds)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_hub_client_timeout_scanner_seconds="$2"
+				shift
+				;;
+			# See the comment of option '--private-registry=' to see what's going on here - principle is the same.
+			--hub-client-timeout-scanner-seconds=*)
+				_arg_hub_client_timeout_scanner_seconds="${_key##--hub-client-timeout-scanner-seconds=}"
+				;;
+			# See the comment of option '-p' to see what's going on here - principle is the same.
+			-s*)
+				_arg_hub_client_timeout_scanner_seconds="${_key##-s}"
 				;;
 			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
 			-C|--hub-max-concurrent-scans)
