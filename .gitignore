@@ -5,3 +5,5 @@ perceptor-protoform/protoform
 perceptor-scanner/perceptor-imagefacade
 perceptor-scanner/perceptor-scanner
 perceptor/perceptor
+install/kube1.6/protoform.yaml
+install/kube1.6/rbac.yaml
