@@ -11,7 +11,7 @@ DEF_PERCEPTOR_PROTOFORM_TAG=master
 perceptor_protoform_image=${perceptor_protoform_image:-$DEF_PERCEPTOR_PROTOFORM_IMAGE}
 perceptor_protoform_tag=${perceptor_protoform_tag:-$DEF_PERCEPTOR_PROTOFORM_TAG}
 
-hubUserPassword=$(echo -n "$_arg_hub_password" | base64)
+hubUserPassword=$(printf "%s" "$_arg_hub_password" | base64)
 
 cat << EOF > protoform.yaml
 apiVersion: v1
