@@ -39,6 +39,9 @@ func CreateImageLabels(obj interface{}, name string, count int) map[string]strin
 
 	if len(name) > 0 {
 		imagePostfix = fmt.Sprintf("%d", count)
+		name = strings.Replace(name, "/", ".", -1)
+		// If any image is from private registry, it might tagged with port number
+		name = strings.Replace(name, ":", ".", -1)
 		labels[fmt.Sprintf("com.blackducksoftware.image%d", count)] = strings.Replace(name, "/", ".", -1)
 	}
 	labels[fmt.Sprintf("com.blackducksoftware.image%s.policy-violations", imagePostfix)] = fmt.Sprintf("%d", imageData.GetPolicyViolationCount())
