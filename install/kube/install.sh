@@ -4,7 +4,7 @@ kubectl create ns $_arg_pcp_namespace
 
 source ../common/rbac.yaml.sh
 
-source ../common/parse-image-registry.sh "../kube1.6/image-registry.json"
+source ../common/parse-image-registry.sh "../kube/image-registry.json"
 
 source ../common/protoform.yaml.sh
 
