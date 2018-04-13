@@ -1,16 +1,16 @@
 .TH NAME
 .PP
-opssight-pod-controller
+opssight-pod-processor
 
 
 .SH DESCRIPTION
 .PP
-The opssight-pod-controller is used to identify all images inside each pod in any Kubernetes or Red Hat OpenShift cluster. It should send all those identified images to opssight-core to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from opssight-core scan results and annotate and label them in all pods.
+The opssight-pod-processor is used to identify all images inside each pod in a Kubernetes or Red Hat OpenShift cluster. It will send all those identified images to opssight-core for scanning. It will also retrieve the vulnerability and policy violations of each image periodically from opssight-core and annotate and label them in all pods.
 
 
 .SH USAGE
 .PP
-The opssight-pod-controller will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
+The opssight-pod-processor will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
 
 
 .PP
@@ -20,7 +20,7 @@ Please visit
 
 .SH SECURITY IMPLICATIONS
 .PP
-The opssight-image-controller requires admin access which are fully documented in the OpsSight for Red Hat OpenShift security document.
+The opssight-image-processor requires admin access. For more information, see the OpsSight for Red Hat OpenShift Security Disclosures document.
 
 
 .SH AUTHORS
