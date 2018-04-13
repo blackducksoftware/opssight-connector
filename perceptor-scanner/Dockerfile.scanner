@@ -12,11 +12,11 @@ COPY ./image-scanner-help.1 /help.1
 
 COPY ./perceptor-scanner ./perceptor-scanner
 
-LABEL name="Black Duck OpsSight Image Scanner" \
+LABEL name="Black Duck OpsSight Scanner" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
-      summary="Black Duck OpsSight Image Scanner" \
-      description="This container is used to scan the images that is received from opsight-core. It should call the blackduck scanner client to scan those images." \
+      summary="Black Duck OpsSight Scanner" \
+      description="This container is used to scan images received from opsight-core. It calls the Black Duck scan client." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
