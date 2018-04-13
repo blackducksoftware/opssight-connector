@@ -61,7 +61,7 @@ func NewPodAnnotator(pl corev1.CoreV1Interface, perceptorURL string, handler ann
 
 // Run starts a controller that will annotate pods
 func (pa *PodAnnotator) Run(interval time.Duration, stopCh <-chan struct{}) {
-	log.Infof("starting pod annotator controller")
+	log.Infof("starting pod pod_annotator controller")
 
 	for {
 		select {
@@ -74,7 +74,6 @@ func (pa *PodAnnotator) Run(interval time.Duration, stopCh <-chan struct{}) {
 
 		err := pa.annotate()
 		if err != nil {
-			metrics.RecordError("annotator", "unable to annotate pod")
 			log.Errorf("failed to annotate pods: %v", err)
 		}
 	}
@@ -85,7 +84,7 @@ func (pa *PodAnnotator) annotate() error {
 	log.Infof("attempting to get scan results with GET %s for pod annotation", pa.scanResultsURL)
 	scanResults, err := pa.getScanResults()
 	if err != nil {
-		metrics.RecordError("annotator", "error getting scan results")
+		metrics.RecordError("pod_annotator", "error getting scan results")
 		return fmt.Errorf("error getting scan results: %v", err)
 	}
 
@@ -100,13 +99,13 @@ func (pa *PodAnnotator) getScanResults() (*perceptorapi.ScanResults, error) {
 
 	bytes, err := communicator.GetPerceptorScanResults(pa.scanResultsURL)
 	if err != nil {
-		metrics.RecordError("annotator", "unable to get scan results")
+		metrics.RecordError("pod_annotator", "unable to get scan results")
 		return nil, fmt.Errorf("unable to get scan results: %v", err)
 	}
 
 	err = json.Unmarshal(bytes, &results)
 	if err != nil {
-		metrics.RecordError("annotator", "unable to unmarshal scan results")
+		metrics.RecordError("pod_annotator", "unable to Unmarshal ScanResults")
 		return nil, fmt.Errorf("unable to Unmarshal ScanResults from url %s: %v", pa.scanResultsURL, err)
 	}
 
@@ -120,7 +119,7 @@ func (pa *PodAnnotator) addAnnotationsToPods(results perceptorapi.ScanResults) {
 		kubePod, err := pa.coreV1.Pods(pod.Namespace).Get(pod.Name, metav1.GetOptions{})
 		metrics.RecordDuration("get pod", time.Now().Sub(getPodStart))
 		if err != nil {
-			metrics.RecordError("annotator", "unable to get pod")
+			metrics.RecordError("pod_annotator", "unable to get pod")
 			log.Errorf("unable to get pod %s: %v", podName, err)
 			continue
 		}
@@ -134,9 +133,10 @@ func (pa *PodAnnotator) addAnnotationsToPods(results perceptorapi.ScanResults) {
 			_, err = pa.coreV1.Pods(pod.Namespace).Update(kubePod)
 			metrics.RecordDuration("update pod", time.Now().Sub(updatePodStart))
 			if err != nil {
-				metrics.RecordError("annotator", "unable to update annotations/labels for pod")
+				metrics.RecordError("pod_annotator", "unable to update annotations/labels for pod")
 				log.Errorf("unable to update annotations/labels for pod %s: %v", podName, err)
 			} else {
+				metrics.RecordPodAnnotation("pod_annotator", podName)
 				log.Infof("successfully annotated pod %s", podName)
 			}
 		}
@@ -160,7 +160,6 @@ func (pa *PodAnnotator) addPodAnnotations(pod *v1.Pod, podAnnotations *annotatio
 	// Apply updated annotations to the pod if the existing annotations don't
 	// contain the expected entries
 	if !pa.h.CompareMaps(currentAnnotations, newAnnotations) {
-		metrics.RecordError("annotator", "annotations are missing or incorrect on pod")
 		log.Infof("annotations are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentAnnotations, newAnnotations)
 		setAnnotationsStart := time.Now()
 		pod.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
@@ -198,7 +197,6 @@ func (pa *PodAnnotator) addPodLabels(pod *v1.Pod, podAnnotations *annotations.Po
 	// Apply updated labels to the pod if the existing labels don't
 	// contain the expected entries
 	if !pa.h.CompareMaps(currentLabels, newLabels) {
-		metrics.RecordError("annotator", "labels are missing or incorrect on pod")
 		log.Infof("labels are missing or incorrect on pod %s.  Expected %v to contain %v", podName, currentLabels, newLabels)
 		setLabelsStart := time.Now()
 		pod.SetLabels(utils.MapMerge(currentLabels, newLabels))
@@ -225,7 +223,7 @@ func (pa *PodAnnotator) getPodContainerMap(pod *v1.Pod, scannedImages []percepto
 	for cnt, container := range pod.Status.ContainerStatuses {
 		name, sha, err := docker.ParseImageIDString(container.ImageID)
 		if err != nil {
-			metrics.RecordError("annotator", "unable to parse kubernetes imageID")
+			metrics.RecordError("pod_annotator", "unable to parse kubernetes imageID")
 			log.Errorf("unable to parse kubernetes imageID string %s from pod %s/%s: %v", container.ImageID, pod.Namespace, pod.Name, err)
 			continue
 		}

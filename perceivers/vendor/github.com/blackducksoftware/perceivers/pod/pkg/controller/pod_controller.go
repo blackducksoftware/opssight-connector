@@ -129,7 +129,7 @@ func (pc *PodController) enqueueJob(obj interface{}) {
 	if err == nil {
 		pc.queue.Add(key)
 	} else {
-		metrics.RecordError("controller", "unable to get key")
+		metrics.RecordError("pod_controller", "unable to create key for enqueuing")
 	}
 }
 
@@ -166,8 +166,6 @@ func (pc *PodController) processNextWorkItem() bool {
 		return true
 	}
 
-	metrics.RecordError("controller", "unable to sync handler")
-
 	// There was a failure so be sure to report it.  This method allows for pluggable error handling
 	// which can be used for things like cluster-monitoring
 	utilruntime.HandleError(fmt.Errorf("%v failed with : %v", key, err))
@@ -186,7 +184,7 @@ func (pc *PodController) processPod(key string) error {
 
 	ns, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
-		metrics.RecordError("controller", "error getting name of pod")
+		metrics.RecordError("pod_controller", "error getting name of pod")
 		return fmt.Errorf("error getting name of pod %q to get pod from informer: %v", key, err)
 	}
 
@@ -194,13 +192,15 @@ func (pc *PodController) processPod(key string) error {
 	getPodStart := time.Now()
 	pod, err := pc.podLister.Pods(ns).Get(name)
 	metrics.RecordDuration("get pod -- pod controller", time.Now().Sub(getPodStart))
-	if err != nil {
-		metrics.RecordError("controller", "unable to get pod")
-	}
 	if errors.IsNotFound(err) {
 		// Pod doesn't exist (anymore), so this is a delete event
-		return communicator.SendPerceptorDeleteEvent(pc.podURL, name)
+		err = communicator.SendPerceptorDeleteEvent(pc.podURL, name)
+		if err != nil {
+			metrics.RecordError("pod_controller", "error sending pod delete event")
+		}
+		return err
 	} else if err != nil {
+		metrics.RecordError("pod_controller", "error getting pod from informer")
 		return fmt.Errorf("error getting pod %s from informer: %v", name, err)
 	}
 
@@ -208,8 +208,11 @@ func (pc *PodController) processPod(key string) error {
 	// the perceptor
 	podInfo, err := mapper.NewPerceptorPodFromKubePod(pod)
 	if err != nil {
-		metrics.RecordError("controller", "unable to convert kube pod to perceptor pod")
 		return fmt.Errorf("error converting pod to perceptor pod: %v", err)
 	}
-	return communicator.SendPerceptorAddEvent(pc.podURL, podInfo)
+	err = communicator.SendPerceptorAddEvent(pc.podURL, podInfo)
+	if err != nil {
+		metrics.RecordError("pod_controller", "error sending pod add event")
+	}
+	return err
 }

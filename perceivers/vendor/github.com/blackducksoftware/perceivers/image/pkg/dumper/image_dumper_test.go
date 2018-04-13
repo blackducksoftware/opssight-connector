@@ -74,7 +74,7 @@ func TestGetAllImagesAsPerceptorImages(t *testing.T) {
 		{
 			description: "invalid and valid images",
 			osImages:    v1.ImageList{Items: []v1.Image{invalidImage, validImage}},
-			expected:    make([]perceptorapi.Image, 0),
+			expected:    []perceptorapi.Image{validPerceptorImage},
 			shouldPass:  false,
 		},
 	}

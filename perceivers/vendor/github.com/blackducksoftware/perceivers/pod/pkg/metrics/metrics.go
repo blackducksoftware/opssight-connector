@@ -31,24 +31,29 @@ import (
 var httpResults *prometheus.CounterVec
 var durationsHistogram *prometheus.HistogramVec
 var errorsCounter *prometheus.CounterVec
+var podsAnnotated *prometheus.CounterVec
+var totalPodsAnnotated *prometheus.CounterVec
 
-// helpers
-
+// RecordError records metric information related to errors
 func RecordError(errorStage string, errorName string) {
 	errorsCounter.With(prometheus.Labels{"stage": errorStage, "errorName": errorName}).Inc()
 }
 
+// RecordDuration records the duration of an operation
 func RecordDuration(operation string, duration time.Duration) {
 	durationsHistogram.With(prometheus.Labels{"operation": operation}).Observe(duration.Seconds())
 }
 
-// recorders
-
-func RecordHttpStats(path string, success bool) {
-	httpResults.With(prometheus.Labels{"path": path, "result": fmt.Sprintf("%t", success)}).Inc()
+// RecordPodAnnotation records metric information related to pod annotations
+func RecordPodAnnotation(annotator string, podName string) {
+	podsAnnotated.With(prometheus.Labels{"annotator": annotator, "pod_name": podName})
+	totalPodsAnnotated.With(prometheus.Labels{"annotator": annotator, "pods_annotated": "total"}).Inc()
 }
 
-// init
+// RecordHTTPStats records metric information related to http requests
+func RecordHTTPStats(path string, success bool) {
+	httpResults.With(prometheus.Labels{"path": path, "result": fmt.Sprintf("%t", success)}).Inc()
+}
 
 func init() {
 	httpResults = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -76,7 +81,23 @@ func init() {
 		Help:      "errors from pod perceiver operations",
 	}, []string{"stage", "errorName"})
 
+	podsAnnotated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "pod_perceiver",
+		Name:      "annotations",
+		Help:      "individual pod annotations",
+	}, []string{"annotator", "pod_name"})
+
+	totalPodsAnnotated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "pod_perceiver",
+		Name:      "total_annotations",
+		Help:      "total pods annotated",
+	}, []string{"annotator", "pods_annotated"})
+
 	prometheus.MustRegister(errorsCounter)
 	prometheus.MustRegister(durationsHistogram)
 	prometheus.MustRegister(httpResults)
+	prometheus.MustRegister(podsAnnotated)
+	prometheus.MustRegister(totalPodsAnnotated)
 }

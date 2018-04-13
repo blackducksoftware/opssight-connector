@@ -31,7 +31,8 @@ import (
 func TestMetrics(t *testing.T) {
 	RecordError("test stage", "test message")
 	RecordDuration("a b c d", time.Now().Sub(time.Now()))
-	RecordHttpStats("getnextimage", true)
+	RecordHTTPStats("getnextimage", true)
+	RecordImageAnnotation("qrs", "tuv")
 
 	message := "finished test case"
 	t.Log(message)

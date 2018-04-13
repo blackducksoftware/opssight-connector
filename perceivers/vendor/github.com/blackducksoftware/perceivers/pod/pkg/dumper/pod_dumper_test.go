@@ -100,7 +100,7 @@ func TestGetAllPodsAsPerceptorPods(t *testing.T) {
 		{
 			description: "invalid and valid pods",
 			kubePods:    v1.PodList{Items: []v1.Pod{invalidPod, validPod}},
-			expected:    make([]perceptorapi.Pod, 0),
+			expected:    []perceptorapi.Pod{validPerceptorPod},
 			shouldPass:  false,
 		},
 	}

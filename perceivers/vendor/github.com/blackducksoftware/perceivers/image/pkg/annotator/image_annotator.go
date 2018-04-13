@@ -76,7 +76,6 @@ func (ia *ImageAnnotator) Run(interval time.Duration, stopCh <-chan struct{}) {
 
 		err := ia.annotate()
 		if err != nil {
-			metrics.RecordError("image_controller", "failed to annotate images")
 			log.Errorf("failed to annotate images: %v", err)
 		}
 	}
@@ -87,7 +86,7 @@ func (ia *ImageAnnotator) annotate() error {
 	log.Infof("attempting to GET %s for image annotation", ia.scanResultsURL)
 	scanResults, err := ia.getScanResults()
 	if err != nil {
-		metrics.RecordError("image_controller", "error getting scan results")
+		metrics.RecordError("image_annotator", "error getting scan results")
 		return fmt.Errorf("error getting scan results: %v", err)
 	}
 
@@ -102,13 +101,13 @@ func (ia *ImageAnnotator) getScanResults() (*perceptorapi.ScanResults, error) {
 
 	bytes, err := communicator.GetPerceptorScanResults(ia.scanResultsURL)
 	if err != nil {
-		metrics.RecordError("image_controller", "failed to annotate images")
+		metrics.RecordError("image_annotator", "unable to get scan results")
 		return nil, fmt.Errorf("unable to get scan results: %v", err)
 	}
 
 	err = json.Unmarshal(bytes, &results)
 	if err != nil {
-		metrics.RecordError("image_controller", "unable to Unmarshal ScanResults")
+		metrics.RecordError("image_annotator", "unable to Unmarshal ScanResults")
 		return nil, fmt.Errorf("unable to Unmarshal ScanResults from url %s: %v", ia.scanResultsURL, err)
 	}
 
@@ -132,15 +131,13 @@ func (ia *ImageAnnotator) addAnnotationsToImages(results perceptorapi.ScanResult
 		getImageStart := time.Now()
 		osImage, err := ia.client.Images().Get(getName, metav1.GetOptions{})
 		metrics.RecordDuration("get image", time.Now().Sub(getImageStart))
-		if err != nil {
-			metrics.RecordError("image_controller", "unable to get image")
-		}
 		if errors.IsNotFound(err) {
 			// This isn't an image in openshift
 			continue
 		} else if err != nil {
 			// Some other kind of error, possibly couldn't communicate, so return
 			// an error
+			metrics.RecordError("image_annotator", "unable to get image")
 			log.Errorf("unexpected error retrieving image %s: %v", fullImageName, err)
 			continue
 		}
@@ -148,12 +145,12 @@ func (ia *ImageAnnotator) addAnnotationsToImages(results perceptorapi.ScanResult
 		// Verify the sha of the scanned image matches that of the image we retrieved
 		_, imageSha, err := docker.ParseImageIDString(osImage.DockerImageReference)
 		if err != nil {
-			metrics.RecordError("image_controller", "unable to parse openshift imageID")
+			metrics.RecordError("image_annotator", "unable to parse openshift imageID")
 			log.Errorf("unable to parse openshift imageID from image %s: %v", imageName, err)
 			continue
 		}
 		if imageSha != image.Sha {
-			metrics.RecordError("image_controller", "image sha doesn't match")
+			metrics.RecordError("image_annotator", "image sha doesn't match")
 			log.Errorf("image sha doesn't match for image %s.  Got %s, expected %s", imageName, image.Sha, imageSha)
 			continue
 		}
@@ -167,9 +164,10 @@ func (ia *ImageAnnotator) addAnnotationsToImages(results perceptorapi.ScanResult
 			_, err = ia.client.Images().Update(osImage)
 			metrics.RecordDuration("update image", time.Now().Sub(updateImageStart))
 			if err != nil {
-				metrics.RecordError("image_controller", "unable to update image")
+				metrics.RecordError("image_annotator", "unable to update annotations/labels for image")
 				log.Errorf("unable to update annotations/labels for image %s: %v", fullImageName, err)
 			} else {
+				metrics.RecordImageAnnotation("image_annotator", fullImageName)
 				log.Infof("successfully annotated image %s", fullImageName)
 			}
 		}
@@ -189,7 +187,6 @@ func (ia *ImageAnnotator) addImageAnnotations(name string, image *v1.Image, imag
 	// Apply updated annotations to the image if the existing annotations don't
 	// contain the expected entries
 	if !ia.h.CompareMaps(currentAnnotations, newAnnotations) {
-		metrics.RecordError("image_controller", "annotations are missing or incorrect")
 		log.Infof("annotations are missing or incorrect on image %s.  Expected %v to contain %v", name, currentAnnotations, newAnnotations)
 		setAnnotationsStart := time.Now()
 		image.SetAnnotations(utils.MapMerge(currentAnnotations, newAnnotations))
@@ -212,7 +209,6 @@ func (ia *ImageAnnotator) addImageLabels(name string, image *v1.Image, imageAnno
 	// Apply updated labels to the image if the existing annotations don't
 	// contain the expected entries
 	if !ia.h.CompareMaps(currentLabels, newLabels) {
-		metrics.RecordError("image_controller", "labels are missing or incorrect")
 		log.Infof("labels are missing or incorrect on image %s.  Expected %v to contain %v", name, currentLabels, newLabels)
 		setLabelsStart := time.Now()
 		image.SetLabels(utils.MapMerge(currentLabels, newLabels))
