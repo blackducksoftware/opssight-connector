@@ -1,5 +1,22 @@
 FROM registry.access.redhat.com/rhel7
 
+MAINTAINER Black Duck OpsSight Team
+
+ARG LASTCOMMIT
+ARG BUILDTIME
+
+# Container catalog requirements
+COPY ./../LICENSE /licenses/
+COPY ./image-scanner-help.1 /help.1
+
 COPY ./perceptor-scanner ./perceptor-scanner
+
+LABEL name="Black Duck OpsSight Image Scanner" \
+      vendor="Black Duck Software" \
+      release.version="1.0" \
+      summary="Black Duck OpsSight Image Scanner" \
+      description="This container is used to scan the images that is received from opsight-core. It should call the blackduck scanner client to scan those images." \
+      lastcommit="$LASTCOMMIT" \
+      buildtime="$BUILDTIME"
 
 CMD ["./perceptor-scanner"]

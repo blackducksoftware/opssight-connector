@@ -1,5 +1,22 @@
 FROM scratch
 
+MAINTAINER Black Duck OpsSight Team
+
+ARG LASTCOMMIT
+ARG BUILDTIME
+
+# Container catalog requirements
+COPY ./../LICENSE /licenses/
+COPY ./image-puller-help.1 /help.1
+
 COPY ./perceptor-imagefacade ./perceptor-imagefacade
+
+LABEL name="Black Duck OpsSight Image Puller" \
+      vendor="Black Duck Software" \
+      release.version="1.0" \
+      summary="Black Duck OpsSight Image Puller" \
+      description="This container is used to pull the images from docker and save them as TAR ball." \
+      lastcommit="$LASTCOMMIT" \
+      buildtime="$BUILDTIME"
 
 CMD ["./perceptor-imagefacade"]

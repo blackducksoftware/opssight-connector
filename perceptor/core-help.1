@@ -1,0 +1,28 @@
+.TH NAME
+.PP
+opssight-core
+
+
+.SH DESCRIPTION
+.PP
+The opssight-core is used to get all images from opsight-image-controller or opssight-pod-controller in any Kubernetes or Red Hat OpenShift cluster. It should send all those received images to blackduck scanner to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from blackduck hub and update the scan results.
+
+
+.SH USAGE
+.PP
+The opssight-core will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
+
+
+.PP
+Please visit
+\[la]https://www.blackducksoftware.com/red-hat-openshift\[ra] to learn more about OpsSight for Red Hat OpenShift.
+
+
+.SH SECURITY IMPLICATIONS
+.PP
+There is no security implications for opssight-core in OpenShift environment
+
+
+.SH AUTHORS
+.PP
+Black Duck Software
