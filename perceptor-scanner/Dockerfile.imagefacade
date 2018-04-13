@@ -12,11 +12,11 @@ COPY ./image-puller-help.1 /help.1
 
 COPY ./perceptor-imagefacade ./perceptor-imagefacade
 
-LABEL name="Black Duck OpsSight Image Puller" \
+LABEL name="Black Duck OpsSight Image Getter" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
-      summary="Black Duck OpsSight Image Puller" \
-      description="This container is used to pull the images from docker and save them as TAR ball." \
+      summary="Black Duck OpsSight Image Getter" \
+      description="This container is used to get the images from Docker and save them as tar ball." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
