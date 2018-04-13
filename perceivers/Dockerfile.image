@@ -4,17 +4,18 @@ MAINTAINER Black Duck OpsSight Team
 
 ARG LASTCOMMIT
 ARG BUILDTIME
+ARG VERSION
 
 # Container catalog requirements
 COPY ./../LICENSE /licenses/
-COPY ./image-controller-help.1 /help.1
+COPY ./image-processor-help.1 /help.1
 
 COPY ./_output/image-perceiver ./image-perceiver
 
-LABEL name="Black Duck OpsSight Image Controller" \
+LABEL name="Black Duck OpsSight Image Processor" \
       vendor="Black Duck Software" \
-      release.version="1.0" \
-      summary="Black Duck OpsSight Image Controller" \
+      release.version="$VERSION" \
+      summary="Black Duck OpsSight Image Processor" \
       description="This container is used to identify all images in Red Hat OpenShift cluster. It should send all those identified images to opssight-core to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from opssight-core scan results and annotate and label them in all images." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"

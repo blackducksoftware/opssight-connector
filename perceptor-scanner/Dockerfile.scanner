@@ -4,6 +4,7 @@ MAINTAINER Black Duck OpsSight Team
 
 ARG LASTCOMMIT
 ARG BUILDTIME
+ARG VERSION
 
 # Container catalog requirements
 COPY ./../LICENSE /licenses/
@@ -13,7 +14,7 @@ COPY ./perceptor-scanner ./perceptor-scanner
 
 LABEL name="Black Duck OpsSight Image Scanner" \
       vendor="Black Duck Software" \
-      release.version="1.0" \
+      release.version="$VERSION" \
       summary="Black Duck OpsSight Image Scanner" \
       description="This container is used to scan the images that is received from opsight-core. It should call the blackduck scanner client to scan those images." \
       lastcommit="$LASTCOMMIT" \
