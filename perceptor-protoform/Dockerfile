@@ -16,7 +16,7 @@ LABEL name="Black Duck OpsSight Deployer" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
       summary="Black Duck OpsSight Deployer" \
-      description="This container is used to deploy all the containers that is required for Blackduck OpsSight product." \
+      description="This container is used to deploy the Black Duck OpsSight containers." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
