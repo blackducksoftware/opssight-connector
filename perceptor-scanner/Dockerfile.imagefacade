@@ -8,7 +8,7 @@ ARG VERSION
 
 # Container catalog requirements
 COPY ./../LICENSE /licenses/
-COPY ./image-puller-help.1 /help.1
+COPY ./image-getter-help.1 /help.1
 
 COPY ./perceptor-imagefacade ./perceptor-imagefacade
 

@@ -8,7 +8,7 @@ ARG VERSION
 
 # Container catalog requirements
 COPY ./../LICENSE /licenses/
-COPY ./image-scanner-help.1 /help.1
+COPY ./scanner-help.1 /help.1
 
 COPY ./perceptor-scanner ./perceptor-scanner
 
