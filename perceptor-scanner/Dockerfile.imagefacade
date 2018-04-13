@@ -16,7 +16,7 @@ LABEL name="Black Duck OpsSight Image Getter" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
       summary="Black Duck OpsSight Image Getter" \
-      description="This container is used to get the images from Docker and save them as tar ball." \
+      description="This container is used to retrieve images that need to be scanned" \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
