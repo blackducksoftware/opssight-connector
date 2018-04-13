@@ -16,7 +16,7 @@ LABEL name="Black Duck OpsSight Core" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
       summary="Black Duck OpsSight Core" \
-      description="This container is used to get all images from opsight-image-controller or opssight-pod-controller in any Kubernetes or Red Hat OpenShift cluster. It should send all those received images to blackduck scanner to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from blackduck hub and update the scan results." \
+      description="This container is used to get images from opsight-image-processor and opssight-pod-processor in Kubernetes and Red Hat OpenShift clusters. It will send all those received images to the Black Duck scanner for scanning. It will also retrieve vulnerability and policy violations for each image periodically from the Black Duck Hub and update the scan results." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
