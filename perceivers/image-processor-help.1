@@ -1,16 +1,16 @@
 .TH NAME
 .PP
-opssight-image-controller
+opssight-image-processor
 
 
 .SH DESCRIPTION
 .PP
-The opssight-image-controller is used to identify all images in Red Hat OpenShift cluster. It should send all those identified images to opssight-core to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from opssight-core scan results and annotate and label them in all images.
+The opssight-image-processor is used to identify all images in a Red Hat OpenShift cluster. It will send all the identified images to opssight-core for scanning. It will also retrieve vulnerability and policy violations for each image periodically from opssight-core and annotate and label them in all images.
 
 
 .SH USAGE
 .PP
-The opssight-image-controller will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
+The opssight-image-processor will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
 
 
 .PP
@@ -20,7 +20,7 @@ Please visit
 
 .SH SECURITY IMPLICATIONS
 .PP
-The opssight-image-controller requires admin access which are fully documented in the OpsSight for Red Hat OpenShift security document.
+The opssight-image-processor requires admin access. For details, see the OpsSight for Red Hat OpenShift Security Disclosures document.
 
 
 .SH AUTHORS
