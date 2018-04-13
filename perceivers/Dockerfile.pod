@@ -16,7 +16,7 @@ LABEL name="Black Duck OpsSight Pod Processor" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
       summary="Black Duck OpsSight Pod Processor" \
-      description="This container is used to identify all images inside each pod in any Kubernetes or Red Hat OpenShift cluster. It should send all those identified images to opssight-core to scan them. It should also retrieve the vulnerability and policy violations of each image periodically from opssight-core scan results and annotate and label them in all pods." \
+      description="This container is used to identify all images inside each pod in a Kubernetes or Red Hat OpenShift cluster. It will send all the identified images to opssight-core for scanning. It will also retrieve vulnerability and policy violations for each image periodically from opssight-core and annotate and label them in all pods." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
 
