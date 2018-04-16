@@ -74,13 +74,17 @@ _arg_default_container_version="latest"
 _arg_pcp_namespace="blackduck-opssight"
 _arg_hub_user="sysadmin"
 _arg_hub_password=""
+# DOC : This is the default namespace since, if co-deploying with hub, it allows you to talk on internal service endpoints.
 _arg_hub_host="nginx-webapp-logstash"
 _arg_hub_port="8443"
+# DOC: If your hub is on the same node, or network namespace ~ you can possibly reduce this to 30 seconds.
 _arg_hub_client_timeout_perceptor_seconds="120"
 _arg_hub_client_timeout_scanner_seconds="30"
+# DOC: This is conservative.  A large hub instance can handle 40 scans in parallel or more.
 _arg_hub_max_concurrent_scans="7"
 _arg_prompt="off"
 _arg_container_default_cpu="300m"
+# DOC: Significantly changing this parameter shouldn't be necessary, even for large images.
 _arg_container_default_memory="1300Mi"
 _arg_container_default_log_level="info"
 _arg_developer_mode="off"
