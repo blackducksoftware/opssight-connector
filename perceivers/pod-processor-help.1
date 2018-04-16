@@ -1,0 +1,28 @@
+.TH NAME
+.PP
+opssight-pod-processor
+
+
+.SH DESCRIPTION
+.PP
+The opssight-pod-processor is used to identify all images inside each pod in a Kubernetes or Red Hat OpenShift cluster. It will send all those identified images to opssight-core for scanning. It will also retrieve the vulnerability and policy violations of each image periodically from opssight-core and annotate and label each pod with the information for each image.
+
+
+.SH USAGE
+.PP
+The opssight-pod-processor will not perform meaningful work if launched outside of an OpenShift environment or in a standalone fashion.
+
+
+.PP
+Please visit
+\[la]https://www.blackducksoftware.com/red-hat-openshift\[ra] to learn more about OpsSight for Red Hat OpenShift.
+
+
+.SH SECURITY IMPLICATIONS
+.PP
+The opssight-image-processor requires admin access. For more information, see the OpsSight for Red Hat OpenShift Security Disclosures document.
+
+
+.SH AUTHORS
+.PP
+Black Duck Software
