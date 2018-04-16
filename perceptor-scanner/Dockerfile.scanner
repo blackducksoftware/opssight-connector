@@ -7,7 +7,7 @@ ARG BUILDTIME
 ARG VERSION
 
 # Container catalog requirements
-COPY ./../LICENSE /licenses/
+COPY ./LICENSE /licenses/
 COPY ./scanner-help.1 /help.1
 
 COPY ./perceptor-scanner ./perceptor-scanner
