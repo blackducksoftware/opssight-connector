@@ -184,7 +184,7 @@ func (osisc *OSImageStreamController) processImageStream(obj *imageapi.ImageStre
 		}
 		for _, image := range images {
 			err = communicator.SendPerceptorDeleteEvent(osisc.imageURL, image.Name)
-			metrics.RecordHttpStats(osisc.imageURL, err == nil)
+			metrics.RecordHTTPStats(osisc.imageURL, err == nil)
 			if err != nil {
 				metrics.RecordError("imagestream_controller", "unable to send delete event")
 				errList = append(errList, err.Error())
@@ -202,7 +202,7 @@ func (osisc *OSImageStreamController) processImageStream(obj *imageapi.ImageStre
 	}
 	for _, image := range images {
 		err = communicator.SendPerceptorAddEvent(osisc.imageURL, image)
-		metrics.RecordHttpStats(osisc.imageURL, err == nil)
+		metrics.RecordHTTPStats(osisc.imageURL, err == nil)
 		if err != nil {
 			metrics.RecordError("imagestream_controller", "unable to send add event")
 			errList = append(errList, err.Error())

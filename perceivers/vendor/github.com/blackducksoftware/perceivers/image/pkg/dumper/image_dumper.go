@@ -69,7 +69,7 @@ func (id *ImageDumper) Run(interval time.Duration, stopCh <-chan struct{}) {
 		// Get all the images in the format pereptor uses
 		images, err := id.getAllImagesAsPerceptorImages()
 		if err != nil {
-			metrics.RecordError("dumper", "unable to get all images")
+			metrics.RecordError("image_dumper", "unable to get all images")
 			log.Errorf("unable to get all images: %v", err)
 			continue
 		}
@@ -77,16 +77,16 @@ func (id *ImageDumper) Run(interval time.Duration, stopCh <-chan struct{}) {
 
 		jsonBytes, err := json.Marshal(perceptorapi.NewAllImages(images))
 		if err != nil {
-			metrics.RecordError("dumper", "unable to serialize all images")
+			metrics.RecordError("image_dumper", "unable to serialize all images")
 			log.Errorf("unable to serialize all images: %v", err)
 			continue
 		}
 
 		// Send all the image information to the perceptor
 		err = communicator.SendPerceptorData(id.allImagesURL, jsonBytes)
-		metrics.RecordHttpStats(id.allImagesURL, err == nil)
+		metrics.RecordHTTPStats(id.allImagesURL, err == nil)
 		if err != nil {
-			metrics.RecordError("dumper", "failed to send images")
+			metrics.RecordError("image_dumper", "failed to send images")
 			log.Errorf("failed to send images: %v", err)
 		} else {
 			log.Infof("http POST request to %s succeeded", id.allImagesURL)
@@ -109,7 +109,8 @@ func (id *ImageDumper) getAllImagesAsPerceptorImages() ([]perceptorapi.Image, er
 	for _, image := range images.Items {
 		perceptorImage, err := mapper.NewPerceptorImageFromOSImage(&image)
 		if err != nil {
-			return nil, err
+			metrics.RecordError("image_dumper", "unable to convert image to perceptor image")
+			continue
 		}
 		perceptorImages = append(perceptorImages, *perceptorImage)
 	}

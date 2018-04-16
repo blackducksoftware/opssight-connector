@@ -27,16 +27,21 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
 func SetupHTTPServer(responder Responder) {
 	// state of the program
-	http.Handle("/metrics", prometheus.Handler())
 	http.HandleFunc("/model", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			fmt.Fprint(w, responder.GetModel())
+			jsonBytes, err := json.Marshal(responder.GetModel())
+			if err != nil {
+				responder.Error(w, r, err, 500)
+				return
+			}
+			header := w.Header()
+			header.Set(http.CanonicalHeaderKey("content-type"), "application/json")
+			fmt.Fprint(w, string(jsonBytes))
 		} else {
 			responder.NotFound(w, r)
 		}
@@ -55,7 +60,7 @@ func SetupHTTPServer(responder Responder) {
 			var pod Pod
 			err = json.Unmarshal(body, &pod)
 			if err != nil {
-				log.Infof("unable to ummarshal JSON for pod POST: %s", err.Error())
+				log.Errorf("unable to ummarshal JSON for pod POST: %s", err.Error())
 				responder.Error(w, r, err, 400)
 				return
 			}
@@ -151,6 +156,8 @@ func SetupHTTPServer(responder Responder) {
 				responder.Error(w, r, err, 500)
 				return
 			}
+			header := w.Header()
+			header.Set(http.CanonicalHeaderKey("content-type"), "application/json")
 			fmt.Fprint(w, string(jsonBytes))
 		} else {
 			responder.NotFound(w, r)
@@ -165,6 +172,8 @@ func SetupHTTPServer(responder Responder) {
 			if err != nil {
 				responder.Error(w, r, err, 500)
 			} else {
+				header := w.Header()
+				header.Set(http.CanonicalHeaderKey("content-type"), "application/json")
 				fmt.Fprint(w, string(jsonBytes))
 			}
 		} else {
@@ -181,6 +190,10 @@ func SetupHTTPServer(responder Responder) {
 			}
 			var scanResults FinishedScanClientJob
 			err = json.Unmarshal(body, &scanResults)
+			if err != nil {
+				responder.Error(w, r, err, 400)
+				return
+			}
 			responder.PostFinishScan(scanResults)
 			fmt.Fprint(w, "")
 		} else {
@@ -198,6 +211,10 @@ func SetupHTTPServer(responder Responder) {
 			}
 			var limit SetConcurrentScanLimit
 			err = json.Unmarshal(body, &limit)
+			if err != nil {
+				responder.Error(w, r, err, 400)
+				return
+			}
 			responder.SetConcurrentScanLimit(limit)
 			fmt.Fprint(w, "")
 		} else {

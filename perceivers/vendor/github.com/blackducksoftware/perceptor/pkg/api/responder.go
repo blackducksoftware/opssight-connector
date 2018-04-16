@@ -26,7 +26,7 @@ import (
 )
 
 type Responder interface {
-	GetModel() string
+	GetModel() Model
 
 	// perceiver
 	AddPod(pod Pod)

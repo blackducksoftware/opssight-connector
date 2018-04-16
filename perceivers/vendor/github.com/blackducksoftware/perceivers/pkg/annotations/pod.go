@@ -96,6 +96,9 @@ func CreatePodAnnotations(obj interface{}) map[string]string {
 	podData := obj.(*PodAnnotationData)
 	newAnnotations := make(map[string]string)
 
+	newAnnotations["pod.policy-violations"] = fmt.Sprintf("%d", podData.GetPolicyViolationCount())
+	newAnnotations["pod.vulnerabilities"] = fmt.Sprintf("%d", podData.GetVulnerabilityCount())
+	newAnnotations["pod.overall-status"] = podData.GetOverallStatus()
 	newAnnotations["pod.scanner-version"] = podData.GetScanClientVersion()
 	newAnnotations["pod.server-version"] = podData.GetHubVersion()
 

@@ -37,15 +37,27 @@ import (
 // perceptor pod object
 func NewPerceptorPodFromKubePod(kubePod *v1.Pod) (*perceptorapi.Pod, error) {
 	containers := []perceptorapi.Container{}
+	actual := len(kubePod.Status.ContainerStatuses)
+	expected := len(kubePod.Spec.Containers)
+	
+	// Note that even this is not a permanant solution to race conditions between
+	// unprocessed apiserver pod objects https://github.com/blackducksoftware/perceivers/issues/54
+	// Revise in the 1.0.1 timeline.
+	if actual != expected {
+		return nil, fmt.Errorf("unable to instantiate perceptor pod: kube pod %s/%s has %d container statuses, but %d containers in its spec", kubePod.Namespace, kubePod.Name, actual, expected)
+	}
 	for _, newCont := range kubePod.Status.ContainerStatuses {
 		if len(newCont.ImageID) > 0 {
 			name, sha, err := docker.ParseImageIDString(newCont.ImageID)
 			if err != nil {
-				metrics.RecordError("mapper", "unable to parse kubernetes imageID")
+				metrics.RecordError("pod_mapper", "unable to parse kubernetes imageID")
 				return nil, fmt.Errorf("unable to parse kubernetes imageID string %s from pod %s/%s: %v", newCont.ImageID, kubePod.Namespace, kubePod.Name, err)
 			}
 			addedCont := perceptorapi.NewContainer(*perceptorapi.NewImage(name, sha, newCont.Image), newCont.Name)
 			containers = append(containers, *addedCont)
+		} else {
+			metrics.RecordError("pod_mapper", "empty kubernetes imageID")
+			return nil, fmt.Errorf("empty kubernetes imageID from pod %s/%s, container %s", kubePod.Namespace, kubePod.Name, newCont.Name)
 		}
 	}
 	return perceptorapi.NewPod(kubePod.Name, string(kubePod.UID), kubePod.Namespace, containers), nil

@@ -30,14 +30,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// TODO metrics
-// number of namespaces found
-// number of pods per namespace
-// number of images per pod
-// number of occurrences of each pod
-// number of successes, failures, of each perceptor endpoint
-// ??? number of scan results fetched from perceptor
-
 func main() {
 	log.Info("starting pod-perceiver")
 

@@ -31,24 +31,29 @@ import (
 var httpResults *prometheus.CounterVec
 var durationsHistogram *prometheus.HistogramVec
 var errorsCounter *prometheus.CounterVec
+var imagesAnnotated *prometheus.CounterVec
+var totalImagesAnnotated *prometheus.CounterVec
 
-// helpers
-
+// RecordError records metric information related to errors
 func RecordError(errorStage string, errorName string) {
 	errorsCounter.With(prometheus.Labels{"stage": errorStage, "errorName": errorName}).Inc()
 }
 
+// RecordDuration records the duration of an operation
 func RecordDuration(operation string, duration time.Duration) {
 	durationsHistogram.With(prometheus.Labels{"operation": operation}).Observe(duration.Seconds())
 }
 
-// recorders
-
-func RecordHttpStats(path string, success bool) {
-	httpResults.With(prometheus.Labels{"path": path, "result": fmt.Sprintf("%t", success)}).Inc()
+// RecordImageAnnotation records metric information related to image annotations
+func RecordImageAnnotation(annotator string, imageName string) {
+	imagesAnnotated.With(prometheus.Labels{"annotator": annotator, "image_name": imageName}).Inc()
+	totalImagesAnnotated.With(prometheus.Labels{"annotator": annotator, "images_annotated": "total"}).Inc()
 }
 
-// init
+// RecordHTTPStats records metric information related to http requests
+func RecordHTTPStats(path string, success bool) {
+	httpResults.With(prometheus.Labels{"path": path, "result": fmt.Sprintf("%t", success)}).Inc()
+}
 
 func init() {
 	httpResults = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -76,7 +81,23 @@ func init() {
 		Help:      "errors from image perceiver operations",
 	}, []string{"stage", "errorName"})
 
+	imagesAnnotated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "image_perceiver",
+		Name:      "annotations",
+		Help:      "individual image annotations",
+	}, []string{"annotator", "image_name"})
+
+	totalImagesAnnotated = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "image_perceiver",
+		Name:      "total_annotations",
+		Help:      "total images annotated",
+	}, []string{"annotator", "images_annotated"})
+
 	prometheus.MustRegister(errorsCounter)
 	prometheus.MustRegister(durationsHistogram)
 	prometheus.MustRegister(httpResults)
+	prometheus.MustRegister(imagesAnnotated)
+	prometheus.MustRegister(totalImagesAnnotated)
 }

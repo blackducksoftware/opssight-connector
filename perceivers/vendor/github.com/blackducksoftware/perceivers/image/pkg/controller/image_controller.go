@@ -125,7 +125,7 @@ func (ic *ImageController) enqueueJob(obj interface{}) {
 	if err == nil {
 		ic.queue.Add(key)
 	} else {
-		metrics.RecordError("image_controller", "unable to retrieve key from cache")
+		metrics.RecordError("image_controller", "unable to create key for enqueuing")
 	}
 }
 
@@ -161,8 +161,6 @@ func (ic *ImageController) processNextWorkItem() bool {
 		return true
 	}
 
-	metrics.RecordError("image_controller", "unable to sync handler")
-
 	// There was a failure so be sure to report it.  This method allows for pluggable error handling
 	// which can be used for things like cluster-monitoring
 	utilruntime.HandleError(fmt.Errorf("%v failed with : %v", key, err))
@@ -187,13 +185,15 @@ func (ic *ImageController) processImage(key string) error {
 
 	// Get the image
 	image, err := ic.imageLister.Get(name)
-	if err != nil {
-		metrics.RecordError("image_controller", "error getting image lister")
-	}
 	if errors.IsNotFound(err) {
 		// Image doesn't exist (anymore), so this is a delete event
-		return communicator.SendPerceptorDeleteEvent(ic.imageURL, name)
+		err = communicator.SendPerceptorDeleteEvent(ic.imageURL, name)
+		if err != nil {
+			metrics.RecordError("image_controller", "error sending image delete event")
+		}
+		return err
 	} else if err != nil {
+		metrics.RecordError("image_controller", "error getting image from informer")
 		return fmt.Errorf("error getting image %s from informer: %v", name, err)
 	}
 
@@ -201,8 +201,11 @@ func (ic *ImageController) processImage(key string) error {
 	// to the perceptor
 	imageInfo, err := mapper.NewPerceptorImageFromOSImage(image)
 	if err != nil {
-		metrics.RecordError("image_controller", "error instantiating perceptor image")
 		return fmt.Errorf("error converting image to perceptor image: %v", err)
 	}
-	return communicator.SendPerceptorAddEvent(ic.imageURL, imageInfo)
+	err = communicator.SendPerceptorAddEvent(ic.imageURL, imageInfo)
+	if err != nil {
+		metrics.RecordError("image_controller", "error sending image add event")
+	}
+	return err
 }
