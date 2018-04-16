@@ -2,27 +2,27 @@
   "pod": [
     {
       "name": "pod-perceiver",
-      "image": "opssight-pod-perceiver",
+      "image": "opssight-pod-processor",
       "tag": "latest"
     },
     {
       "name": "perceptor",
-      "image": "opssight-perceptor",
+      "image": "opssight-core",
       "tag": "latest"
     },
     {
       "name": "perceptor-imagefacade",
-      "image": "opssight-perceptor-imagefacade",
+      "image": "opssight-image-getter",
       "tag": "latest"
     },
     {
       "name": "perceptor-scanner",
-      "image": "opssight-perceptor-scanner",
+      "image": "opssight-scanner",
       "tag": "latest"
     },
     {
       "name": "perceptor-protoform",
-      "image": "opssight-perceptor-protoform",
+      "image": "opssight-deployer",
       "tag": "latest"
     }
   ]
