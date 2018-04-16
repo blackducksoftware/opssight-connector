@@ -14,7 +14,7 @@ time="2018-04-16T17:48:01Z" level=error msg="error checking hub for completed sc
 ```
 This is generally okay, as long as progress is being made.  To check , you can check that `Every 2.0s: curl http://opssight-perceptor:3001/metrics ` shows a "ScanStatusComplete" value that is increasing over time.  
 
-*Solution*
+#### Solution
 
 If, for several minutes, you see no scan status completed, do the following:
 
