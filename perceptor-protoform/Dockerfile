@@ -19,5 +19,6 @@ LABEL name="Black Duck OpsSight Deployer" \
       description="This container is used to deploy the Black Duck OpsSight Connector." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME"
+      license="apache"
 
 CMD ["./protoform"]
