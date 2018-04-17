@@ -1,10 +1,11 @@
 #!/bin/bash
 #
 #
-# ARG_OPTIONAL_BOOLEAN([pod-perceiver],[k],[Whether the pod perceiver is enabled.],[on])
-# ARG_OPTIONAL_BOOLEAN([image-perceiver],[o],[Whether the image perceiver is enabled.],[off])
-# ARG_OPTIONAL_BOOLEAN([prometheus-metrics],[M],[Whether the prometheus metrics is enabled.],[off])
-# ARG_OPTIONAL_BOOLEAN([developer-mode],[d],[Whether the Developer mode is enabled.],[off])
+# ARG_OPTIONAL_BOOLEAN([pod-perceiver],[k],[Install the pod perceiver pod.],[on])
+# ARG_OPTIONAL_BOOLEAN([image-perceiver],[o],[Install the image perceiver pod.],[off])
+# ARG_OPTIONAL_BOOLEAN([prometheus-metrics],[M],[Enable prometheus metrics.],[off])
+# ARG_OPTIONAL_BOOLEAN([developer-mode],[d],[Use developer mode.],[off])
+# ARG_OPTIONAL_BOOLEAN([skyfire],[],[Enable Skyfire container for testing.],[off])
 #
 
 # ARG_OPTIONAL_SINGLE([private-registry],[p],[A private registry url you will need to pull images for scan.],["docker-registry.default.svc:5000"])
@@ -20,12 +21,12 @@
 # ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname ],[nginx-webapp-logstash])
 # ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port ],[8443])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[5])
-# ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[T],[hub client timeout for perceptor scanner in seconds ],[5])
+# ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[s],[hub client timeout for perceptor scanner in seconds ],[120])
 # ARG_OPTIONAL_SINGLE([hub-max-concurrent-scans],[C],[maximum scans at a time for the hub],[7])
 # ARG_OPTIONAL_SINGLE([container-default-cpu],[u],[All containers default cpu],[300m])
 # ARG_OPTIONAL_SINGLE([container-default-memory],[m],[All containers default memory],[1300Mi])
 # ARG_OPTIONAL_SINGLE([container-default-log-level],[l],[All containers default log level],[info])
-# ARG_OPTIONAL_SINGLE([prompt],[--prompt],[prompt for values rather then expecting them all at the command line],[off])
+# ARG_OPTIONAL_SINGLE([prompt],[],[prompt for values rather then expecting them all at the command line],[off])
 
 # ARG_HELP([The general script's help msg])
 # ARGBASH_GO()
@@ -79,7 +80,7 @@ _arg_hub_host="nginx-webapp-logstash"
 _arg_hub_port="8443"
 # DOC: If your hub is on the same node, or network namespace ~ you can possibly reduce this to 30 seconds.
 _arg_hub_client_timeout_perceptor_seconds="120"
-_arg_hub_client_timeout_scanner_seconds="30"
+_arg_hub_client_timeout_scanner_seconds="120"
 # DOC: This is conservative.  A large hub instance can handle 40 scans in parallel or more.
 _arg_hub_max_concurrent_scans="7"
 _arg_prompt="off"
