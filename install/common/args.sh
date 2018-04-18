@@ -11,14 +11,14 @@
 # ARG_OPTIONAL_SINGLE([private-registry],[p],[A private registry url you will need to pull images for scan.],["docker-registry.default.svc:5000"])
 # ARG_OPTIONAL_SINGLE([private-registry-token],[t],[A private registry token to have access to pull images],[perceptor-scanner-sa service account token])
 
-# ARG_OPTIONAL_SINGLE([container-registry],[c],[Base docker repo for the applicaition.],[gcr.io])
-# ARG_OPTIONAL_SINGLE([image-repository],[I],[Image repository for the applicaition.],[gke-verification/blackducksoftware])
-# ARG_OPTIONAL_SINGLE([default-container-version],[v],[Default container version],[master])
-# ARG_OPTIONAL_SINGLE([pcp-namespace],[n],[The namespace perceptor containers run in.],[nginx-webapp-logstash])
+# ARG_OPTIONAL_SINGLE([container-registry],[c],[Base docker repo for the applicaition.],[docker.io])
+# ARG_OPTIONAL_SINGLE([image-repository],[I],[Image repository for the applicaition.],[blackducksoftware])
+# ARG_OPTIONAL_SINGLE([default-container-version],[v],[Default container version],[latest])
+# ARG_OPTIONAL_SINGLE([pcp-namespace],[n],[The namespace perceptor containers run in.],[blackduck-opssight])
 
-# ARG_OPTIONAL_SINGLE([hub-user],[U],[hub user],[master])
-# ARG_OPTIONAL_SINGLE([hub-password],[W],[hub password],[master])
-# ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname ],[nginx-webapp-logstash])
+# ARG_OPTIONAL_SINGLE([hub-user],[U],[hub user],[sysadmin])
+# ARG_OPTIONAL_SINGLE([hub-password],[W],[hub password],[])
+# ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname ],[webserver])
 # ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port ],[8443])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[120])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[s],[hub client timeout for perceptor scanner in seconds ],[120])
@@ -76,7 +76,7 @@ _arg_pcp_namespace="blackduck-opssight"
 _arg_hub_user="sysadmin"
 _arg_hub_password=""
 # DOC : This is the default namespace since, if co-deploying with hub, it allows you to talk on internal service endpoints.
-_arg_hub_host="nginx-webapp-logstash"
+_arg_hub_host="webserver"
 _arg_hub_port="8443"
 # DOC: If your hub is on the same node, or network namespace ~ you can possibly reduce this to 30 seconds.
 _arg_hub_client_timeout_perceptor_seconds="120"
@@ -105,10 +105,10 @@ print_help ()
 	printf '\t%s\n' "-c,--container-registry: Base docker repo for the applicaition. (default: 'docker.io')"
 	printf '\t%s\n' "-I,--image-repository: Image repository for the applicaition. (default: 'blackducksoftware ')"
 	printf '\t%s\n' "-v,--default-container-version: Default container version (default: 'master')"
-	printf '\t%s\n' "-n,--pcp-namespace: The namespace perceptor containers run in. (default: 'bds-perceptor')"
+	printf '\t%s\n' "-n,--pcp-namespace: The namespace perceptor containers run in. (default: 'blackduck-opssight')"
 	printf '\t%s\n' "-U,--hub-user: hub user (default: 'sysadmin')"
 	printf '\t%s\n' "-W,--hub-password: hub password"
-	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'nginx-webapp-logstash')"
+	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'webserver')"
 	printf '\t%s\n' "-P,--hub-port: hub port  (default: '8443')"
 	printf '\t%s\n' "-T,--hub-client-timeout-perceptor-seconds: hub client timeout for perceptor in seconds  (default: '120')"
 	printf '\t%s\n' "-s,--hub-client-timeout-scanner-seconds: hub client timeout for perceptor scanner in seconds  (default: '120')"
