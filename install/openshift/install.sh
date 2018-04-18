@@ -5,6 +5,8 @@ _arg_image_perceiver="on"
 
 oc new-project $_arg_pcp_namespace
 
+oc project $_arg_pcp_namespace
+
 source ../common/oadm-policy-init.sh $arg_pcp_namespace
 
 source ../common/parse-image-registry.sh "../openshift/image-registry.json"
