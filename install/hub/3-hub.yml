@@ -148,11 +148,11 @@ items:
         - name: webapp
           resources:
             requests:
-              cpu: 1
-              memory: 2560M
+              cpu: 4
+              memory: 16G
             limits:
-              cpu: 1
-              memory: 2560M
+              cpu: 4
+              memory: 16G
           image: blackducksoftware/hub-webapp:4.5.0
           livenessProbe:
             exec:
@@ -274,9 +274,9 @@ items:
             name: solr-dir
           resources:
             requests:
-              memory: "640M"
+              memory: "2G"
             limits:
-              memory: "640M"
+              memory: "2G"
           image: blackducksoftware/hub-solr:4.5.0
           livenessProbe:
             exec:
@@ -328,9 +328,10 @@ items:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "640M"
+              cpu: 1
+              memory: "1G"
             limits:
-              memory: "640M"
+              memory: "1G"
           name: registration
           ports:
           - containerPort: 8443
@@ -373,9 +374,10 @@ items:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: 384M
+              cpu: 1
+              memory: 1G
             limits:
-              memory: 384M
+              memory: 1G
           ports:
           - containerPort: 2181
             protocol: TCP
@@ -545,9 +547,9 @@ items:
             mountPath: /tmp/secrets
           resources:
             limits:
-              memory: "2560M"
+              memory: 3G
             requests:
-              memory: "2560M"
+              memory: 3G
           ports:
           - containerPort: 8443
             protocol: TCP
@@ -602,9 +604,6 @@ items:
             periodSeconds: 30
             failureThreshold: 10
           imagePullPolicy: Always
-          env:
-          - name: HUB_MAX_MEMORY
-            value: 512m
           envFrom:
           - configMapRef:
               name: hub-config
@@ -612,6 +611,9 @@ items:
               name: hub-db-config
           - configMapRef:
               name: hub-db-config-granular
+          env:
+          - name: HUB_MAX_MEMORY
+            value: 750m
           name: hub-authentication
           volumeMounts:
           - mountPath: "/opt/blackduck/hub/hub-authentication/security"
