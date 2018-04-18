@@ -1,6 +1,7 @@
 package: github.com/blackducksoftware/opssight-connector/perceivers
 import:
 - package: github.com/blackducksoftware/perceivers
+  version: 1.0.0
   subpackages:
   - image/cmd/app
   - pkg/annotations

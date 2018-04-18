@@ -40,7 +40,7 @@ func TestNewPerceptorPodFromKubePod(t *testing.T) {
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{},
+				{},
 			},
 		},
 		Status: v1.PodStatus{
@@ -59,8 +59,8 @@ func TestNewPerceptorPodFromKubePod(t *testing.T) {
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{},
-				v1.Container{},
+				{},
+				{},
 			},
 		},
 		Status: v1.PodStatus{
@@ -108,7 +108,7 @@ func TestNewPerceptorPodFromKubePod(t *testing.T) {
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{},
+				{},
 			},
 		},
 		Status: v1.PodStatus{
@@ -124,7 +124,7 @@ func TestNewPerceptorPodFromKubePod(t *testing.T) {
 	noContainerStatuses := v1.Pod{
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
-				v1.Container{},
+				{},
 			},
 		},
 		ObjectMeta: metav1.ObjectMeta{

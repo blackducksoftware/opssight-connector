@@ -23,7 +23,7 @@ build: $(OUTDIR)
 
 local_build: $(OUTDIR) cmd/image-perceiver/image-perceiver.go cmd/pod-perceiver/pod-perceiver.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${OUTDIR}/image-perceiver cmd/image-perceiver/image-perceiver.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${OUTDIR}/pod-perceiver cmd/image-perceiver/image-perceiver.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ${OUTDIR}/pod-perceiver cmd/pod-perceiver/pod-perceiver.go
 
 container: registry_check $(OUTDIR)/image-perceiver ${OUTDIR}/pod-perceiver
 	docker build -t $(REGISTRY)/$(PREFIX)image-perceiver -f Dockerfile.image .

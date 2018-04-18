@@ -39,8 +39,8 @@ func NewPerceptorPodFromKubePod(kubePod *v1.Pod) (*perceptorapi.Pod, error) {
 	containers := []perceptorapi.Container{}
 	actual := len(kubePod.Status.ContainerStatuses)
 	expected := len(kubePod.Spec.Containers)
-	
-	// Note that even this is not a permanant solution to race conditions between
+
+	// Note that even this is not a permanent solution to race conditions between
 	// unprocessed apiserver pod objects https://github.com/blackducksoftware/perceivers/issues/54
 	// Revise in the 1.0.1 timeline.
 	if actual != expected {

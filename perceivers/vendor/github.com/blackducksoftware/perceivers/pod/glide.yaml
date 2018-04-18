@@ -1,7 +1,7 @@
 package: github.com/blackducksoftware/perceivers/pod
 import:
 - package: github.com/blackducksoftware/perceptor
-  repo: git@github.com:blackducksoftware/perceptor
+  version: 1.0.0
   subpackages:
   - pkg/api
 - package: github.com/sirupsen/logrus
@@ -9,12 +9,14 @@ import:
   subpackages:
   - core/v1
 - package: k8s.io/apimachinery
+  version: kubernetes-1.10.0
   subpackages:
   - pkg/apis/meta/v1
   - pkg/fields
   - pkg/util/runtime
   - pkg/util/wait
 - package: k8s.io/client-go
+  version: kubernetes-1.10.0
   subpackages:
   - kubernetes
   - rest
