@@ -105,9 +105,9 @@ You can just get started by copying the commands (openshift: change `kubectl` to
 *Example Script*
 ```
 kubectl create ns myhub
-kubectl create -f 1-cfssl.yml.template -n myhub
-kubectl create -f 1-cm-hub.yml.template -n myhub
-kubectl create -f 2-postgres-db-external.yml.template -n myhub
+kubectl create -f 1-cfssl.yml -n myhub
+kubectl create -f 1-cm-hub.yml -n myhub
+kubectl create -f 2-postgres-db-external.yml -n myhub
 kubectl create secret generic db-creds --from-literal=blackduck=blackduck123 --from-literal=blackduck_user=blackduck123 -n myhub
 
 sleep 10
@@ -132,7 +132,7 @@ kubectl exec -n myhub -t -i ${podname} -- sh /tmp/pgsetup.sh
 #### Done setting up the external DB.
 sleep 5
 
-kubectl create -f 3-hub.yml.template -n myhub
+kubectl create -f 3-hub.yml -n myhub
 ```
 Note: If you are using a truly external database, you'll want to use the databases
 admin interface to run the alter statements which you are directed to use in the yml
