@@ -1,5 +1,5 @@
-hash: b907330dee89f806ac0d9549299a9483f3475c919535e4f442894213c546a5b8
-updated: 2018-04-13T16:20:05.081618-04:00
+hash: 4e46647606e2746215a0064cfdfa3922cff417a0e8ba60635c371a3765c83ce0
+updated: 2018-04-18T13:56:04.047801-04:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -13,7 +13,7 @@ imports:
   - hubapi
   - hubclient
 - name: github.com/blackducksoftware/perceivers
-  version: b182e481b5fb156ab26070223ce4ae7b3b752b84
+  version: 8685ca9c92bc5fa84f028a3a84b466f7f3d3a454
   subpackages:
   - image/cmd/app
   - image/pkg/annotator
@@ -32,7 +32,7 @@ imports:
   - pod/pkg/mapper
   - pod/pkg/metrics
 - name: github.com/blackducksoftware/perceptor
-  version: 9d5069bd6a9817ef4ac5507e521975f5e22cb42d
+  version: e7e21871be0c521c8c3a0d8b6661a72d524d5bf1
   subpackages:
   - pkg/api
   - pkg/hub
@@ -76,6 +76,7 @@ imports:
   subpackages:
   - hcl/ast
   - hcl/parser
+  - hcl/printer
   - hcl/scanner
   - hcl/strconv
   - hcl/token
@@ -107,7 +108,7 @@ imports:
 - name: github.com/pelletier/go-toml
   version: 66540cf1fcd2c3aee6f6787dfa32a6ae9a870f12
 - name: github.com/prometheus/client_golang
-  version: 967789050ba94deca04a5e84cce8ad472ce313c1
+  version: 82f5ff156b29e276022b1a958f7d385870fb9814
   subpackages:
   - prometheus
 - name: github.com/prometheus/client_model
@@ -127,7 +128,7 @@ imports:
   - nfs
   - xfs
 - name: github.com/sirupsen/logrus
-  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
+  version: 778f2e774c725116edbc3d039dc0dfc1cc62aae8
 - name: github.com/spf13/afero
   version: 63644898a8da0bc22138abf860edaf5277b6102e
   subpackages:
@@ -139,7 +140,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 583c0c0531f06d5278b7d917446061adc344b5cd
 - name: github.com/spf13/viper
-  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+  version: 8dc2790b029dc41e2b8ff772c63c26adbb1db70d
 - name: golang.org/x/crypto
   version: d6449816ce06963d9d136eee5a56fca5b0616e7e
   subpackages:

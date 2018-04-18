@@ -47,6 +47,7 @@ import (
 	imagelister "github.com/openshift/client-go/image/listers/image/v1"
 )
 
+// OSImageStreamController is deprecated and will be removed.
 type OSImageStreamController struct {
 	client            *imageclient.ImageV1Client
 	imageController   cache.Controller
@@ -58,6 +59,7 @@ type OSImageStreamController struct {
 	queue       workqueue.RateLimitingInterface
 }
 
+// NewOSImageStreamController creates and returns a deprecated OSImageStreamController
 func NewOSImageStreamController(oic *imageclient.ImageV1Client, perceptorURL string) *OSImageStreamController {
 	osisc := OSImageStreamController{
 		client:   oic,
@@ -98,6 +100,7 @@ func NewOSImageStreamController(oic *imageclient.ImageV1Client, perceptorURL str
 	return &osisc
 }
 
+// Run will start a deprecated OSImageStreamController
 func (osisc *OSImageStreamController) Run(threadiness int, stopCh <-chan struct{}) {
 	defer osisc.queue.ShutDown()
 

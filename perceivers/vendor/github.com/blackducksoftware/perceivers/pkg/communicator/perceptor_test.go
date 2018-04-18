@@ -29,18 +29,31 @@ import (
 	"testing"
 
 	"github.com/blackducksoftware/perceivers/pkg/utils"
-
-	perceptorapi "github.com/blackducksoftware/perceptor/pkg/api"
 )
 
+type MockContainer struct {
+	Name  string
+	Image MockImage
+}
+
+type MockImage struct {
+	Name        string
+	Sha         string
+	DockerImage string
+}
+
 func TestSendPerceptorAddDeleteEvent(t *testing.T) {
-	pod := perceptorapi.Pod{
+	pod := struct {
+		Name       string
+		Namespace  string
+		Containers []MockContainer
+	}{
 		Name:      "test",
 		Namespace: "testNS",
-		Containers: []perceptorapi.Container{
+		Containers: []MockContainer{
 			{
 				Name: "fakeC1",
-				Image: perceptorapi.Image{
+				Image: MockImage{
 					Name:        "fakeImage1",
 					Sha:         "sha1",
 					DockerImage: "dockerimage1",
@@ -48,7 +61,7 @@ func TestSendPerceptorAddDeleteEvent(t *testing.T) {
 			},
 			{
 				Name: "fakeC2",
-				Image: perceptorapi.Image{
+				Image: MockImage{
 					Name:        "fakeImage2",
 					Sha:         "sha2",
 					DockerImage: "dockerimage2",
