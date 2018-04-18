@@ -36,7 +36,7 @@ user to run processes as user 70.  A generic version of these steps which may
 work for you is defined below:
 
 ```
-oc create serviceaccount postgres -n hub
+oc create serviceaccount postgres -n myhub
 oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
 ```
 
