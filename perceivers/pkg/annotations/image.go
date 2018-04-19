@@ -40,7 +40,10 @@ func CreateImageLabels(obj interface{}, name string, count int) map[string]strin
 
 	if len(name) > 0 {
 		imagePostfix = fmt.Sprintf("%d", count)
-		imagename, _, _ := docker.ParseImageIDString(name)
+		imagename, _, err := docker.ParseImageIDString(name)
+		if err != nil {
+			fmt.Errorf("%s", err)
+		}
 		imagename = strings.Replace(imagename, "/", ".", -1)
 		// some images end up having 'image:port' format, which breaks the req'd regex format.
 		imagename = strings.Replace(imagename, ":", ".", -1)
