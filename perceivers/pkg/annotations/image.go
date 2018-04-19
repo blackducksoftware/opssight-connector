@@ -44,6 +44,9 @@ func CreateImageLabels(obj interface{}, name string, count int) map[string]strin
 		if err != nil {
 			fmt.Errorf("%s", err)
 		}
+		if len(imagename) > 63 {
+			imagename = string(imagename[0:63])
+		}
 		imagename = strings.Replace(imagename, "/", ".", -1)
 		// some images end up having 'image:port' format, which breaks the req'd regex format.
 		imagename = strings.Replace(imagename, ":", ".", -1)
