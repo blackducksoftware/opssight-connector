@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/blackducksoftware/perceivers/pkg/annotations"
+	"github.com/blackducksoftware/perceivers/pkg/docker"
 )
 
 // ImageAnnotationPrefix is the prefix used for BlackDuckAnnotations in image annotations
@@ -39,10 +40,17 @@ func CreateImageLabels(obj interface{}, name string, count int) map[string]strin
 
 	if len(name) > 0 {
 		imagePostfix = fmt.Sprintf("%d", count)
-		name = strings.Replace(name, "/", ".", -1)
-		// some images end up having 'image:port' format, which breaks the req'd regex format. 
-		name = strings.Replace(name, ":", ".", -1)
-		labels[fmt.Sprintf("com.blackducksoftware.image%d", count)] = name
+		imagename, _, err := docker.ParseImageIDString(name)
+		if err != nil {
+			fmt.Errorf("%s", err)
+		}
+		if len(imagename) > 63 {
+			imagename = string(imagename[0:63])
+		}
+		imagename = strings.Replace(imagename, "/", ".", -1)
+		// some images end up having 'image:port' format, which breaks the req'd regex format.
+		imagename = strings.Replace(imagename, ":", ".", -1)
+		labels[fmt.Sprintf("com.blackducksoftware.image%d", count)] = imagename
 	}
 	labels[fmt.Sprintf("com.blackducksoftware.image%s.policy-violations", imagePostfix)] = fmt.Sprintf("%d", imageData.GetPolicyViolationCount())
 	labels[fmt.Sprintf("com.blackducksoftware.image%s.has-policy-violations", imagePostfix)] = fmt.Sprintf("%t", imageData.HasPolicyViolations())
