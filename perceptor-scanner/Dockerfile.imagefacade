@@ -18,7 +18,7 @@ LABEL name="Black Duck OpsSight Image Getter" \
       summary="Black Duck OpsSight Image Getter" \
       description="This container is used to retrieve images that need to be scanned" \
       lastcommit="$LASTCOMMIT" \
-      buildtime="$BUILDTIME"
+      buildtime="$BUILDTIME" \
       license="apache"
 
 CMD ["./perceptor-imagefacade"]
