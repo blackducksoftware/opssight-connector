@@ -533,6 +533,10 @@ items:
           envFrom:
           - configMapRef:
               name: hub-config
+          - configMapRef:
+              name: hub-db-config
+          - configMapRef:
+              name: hub-db-config-granular
           env:
           -  name: HUB_MAX_MEMORY
              valueFrom:
