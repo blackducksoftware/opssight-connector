@@ -25,6 +25,8 @@ Evolve your hub to meet your organization's needs.  Because the configuration se
 
 ## Run the hub !
 
+NOTE: Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
+
 First make a ns/project for your hub:
 
 - For openshift:`oc new-project myhub`
