@@ -110,6 +110,9 @@ You can just get started by copying the commands (openshift: change `kubectl` to
 
 
 *Example Script*
+- Make sure you can write files to /tmp/.
+
+If running this for the first time, run each command manually, waiting for pods to come up as needed.
 ```
 kubectl create ns myhub
 kubectl create -f 1-cfssl.yml -n myhub
@@ -117,7 +120,11 @@ kubectl create -f 1-cm-hub.yml -n myhub
 kubectl create -f 2-postgres-db-external.yml -n myhub
 kubectl create secret generic db-creds --from-literal=blackduck=blackduck123 --from-literal=blackduck_user=blackduck123 -n myhub
 
-sleep 10
+# Wait for the pods to come up, you can poll them manually.
+until kubectl get pods -n myhub | grep -q postgres; do
+     echo "waiting for postgres"
+done
+
 podname=$(kubectl get pods -n myhub | grep postgres | cut -d' ' -f 1)
 
 kubectl get pods -n myhub
