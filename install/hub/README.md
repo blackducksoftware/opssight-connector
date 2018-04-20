@@ -25,6 +25,11 @@ Evolve your hub to meet your organization's needs.  Because the configuration se
 
 ## Run the hub !
 
+First make a ns/project for your hub:
+
+- For openshift:`oc new-project myhub`
+- For kubernetes:`kubectl create ns myhub`
+
 #### Step 1: Setting up service accounts
 
 This may not be necessary for some users, feel free to skip to the next section
