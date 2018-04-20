@@ -108,7 +108,6 @@ you have set it up already.
 
 You can just get started by copying the commands (openshift: change `kubectl` to `oc`).
 
-
 *Example Script*
 - Make sure you can write files to /tmp/.
 
