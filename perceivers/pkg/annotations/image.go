@@ -39,10 +39,7 @@ func CreateImageLabels(obj interface{}, name string, count int) map[string]strin
 
 	if len(name) > 0 {
 		imagePostfix = fmt.Sprintf("%d", count)
-		name = strings.Replace(name, "/", ".", -1)
-		// some images end up having 'image:port' format, which breaks the req'd regex format. 
-		name = strings.Replace(name, ":", ".", -1)
-		labels[fmt.Sprintf("com.blackducksoftware.image%d", count)] = name
+		labels[fmt.Sprintf("com.blackducksoftware.image%d", count)] = ShortenLabelContent(name)
 	}
 	labels[fmt.Sprintf("com.blackducksoftware.image%s.policy-violations", imagePostfix)] = fmt.Sprintf("%d", imageData.GetPolicyViolationCount())
 	labels[fmt.Sprintf("com.blackducksoftware.image%s.has-policy-violations", imagePostfix)] = fmt.Sprintf("%t", imageData.HasPolicyViolations())
@@ -76,4 +73,31 @@ func CreateImageAnnotations(obj interface{}, name string, count int) map[string]
 	newAnnotations[fmt.Sprintf("%s%s/policy.blackduck", imagePrefix, ImageAnnotationPrefix)] = policyAnnotations.AsString()
 
 	return newAnnotations
+}
+
+// ShortenLabelContent will ensure the data is less than the 63 character limit and doesn't contain
+// any characters that are not allowed
+func ShortenLabelContent(data string) string {
+	newData := RemoveRegistryInfo(data)
+
+	// Label values can not be longer than 63 characters
+	if len(newData) > 63 {
+		newData = newData[0:63]
+	}
+
+	return newData
+}
+
+// RemoveRegistryInfo will take a string and return a string that removes any registry name information
+// and replaces all / with .
+func RemoveRegistryInfo(d string) string {
+	s := strings.Split(d, "/")
+
+	// If the data includes a . or : before the first / then that string is most likely
+	// a registry name.  Remove it because it could make the data too long and
+	// truncate useful information
+	if strings.Contains(s[0], ".") || strings.Contains(s[0], ":") {
+		s = s[1:]
+	}
+	return strings.Join(s, ".")
 }
