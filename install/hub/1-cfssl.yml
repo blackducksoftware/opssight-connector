@@ -1,7 +1,7 @@
 kind: List
 apiVersion: v1
 items:
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: cfssl
@@ -14,6 +14,9 @@ items:
     template:
       metadata:
         name: cfssl
+        labels:
+          app: cfssl
+          tier: cfssl
       spec:
         volumes:
         - emptyDir: {}
