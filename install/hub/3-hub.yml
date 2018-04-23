@@ -160,11 +160,11 @@ items:
         - name: webapp
           resources:
             requests:
-              cpu: 4
-              memory: 16G
+              cpu: 3
+              memory: 12G
             limits:
-              cpu: 4
-              memory: 16G
+              cpu: 3
+              memory: 12G
           image: blackducksoftware/hub-webapp:4.5.0
           livenessProbe:
             exec:
@@ -207,9 +207,9 @@ items:
                 - /usr/local/bin/docker-healthcheck.sh
                 - http://localhost:9600/
             initialDelaySeconds: 240
-            timeoutSeconds: 10
-            periodSeconds: 30
-            failureThreshold: 10
+            timeoutSeconds: 240
+            periodSeconds: 60
+            failureThreshold: 20
           imagePullPolicy: Always
           envFrom:
           - configMapRef:
