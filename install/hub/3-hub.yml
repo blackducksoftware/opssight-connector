@@ -17,6 +17,9 @@ items:
     template:
       metadata:
         name: jobrunner
+        labels:
+          app: jobrunner
+          tier: jobrunner  
       spec:
         volumes:
         - name: db-passwords
@@ -76,6 +79,9 @@ items:
     template:
       metadata:
         name: webserver
+        labels:
+          app: webserver
+          tier: webserver  
       spec:
         volumes:
         - name: dir-webserver
@@ -133,6 +139,9 @@ items:
     template:
       metadata:
         name: webapp-logstash
+        labels:
+          app: webapp-logstash
+          tier: webapp-logstash
       spec:
         volumes:
         - emptyDir: {}
@@ -229,6 +238,8 @@ items:
   template:
       metadata:
         name: documentation
+        labels:
+          app: documentation
       spec:
         containers:
         - image: blackducksoftware/hub-documentation:4.5.0
@@ -268,6 +279,9 @@ items:
     template:
       metadata:
         name: solr
+        labels:
+          app: solr
+          tier: solr
       spec:
         volumes:
         - name: solr-dir
@@ -312,6 +326,9 @@ items:
     template:
       metadata:
         name: registration
+        labels:
+          app: registration
+          tier: registration
       spec:
         volumes:
         - emptyDir: {}
@@ -358,6 +375,9 @@ items:
     template:
       metadata:
         name: zookeeper
+        labels:
+          app: zookeeper
+          tier: zookeeper
       spec:
         volumes:
         - emptyDir: {}
