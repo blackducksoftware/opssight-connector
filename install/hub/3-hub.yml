@@ -530,7 +530,10 @@ items:
       matchLabels:
         app: hub-scan
     template:
-      name: hub-scan
+      metadata:
+        name: hub-scan
+        labels:
+          app: hub-scan
       spec:
         volumes:
         - emptyDir: {}
@@ -605,6 +608,9 @@ items:
     name: hub-authentication
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: hub-authentication
     template:
       metadata:
         labels:
