@@ -232,10 +232,10 @@ items:
     name: documentation
   spec:
     replicas: 1
-  selector:
-    matchLabels:
-      app: documentation
-  template:
+    selector:
+      matchLabels:
+        app: documentation
+    template:
       metadata:
         name: documentation
         labels:
@@ -270,11 +270,11 @@ items:
   kind: Deployment
   metadata:
     name: solr
-  selector:
-    matchLabels:
-      app: solr
-      tier: solr
   spec:
+    selector:
+      matchLabels:
+        app: solr
+        tier: solr
     replicas: 1
     template:
       metadata:
