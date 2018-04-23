@@ -118,7 +118,7 @@ items:
           # Uncomment this line to add a custom TLS Certificate for the web server.
           #- name: nginx-certs
           #  mountPath: "/tmp/secrets"
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: webapp-logstash
@@ -214,7 +214,7 @@ items:
           ports:
           - containerPort: 5044 # filebeat
             protocol: TCP
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: documentation
@@ -251,7 +251,7 @@ items:
           ports:
           - containerPort: 8443
             protocol: TCP
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: solr
@@ -294,7 +294,7 @@ items:
           ports:
           - containerPort: 8983
             protocol: TCP
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: registration
@@ -339,7 +339,7 @@ items:
           volumeMounts:
           - mountPath: "/opt/blackduck/hub/hub-registration/config"
             name: dir-registration
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: zookeeper
@@ -493,7 +493,7 @@ items:
       targetPort: 8443
     selector:
       app: documentation
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: hub-scan
@@ -572,7 +572,7 @@ items:
   status:
     loadBalancer: {}
 
-- apiVersion: apps/v1beta1
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: hub-authentication
