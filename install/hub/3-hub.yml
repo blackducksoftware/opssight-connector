@@ -506,10 +506,10 @@ items:
     name: hub-scan
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: hub-scan
     template:
-      metadata:
-        labels:
-          app: hub-scan
         name: hub-scan
       spec:
         volumes:
