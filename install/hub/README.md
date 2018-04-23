@@ -15,15 +15,13 @@ All below commands assume:
 - you have a cluster with at least 10 cores / 20GB of allocatable memory.
 - you have administrative access to your cluster.
 
-### Quickstart
+### Hub setup instructions 
 
-The best way to setup the hub is to get a simple version up and running
-in an environment of your choosing,
+#### If your in a hurry, skip to the quickstart section:
 
-### What then ?
-Evolve your hub to meet your organization's needs.  Because the configuration settings may vary (100s of scans aday? 10 scan a year ?), we do not proscribe a specific one-size-fits-all installation.
+The quickstart section shows how to quickly get a prototypical hub up and running.
 
-## Run the hub !
+#### Befoe you start:
 
 NOTE: Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
 
@@ -32,24 +30,25 @@ First make a ns/project for your hub:
 - For openshift:`oc new-project myhub`
 - For kubernetes:`kubectl create ns myhub`
 
-#### Step 1: Setting up service accounts
+#### Step 1: Setting up service accounts (if you need them).
 
-This may not be necessary for some users, feel free to skip to the next section
+This may not be necessary for some users, feel free to skip to the *next* section
 if you think you don't need to setup any special service accounts (i.e. if you're
 running in a namespace that has administrative capabilities).
 
-- For openshift: You need to create a service account for the hub, and allow that
+- First create your service account (Openshift users, use `oc`):
+```
+kubectl create serviceaccount postgresapp -n myhub
+```
+
+ - For openshift: You need to create a service account for the hub, and allow that
 user to run processes as user 70.  A generic version of these steps which may
 work for you is defined below:
-
 ```
-oc create serviceaccount postgres -n myhub
 oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
 ```
 
-- For kubernetes:
-
-Something as simple as this will do, in case your kubernetes distribution doesnt
+ - For kubernetes: Something as simple as this will do, in case your kubernetes distribution doesnt
 allow you to run container as arbitrary users.  Note this can be toned down to just
 allow user 70, but we provide the generic config snippet because its more flexible.
 
@@ -64,101 +63,146 @@ cat << EOF > sc.json
 EOF
 kubectl create -f sc.json
 ```
-### Step 2: Run the hub with an internally configured database.
 
-Then, you can (in most cases) just start the hub like so:
+#### Step 2: Create your cfssl container, and the core hub config map.
 
----
+Note we may edit the configmap later for external postgres or other settings.  For now, leave it as it is by default, and run these commands (openshift users: use `oc` instead of `kubectl`).
 ```
 kubectl create ns myhub
-kubectl create -f 1-cm-hub.yml -n myhub
 kubectl create -f 1-cfssl.yml -n myhub
-kubectl create -f 2-cm-hub.yml -n myhub
+kubectl create -f 1-cm-hub.yml -n myhub
+```
+
+#### Step 3: Choose your postgres database type, and then setup your postgres database
+
+There are two ways to run the hub's postgres database, and we refer to them as *internal*, or *external*.  
+
+Choose internal if you dont care about maintaining your own databse, and are able to run containers as any user in your cluster.  
+Otherwise, choose external.
+
+*Note: Obviously, you only need to do ONE of the two below steps, before moving on to step 3 ~ choose EITHER Internal OR External database setup!*.
+
+##### Step 3 (INTERNAL database setup option)
+
+If you are okay using an internal database, and are able to run containers as user 70, then 
+Then, you can (in most cases) just start the hub using the snippet of kubectl create statements below.
+
+- Note: the default yaml files dont have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes, other then postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do 1000s of scans early on.
+
+- Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you dont want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
+
+```
 kubectl create -f 2-postgres-db-internal.yml -n myhub
-sleep 1
+```
+
+Thats it, now, skip ahead to step 4!
+
+##### Step 3 (EXTERNAL database setup option)
+
+Note that if you did the internal database setup step, this obviously is not needed.
+
+- Note that by 'external' we mean, any postgres other then the official `hub-postgres` image which ships with the blackduck containers.  Our official hub-postgres image bootstraps its own schema, and uses CFSSL for authentication.  In this case, you will have to setup auth and the schema yourself, and we show you how to do this below.
+
+- Also note that openshift users can use 'oc' as a substitute for the kubectl commands below, and
+should also make sure to create a project for running the hub before running them.
+
+- For simplicity, we use an example password below (blackduck123).
+
+So, now lets do our external database setup, in two steps:
+
+1) First lets make sure we create secrets which will match our passwords that we will set in the external database.
+
+```
+kubectl create secret generic db-creds --from-literal=blackduck=blackduck123 --from-literal=blackduck_user=blackduck123 -n myhub
+```
+
+2) Then, create the `blackduck` and `blackduck_user` users in the database, and set their passwords to the ones above, and run the external-postgres-init script on your database to set up the schema.  Then, edit the `HUB_POSTGRES_HOST` field in the `hub-db-config` configmap to match the DNS name or IP address of your external postgres host (alternatively, use a headless service for advanced users).
+
+Your external database is now set up.  Move on to step 4 to install the hub.
+
+#### Step 4: Finally, create the hub app's containers.
+
+You have now set up the main initial containers that the blackduck hub depends on, and set its database up.  Now you can start the rest of the application.  As mentioned earlier, for fully production deployment, you'll want to replace emptyDir's with real storage directories based on your admin's recommendation before running this:
+
+```
+#### Done setting up the external DB.
 kubectl create -f 3-hub.yml -n myhub
 ```
 
-#### Or, Run the hub with an externally configured database.
+If all the above pods are properly scheduled and running, you can then
+expose an endpoint, and start using the hub to scan projects.
 
-Note that openshift users can use 'oc' as a substitute for the kubectl commands below, and
-should also make sure to create a project for running the hub before running them.
+### Quick start examples !
 
-To exemplify how to do this, we provide a "container" which is configured
-much the same as AWS RDS, GCloud Postgres, or any other postgres VM.
+The following two quick starts show how to get the hub up 'instantly' for a prototype configuration that you can evolve.  
+- These are only examples, not 'installers', and should be leveraged by administrators who know what they are doing to quickly grok the hub setup process.  
+- Do not assume that running these scripts is a replacement for actually understanding the hub setup/configuration process.
+- Building on the points above: Make sure you make any production modifications (volumes, certificates, etc) that you need before running them.  Contact blackduck support if you have questions on how to adopt these scripts to match any special hub configurations you need. 
 
-For simplicity, we use an example password below (blackduck123).
+That said: If your just learning the hub for the first time, these are a great way to get started quickly.  So feel free to dive in and try the quick starts out to get the hub up and running quickly in your cloud native environment!
 
+Openshift users: use `oc` instead of kubectl, and `project` instead of namespace.
 
-The following instructions can easily be adopted to initialize any external database, contact blackduck for advice on how if
-you need help.
+#### Kubernetes Internal DB 'quick start' script:
 
-A script which can be used as a prototype to create your own installation is below.
-We walk through it in the following lines.
+Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
 
-- First, we create a namespace for the hub your running.
-- Then, create 3 yaml files.  A configmap (1-cm-hub.yml), cfssl deployment(1-cfssl.yml), and a postgres db.
-- Then, create secrets for "blackduck" and "blackduck_user" database passwords.
-- Now, create your external database.  In our quick start example below, we do this in a container that runs
-readily in any cloud native environment, needing no special permissions: including red hat's openshift.
-- Wait for the external db to come up.  If using RDS or another external postgres, lets assume
-you have set it up already.
-- In your external database, run the external-postgres-init.pgsql file, and then alter passwords for blackduck,blackduck_user to match the secrets you created.
-- Finally: create the rest of the hub deployments (3-hub.yml)
-
-You can just get started by copying the commands (openshift: change `kubectl` to `oc`).
-
-*Example Script*
-- Make sure you can write files to /tmp/.
-
-If running this for the first time, run each command manually, waiting for pods to come up as needed.
 ```
 kubectl create ns myhub
+kubectl create serviceaccount postgresapp -n myhub
+kubectl create -f 1-cfssl.yml -n myhub
+kubectl create -f 1-cm-hub.yml -n myhub
+kubectl create -f 2-postgres-db-internal.yml -n myhub
+until kubectl get pods -n myhub | grep postgres | grep -q Running ; do
+     echo "waiting for postgres"
+     sleep 5
+done
+kubectl create -f 3-hub.yml -n myhub
+```
+
+#### External DB 'quick start' script:
+
+Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
+
+```
+kubectl create ns myhub
+kubectl create serviceaccount postgresapp -n myhub
 kubectl create -f 1-cfssl.yml -n myhub
 kubectl create -f 1-cm-hub.yml -n myhub
 kubectl create -f 2-postgres-db-external.yml -n myhub
+
 kubectl create secret generic db-creds --from-literal=blackduck=blackduck123 --from-literal=blackduck_user=blackduck123 -n myhub
 
 # Wait for the pods to come up, you can poll them manually.
-until kubectl get pods -n myhub | grep -q postgres; do
+until kubectl get pods -n myhub | grep postgres | grep -q Running ; do
      echo "waiting for postgres"
+     sleep 5
 done
-
+sleep 2
 podname=$(kubectl get pods -n myhub | grep postgres | cut -d' ' -f 1)
-
 kubectl get pods -n myhub
-set -x
 kubectl cp external-postgres-init.pgsql myhub/${podname}:/tmp/
 
 #### Setup external db.  Just an example, replace this step with your own custom logic if you want,
 cat << EOF > /tmp/pgsetup.sh
         export PATH=/opt/rh/rh-postgresql96/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/rh/rh-postgresql96/root/usr/bin/
         export LD_LIBRARY_PATH=/opt/rh/rh-postgresql96/root/usr/lib64
-        # initialize the database
+        # initialize the database: RDS or CloudSQL users will implement these steps in their own way.
         psql -a -f  /tmp/external-postgres-init.pgsql
         psql -c "ALTER USER blackduck_user WITH password 'blackduck123'"
         psql -c "ALTER USER blackduck WITH password 'blackduck123'"
 EOF
 kubectl cp /tmp/pgsetup.sh myhub/${podname}:/tmp/
 kubectl exec -n myhub -t -i ${podname} -- sh /tmp/pgsetup.sh
-
-#### Done setting up the external DB.
-sleep 5
-
+sleep 2
 kubectl create -f 3-hub.yml -n myhub
 ```
-Note: If you are using a truly external database, you'll want to use the databases
-admin interface to run the alter statements which you are directed to use in the yml
-file.
-
-If all the above pods are properly scheduled and running, you can then
-expose an endpoint, and start scanning projects.
 
 ### After deployment: Consider using Auto scaling.
 
 - `kubectl create -f autoscale.yml` will ensure that you always have enough jobrunners And scan service runners to keep up with your dynamic workload.
 
-### Step 3: Fine tune your configuration
+### Fine tune your configuration
 
 There are several ways to fine tune your configuration.  Some may be essential
 to your organizations use of the hub (for example, external proxys might be needed).
@@ -171,7 +215,7 @@ might be a preference.
 
 There are several options that can be configured in the yml files for Kubernetes/Openshift as described below.  We use kubernetes and openshift interchangeably for these, as the changes are agnostic to the underlying orchestration.
 
-We go through them below:
+*We go through them below*
 
 #### I want to run the hub with no security context constraints.
 
