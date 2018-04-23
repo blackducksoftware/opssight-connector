@@ -10,12 +10,13 @@ items:
     name: jobrunner
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: jobrunner
+        tier: jobrunner        
     template:
       metadata:
         name: jobrunner
-        labels:
-          app: jobrunner
-          tier: jobrunner
       spec:
         volumes:
         - name: db-passwords
@@ -68,12 +69,13 @@ items:
     name: webserver
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: webserver
+        tier: webserver
     template:
       metadata:
         name: webserver
-        labels:
-          app: webserver
-          tier: webserver
       spec:
         volumes:
         - name: dir-webserver
@@ -124,12 +126,13 @@ items:
     name: webapp-logstash
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: webapp-logstash
+        tier: webapp-logstash
     template:
       metadata:
         name: webapp-logstash
-        labels:
-          app: webapp-logstash
-          tier: webapp-logstash
       spec:
         volumes:
         - emptyDir: {}
@@ -220,10 +223,11 @@ items:
     name: documentation
   spec:
     replicas: 1
-    template:
+  selector:
+    matchLabels:
+      app: documentation
+  template:
       metadata:
-        labels:
-          app: documentation
         name: documentation
       spec:
         containers:
@@ -255,14 +259,15 @@ items:
   kind: Deployment
   metadata:
     name: solr
+  selector:
+    matchLabels:
+      app: solr
+      tier: solr
   spec:
     replicas: 1
     template:
       metadata:
         name: solr
-        labels:
-          app: solr
-          tier: solr
       spec:
         volumes:
         - name: solr-dir
@@ -300,12 +305,13 @@ items:
     name: registration
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: registration
+        tier: registration
     template:
       metadata:
         name: registration
-        labels:
-          app: registration
-          tier: registration
       spec:
         volumes:
         - emptyDir: {}
@@ -345,12 +351,13 @@ items:
     name: zookeeper
   spec:
     replicas: 1
+    selector:
+      matchLabels:
+        app: zookeeper
+        tier: zookeeper
     template:
       metadata:
         name: zookeeper
-        labels:
-          app: zookeeper
-          tier: zookeeper
       spec:
         volumes:
         - emptyDir: {}
