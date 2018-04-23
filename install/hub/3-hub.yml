@@ -530,7 +530,7 @@ items:
       matchLabels:
         app: hub-scan
     template:
-        name: hub-scan
+      name: hub-scan
       spec:
         volumes:
         - emptyDir: {}
