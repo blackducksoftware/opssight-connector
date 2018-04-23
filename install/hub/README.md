@@ -147,7 +147,7 @@ Openshift users: use `oc` instead of kubectl, and `project` instead of namespace
 Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
 
 ```
-#start quickstart-internal
+#end quickstart-internal
 kubectl create ns myhub
 kubectl create serviceaccount postgresapp -n myhub
 kubectl create -f 1-cfssl.yml -n myhub
