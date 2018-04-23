@@ -1,5 +1,5 @@
 kind: List
-apiVersion: v1beta1
+apiVersion: v1
 items:
 # Dummy secret ! These will be mounted and unused.
 - apiVersion: v1
