@@ -163,7 +163,7 @@ kubectl create -f 3-hub.yml -n myhub
 
 #### External DB 'quick start' script:
 
-Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
+Clone this repository , and cd to `install/hub` to run these commands, so the files are local !  Also make sure you can write to tmpfs if running this script.
 
 ```
 #start quickstart-external
