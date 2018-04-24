@@ -93,4 +93,5 @@ items:
       PerceiverContainerVersion: "$pod_perceiver_tag"
       ImageFacadeContainerVersion: "$perceptor_imagefacade_tag"
       LogLevel: "$_arg_container_default_log_level"
+      PerceptorSkyfire: "$_arg_skyfire"
 EOF
