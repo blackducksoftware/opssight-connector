@@ -18,15 +18,15 @@
 
 # ARG_OPTIONAL_SINGLE([hub-user],[U],[hub user],[sysadmin])
 # ARG_OPTIONAL_SINGLE([hub-password],[W],[hub password],[])
-# ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname ],[webserver])
-# ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port ],[443])
+# ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname],[webserver])
+# ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port],[443])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[5])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[s],[hub client timeout for perceptor scanner in seconds ],[120])
 # ARG_OPTIONAL_SINGLE([hub-max-concurrent-scans],[C],[maximum scans at a time for the hub],[7])
 # ARG_OPTIONAL_SINGLE([container-default-cpu],[u],[All containers default cpu],[300m])
 # ARG_OPTIONAL_SINGLE([container-default-memory],[m],[All containers default memory],[1300Mi])
 # ARG_OPTIONAL_SINGLE([container-default-log-level],[l],[All containers default log level],[info])
-# ARG_OPTIONAL_SINGLE([prompt],[],[prompt for values rather then expecting them all at the command line],[off])
+# ARG_OPTIONAL_BOOLEAN([prompt],[],[prompt for values rather then expecting them all at the command line],[off])
 
 # ARG_HELP([The general script's help msg])
 # ARGBASH_GO()
@@ -89,6 +89,7 @@ _arg_container_default_cpu="300m"
 _arg_container_default_memory="1300Mi"
 _arg_container_default_log_level="info"
 _arg_developer_mode="off"
+_arg_skyfire="off"
 
 # Function that prints general usage of the script.
 # This is useful if users asks for it, or if there is an argument parsing error (unexpected / spurious arguments)
@@ -419,6 +420,10 @@ parse_commandline ()
 			--no-prompt|--prompt)
 				_arg_prompt="on"
 				test "${1:0:5}" = "--no-" && _arg_prompt="off"
+				;;
+			--no-skyfire|--skyfire)
+				_arg_skyfire="on"
+				test "${1:0:5}" = "--no-" && _arg_skyfire="off"
 				;;
 			# See the comment of option '--pod-perceiver' to see what's going on here - principle is the same.
 			-h|--help)
