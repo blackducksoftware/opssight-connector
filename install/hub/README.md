@@ -23,12 +23,51 @@ The quickstart section shows how to quickly get a prototypical hub up and runnin
 
 Clone this repository, and cd to `install/hub` to run these commands, so the files are local.
 
-#### Step 1: 
+#### Step 0:
 
 Make a namespaces/project for your hub:
 
 - For openshift:`oc new-project myhub`
 - For kubernetes:`kubectl create ns myhub`
+
+#### Step 1: Setting up service accounts (if you need them).
+
+This may not be necessary for some users, feel free to skip to the *next* section
+if you think you don't need to setup any special service accounts (i.e. if you're
+running in a namespace that has administrative capabilities).
+
+- First create your service account (Openshift users, use `oc`):
+```
+kubectl create serviceaccount postgresapp -n myhub
+```
+
+ - For openshift: You need to create a service account for the hub, and allow that
+user to run processes as user 70.  A generic version of these steps which may
+work for you is defined below:
+```
+oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
+```
+
+ - *Optional for kubernetes*: Something as simple as this will do, in case your kubernetes distribution doesn't allow you to run containers as arbitrary users. Note this can be toned down to just allow user 70, but we provide the generic config snippet because it's more flexible:
+ 
+```
+cat << EOF > sc.json
+{
+  "apiVersion": "policy/v1beta1",
+  "kind": "PodSecurityPolicy",
+  "metadata": {"name": "example"},
+  "spec": {
+    "privileged": false,
+    "seLinux": {"rule": "RunAsAny"},
+    "supplementalGroups": {"rule": "RunAsAny"},
+    "runAsUser": { "rule": "RunAsAny" },
+    "fsGroup": { "rule": "RunAsAny" },
+    "volumes": [ "*" ]
+  }
+}
+EOF
+kubectl create -f sc.json
+```
 
 #### Step 2: Create your cfssl container, and the core hub config map.
 
