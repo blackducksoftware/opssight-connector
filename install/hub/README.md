@@ -48,25 +48,7 @@ work for you is defined below:
 oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
 ```
 
- - *Optional for kubernetes*: Something as simple as this will do, in case your kubernetes distribution doesn't allow you to run containers as arbitrary users. Note this can be toned down to just allow user 70, but we provide the generic config snippet because it's more flexible:
- 
-```
-cat << EOF > sc.json
-{
-  "apiVersion": "policy/v1beta1",
-  "kind": "PodSecurityPolicy",
-  "metadata": {"name": "example"},
-  "spec": {
-    "privileged": false,
-    "seLinux": {"rule": "RunAsAny"},
-    "supplementalGroups": {"rule": "RunAsAny"},
-    "runAsUser": { "rule": "RunAsAny" },
-    "fsGroup": { "rule": "RunAsAny" },
-    "volumes": [ "*" ]
-  }
-}
-EOF
-kubectl create -f sc.json
+ - *Optional for kubernetes*: You may need to create RBAC bindings with your cluster administrator that allow pods to run as any uid.  Consult with your kubernetes administrator and show them your installation workflow (as defined below) to determine if this is necessary in your cluster.
 ```
 
 #### Step 2: Create your cfssl container, and the core hub config map.
