@@ -533,8 +533,8 @@ endpoints so external clients can access them as necessary.
 
 ### More fine tuning
 
-We conclude with more recipes for fine tuning your hub configuration.  Note that its
-advisablbe that you first get a simple hub up and running before adopting these tuning snippets.
+We conclude with more recipes for fine tuning your hub configuration.  Note that it's
+advisable that you first get a simple hub up and running before adopting these tuning snippets.
 
 #### NGINX TLS Configuration details.
 
