@@ -4,9 +4,7 @@
 
 The hub is extensively tested on kubernetes 1.8 / openshift 3.6.
 
-Other versions are supported as well, so long as all the API constructs
-
-in these YAMLs are supported in the corresponding orchestration version.
+Other versions are supported as well, so long as all the API constructs in these YAMLs are supported in the corresponding orchestration version.
 
 ## Installing the Hub quickly.
 
@@ -138,7 +136,7 @@ The following two quick starts show how to get the hub up 'instantly' for a prot
 - Do not assume that running these scripts is a replacement for actually understanding the hub setup/configuration process.
 - Building on the points above: Make sure you make any production modifications (volumes, certificates, etc) that you need before running them.  Contact blackduck support if you have questions on how to adopt these scripts to match any special hub configurations you need. 
 
-That said: If your just learning the hub for the first time, these are a great way to get started quickly.  So feel free to dive in and try the quick starts out to get the hub up and running quickly in your cloud native environment!
+That said: If you're just learning the hub for the first time, these are a great way to get started quickly.  So feel free to dive in and try the quick starts out to get the hub up and running quickly in your cloud native environment!
 
 Openshift users: use `oc` instead of kubectl, and `project` instead of namespace.
 
@@ -203,7 +201,7 @@ kubectl create -f 3-hub.yml -n myhub
 
 ### After deployment: Consider using Auto scaling.
 
-- `kubectl create -f autoscale.yml` will ensure that you always have enough jobrunners And scan service runners to keep up with your dynamic workload.
+- `kubectl create -f autoscale.yml` will ensure that you always have enough jobrunners and scan service runners to keep up with your dynamic workload.
 
 ### Fine tune your configuration
 
@@ -321,7 +319,7 @@ kubectl create secret generic db_user --from-file=./username.txt --from-file=./p
 
 #### Using a Custom web server certificate-key pair
 
-Hub allows users to use their own web server certificate-key pairs for establishing ssl connection.
+The Hub allows users to use their own web server certificate-key pairs for establishing ssl connection.
 
 * Create a Kubernetes secret each called 'WEBSERVER_CUSTOM_CERT_FILE' and 'WEBSERVER_CUSTOM_KEY_FILE' with the custom certificate and custom key in your namespace.
 
@@ -337,9 +335,7 @@ values for the pod specifications in the webserver.
 
 ##### Hub Reporting Database
 
-Hub ships with a reporting database. The database port will be exposed to the Kubernetes network
-
-for connections to the reporting user and reporting database.
+The Hub ships with a reporting database. The database port will be exposed to the Kubernetes network for connections to the reporting user and reporting database.
 
 Details:
 
@@ -442,7 +438,7 @@ For example, a typical invocation to expose the hub might be:
 
 #### Openshift routers
 
-Your administrator can help you define a route if youre using openshift.  Make sure to turn on TLS
+Your administrator can help you define a route if you're using openshift.  Make sure to turn on TLS
 passthrough if going down this road.  You will then likely access your cluster at a URL that openshift
 defined for you, available in the `Routes` UI of your openshift console's webapp.
 
@@ -530,7 +526,7 @@ endpoints so external clients can access them as necessary.
 
 ### More fine tuning
 
-WE conclude with more recipes for fine tuning your hub configuration.  Note that its
+We conclude with more recipes for fine tuning your hub configuration.  Note that its
 advisablbe that you first get a simple hub up and running before adopting these tuning snippets.
 
 #### NGINX TLS Configuration details.
