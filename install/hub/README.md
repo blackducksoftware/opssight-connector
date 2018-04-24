@@ -49,7 +49,7 @@ oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
 ```
 
  - *Optional for kubernetes*: You may need to create RBAC bindings with your cluster administrator that allow pods to run as any uid.  Consult with your kubernetes administrator and show them your installation workflow (as defined below) to determine if this is necessary in your cluster.
-```
+
 
 #### Step 2: Create your cfssl container, and the core hub config map.
 
