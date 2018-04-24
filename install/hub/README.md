@@ -51,18 +51,17 @@ Otherwise, choose external.
 
 ##### Step 3 (INTERNAL database setup option)
 
-If you are okay using an internal database, and are able to run containers as user 70, then 
-Then, you can (in most cases) just start the hub using the snippet of kubectl create statements below.
+If you are okay using an internal database, and are able to run containers as user 70, then you can (in most cases) just start the hub using the snippet of kubectl create statements below.
 
-- Note: the default yaml files dont have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes, other then postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do 1000s of scans early on.
+- Note: the default yaml files don't have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes other than postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do thousands of scans early on.
 
-- Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you dont want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
+- Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you don't want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
 
 ```
 kubectl create -f 2-postgres-db-internal.yml -n myhub
 ```
 
-Thats it, now, skip ahead to step 4!
+That's it, now, skip ahead to step 4!
 
 ##### Step 3 (EXTERNAL database setup option)
 
