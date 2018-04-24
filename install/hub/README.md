@@ -4,9 +4,7 @@
 
 The hub is extensively tested on kubernetes 1.8 / openshift 3.6.
 
-Other versions are supported as well, so long as all the API constructs
-
-in these YAMLs are supported in the corresponding orchestration version.
+Other versions are supported as well, so long as all the API constructs in these YAMLs are supported in the corresponding orchestration version.
 
 ## Installing the Hub quickly.
 
@@ -17,15 +15,17 @@ All below commands assume:
 
 ### Hub setup instructions 
 
-#### If your in a hurry, skip to the quickstart section:
+#### If you're in a hurry, skip to the quickstart section:
 
 The quickstart section shows how to quickly get a prototypical hub up and running.
 
-#### Befoe you start:
+#### Before you start:
 
-NOTE: Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
+Clone this repository, and cd to `install/hub` to run these commands, so the files are local.
 
-First make a ns/project for your hub:
+#### Step 0:
+
+Make a namespaces/project for your hub:
 
 - For openshift:`oc new-project myhub`
 - For kubernetes:`kubectl create ns myhub`
@@ -48,18 +48,23 @@ work for you is defined below:
 oc adm policy add-scc-to-user anyuid system:serviceaccount:myhub:postgres
 ```
 
- - For kubernetes: Something as simple as this will do, in case your kubernetes distribution doesnt
-allow you to run container as arbitrary users.  Note this can be toned down to just
-allow user 70, but we provide the generic config snippet because its more flexible.
-
+ - *Optional for kubernetes*: Something as simple as this will do, in case your kubernetes distribution doesn't allow you to run containers as arbitrary users. Note this can be toned down to just allow user 70, but we provide the generic config snippet because it's more flexible:
+ 
 ```
 cat << EOF > sc.json
-{ "apiVersion": "policy/v1beta1,"kind": "PodSecurityPolicy","metadata": {"name": "example"},
-  "spec": {"privileged": false, "seLinux": { "rule": "RunAsAny" },
-    "supplementalGroups": { "rule": "RunAsAny"},
+{
+  "apiVersion": "policy/v1beta1",
+  "kind": "PodSecurityPolicy",
+  "metadata": {"name": "example"},
+  "spec": {
+    "privileged": false,
+    "seLinux": {"rule": "RunAsAny"},
+    "supplementalGroups": {"rule": "RunAsAny"},
     "runAsUser": { "rule": "RunAsAny" },
     "fsGroup": { "rule": "RunAsAny" },
-    "volumes": [ "*" ] }}
+    "volumes": [ "*" ]
+  }
+}
 EOF
 kubectl create -f sc.json
 ```
@@ -67,8 +72,8 @@ kubectl create -f sc.json
 #### Step 2: Create your cfssl container, and the core hub config map.
 
 Note we may edit the configmap later for external postgres or other settings.  For now, leave it as it is by default, and run these commands (openshift users: use `oc` instead of `kubectl`).
+
 ```
-kubectl create ns myhub
 kubectl create -f 1-cfssl.yml -n myhub
 kubectl create -f 1-cm-hub.yml -n myhub
 ```
@@ -77,25 +82,25 @@ kubectl create -f 1-cm-hub.yml -n myhub
 
 There are two ways to run the hub's postgres database, and we refer to them as *internal*, or *external*.  
 
-Choose internal if you dont care about maintaining your own databse, and are able to run containers as any user in your cluster.  
+Choose internal if you don't care about maintaining your own databse, and are able to run containers as any user in your cluster.
+
 Otherwise, choose external.
 
 *Note: Obviously, you only need to do ONE of the two below steps, before moving on to step 3 ~ choose EITHER Internal OR External database setup!*.
 
 ##### Step 3 (INTERNAL database setup option)
 
-If you are okay using an internal database, and are able to run containers as user 70, then 
-Then, you can (in most cases) just start the hub using the snippet of kubectl create statements below.
+If you are okay using an internal database, and are able to run containers as user 70, then you can (in most cases) just start the hub using the snippet of kubectl create statements below.
 
-- Note: the default yaml files dont have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes, other then postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do 1000s of scans early on.
+- Note: the default yaml files don't have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes other than postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do thousands of scans early on.
 
-- Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you dont want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
+- Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you don't want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
 
 ```
 kubectl create -f 2-postgres-db-internal.yml -n myhub
 ```
 
-Thats it, now, skip ahead to step 4!
+That's it, now, skip ahead to step 4!
 
 ##### Step 3 (EXTERNAL database setup option)
 
@@ -138,7 +143,7 @@ The following two quick starts show how to get the hub up 'instantly' for a prot
 - Do not assume that running these scripts is a replacement for actually understanding the hub setup/configuration process.
 - Building on the points above: Make sure you make any production modifications (volumes, certificates, etc) that you need before running them.  Contact blackduck support if you have questions on how to adopt these scripts to match any special hub configurations you need. 
 
-That said: If your just learning the hub for the first time, these are a great way to get started quickly.  So feel free to dive in and try the quick starts out to get the hub up and running quickly in your cloud native environment!
+That said: If you're just learning the hub for the first time, these are a great way to get started quickly.  So feel free to dive in and try the quick starts out to get the hub up and running quickly in your cloud native environment!
 
 Openshift users: use `oc` instead of kubectl, and `project` instead of namespace.
 
@@ -203,7 +208,7 @@ kubectl create -f 3-hub.yml -n myhub
 
 ### After deployment: Consider using Auto scaling.
 
-- `kubectl create -f autoscale.yml` will ensure that you always have enough jobrunners And scan service runners to keep up with your dynamic workload.
+- `kubectl create -f autoscale.yml` will ensure that you always have enough jobrunners and scan service runners to keep up with your dynamic workload.
 
 ### Fine tune your configuration
 
@@ -321,7 +326,7 @@ kubectl create secret generic db_user --from-file=./username.txt --from-file=./p
 
 #### Using a Custom web server certificate-key pair
 
-Hub allows users to use their own web server certificate-key pairs for establishing ssl connection.
+The Hub allows users to use their own web server certificate-key pairs for establishing ssl connection.
 
 * Create a Kubernetes secret each called 'WEBSERVER_CUSTOM_CERT_FILE' and 'WEBSERVER_CUSTOM_KEY_FILE' with the custom certificate and custom key in your namespace.
 
@@ -337,9 +342,7 @@ values for the pod specifications in the webserver.
 
 ##### Hub Reporting Database
 
-Hub ships with a reporting database. The database port will be exposed to the Kubernetes network
-
-for connections to the reporting user and reporting database.
+The Hub ships with a reporting database. The database port will be exposed to the Kubernetes network for connections to the reporting user and reporting database.
 
 Details:
 
@@ -442,7 +445,7 @@ For example, a typical invocation to expose the hub might be:
 
 #### Openshift routers
 
-Your administrator can help you define a route if youre using openshift.  Make sure to turn on TLS
+Your administrator can help you define a route if you're using openshift.  Make sure to turn on TLS
 passthrough if going down this road.  You will then likely access your cluster at a URL that openshift
 defined for you, available in the `Routes` UI of your openshift console's webapp.
 
@@ -530,8 +533,8 @@ endpoints so external clients can access them as necessary.
 
 ### More fine tuning
 
-WE conclude with more recipes for fine tuning your hub configuration.  Note that its
-advisablbe that you first get a simple hub up and running before adopting these tuning snippets.
+We conclude with more recipes for fine tuning your hub configuration.  Note that it's
+advisable that you first get a simple hub up and running before adopting these tuning snippets.
 
 #### NGINX TLS Configuration details.
 
