@@ -134,7 +134,7 @@ Openshift users: use `oc` instead of kubectl, and `project` instead of namespace
 Clone this repository , and cd to `install/hub` to run these commands, so the files are local !
 
 ```
-#end quickstart-internal
+#start quickstart-internal
 kubectl create ns myhub
 kubectl create serviceaccount postgresapp -n myhub
 kubectl create -f 1-cfssl.yml -n myhub
@@ -185,7 +185,7 @@ kubectl cp /tmp/pgsetup.sh myhub/${podname}:/tmp/
 kubectl exec -n myhub -t -i ${podname} -- sh /tmp/pgsetup.sh
 sleep 2
 kubectl create -f 3-hub.yml -n myhub
-#start quickstart-external
+#end quickstart-external
 ```
 
 ### After deployment: Consider using Auto scaling.
