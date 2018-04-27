@@ -19,7 +19,7 @@
 # ARG_OPTIONAL_SINGLE([hub-user],[U],[hub user],[sysadmin])
 # ARG_OPTIONAL_SINGLE([hub-password],[W],[hub password],[])
 # ARG_OPTIONAL_SINGLE([hub-host],[H],[hub hostname],[webserver])
-# ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port],[443])
+# ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port],[8443])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[5])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[s],[hub client timeout for perceptor scanner in seconds ],[120])
 # ARG_OPTIONAL_SINGLE([hub-max-concurrent-scans],[C],[maximum scans at a time for the hub],[7])
@@ -77,7 +77,7 @@ _arg_hub_user="sysadmin"
 _arg_hub_password=""
 # DOC : This is the default namespace since, if co-deploying with hub, it allows you to talk on internal service endpoints.
 _arg_hub_host="webserver"
-_arg_hub_port="443"
+_arg_hub_port="8443"
 # DOC: If your hub is on the same node, or network namespace ~ you can possibly reduce this to 30 seconds.
 _arg_hub_client_timeout_perceptor_seconds="5"
 _arg_hub_client_timeout_scanner_seconds="120"
@@ -110,7 +110,7 @@ print_help ()
 	printf '\t%s\n' "-U,--hub-user: hub user (default: 'sysadmin')"
 	printf '\t%s\n' "-W,--hub-password: hub password"
 	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'webserver')"
-	printf '\t%s\n' "-P,--hub-port: hub port  (default: '443')"
+	printf '\t%s\n' "-P,--hub-port: hub port  (default: '8443')"
 	printf '\t%s\n' "-T,--hub-client-timeout-perceptor-seconds: hub client timeout for opssight-core in seconds  (default: '5')"
 	printf '\t%s\n' "-s,--hub-client-timeout-scanner-seconds: hub client timeout for opssight-scanner in seconds  (default: '120')"
 	printf '\t%s\n' "-C,--hub-max-concurrent-scans: maximum scans at a time for the hub (default: '7')"
