@@ -167,7 +167,8 @@ until kubectl get pods -n myhub | grep postgres | grep -q Running ; do
      echo "waiting for postgres"
      sleep 5
 done
-sleep 2
+echo "... Postgres found ! Installing DB Schema in 10 seconds ..."
+sleep 10
 podname=$(kubectl get pods -n myhub | grep postgres | cut -d' ' -f 1)
 kubectl get pods -n myhub
 kubectl cp external-postgres-init.pgsql myhub/${podname}:/tmp/
