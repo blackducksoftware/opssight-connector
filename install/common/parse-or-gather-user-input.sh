@@ -10,7 +10,7 @@ function prompt() {
     echo "Interactive"
     echo "============================================"
     read -p "Hub server host (e.g. hub.mydomain.com): " hub_host
-    read -p "Hub server port [8443]: " hub_port
+    read -p "Hub server port [443]: " hub_port
     read -p "Hub user name [sysadmin]: " hub_user
     read -sp "Hub user password : " _arg_hub_password
     echo " "
