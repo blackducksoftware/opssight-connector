@@ -1,12 +1,12 @@
-steps: "go test -c -o basictest ./basicskyfire/"
+steps:
 - name: 'gcr.io/cloud-builders/go'
-  args: ['test', '-c', '-o', './e2e/cmd/basicskyfire', './e2e/basicskyfire/']
+  args: ['test', '-c',  '-o', './cmd/mirage', './basicskyfire/']
   env:
   - 'PROJECT_ROOT=github.com/blackducksoftware/opssight-connector'
   - 'CGO_ENABLED=0'
   - 'GOOS=linux'
   - 'GOARCH=amd64'
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/opssight-connector:$BRANCH_NAME', './e2e/cmd/basicskyfire/.']
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/opssight-connector:$BRANCH_NAME', './cmd/.']
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/blackducksoftware/opssight-connector:$BRANCH_NAME']
