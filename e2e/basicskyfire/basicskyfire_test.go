@@ -1,12 +1,31 @@
-package main
+/*
+Copyright (C) 2018 Black Duck Software, Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
+package basicskyfire
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
@@ -15,16 +34,8 @@ import (
 	gomega "github.com/onsi/gomega"
 )
 
-var skyfireBaseURL string
-
-func init() {
-	flag.StringVar(&skyfireBaseURL, "skyfireBaseURL", "", "skyfireBaseURL is where to find skyfire")
-}
-
 func TestBasicSkyfire(t *testing.T) {
-	fmt.Println(os.Args)
-	fmt.Printf("skyfire base URL: %s\n", skyfireBaseURL)
-	skyfireURL := fmt.Sprintf("%s/latestreport", skyfireBaseURL)
+	skyfireURL := "http://skyfire:3187/latestreport"
 	BasicSkyfireTests(skyfireURL)
 	gomega.RegisterFailHandler(ginkgo.Fail)
 	ginkgo.RunSpecs(t, "basic-skyfire")
@@ -69,6 +80,23 @@ func BasicSkyfireTests(skyfireURL string) {
 			gomega.Expect(len(report.Kube.PartiallyLabeledPods)).Should(gomega.Equal(0))
 			gomega.Expect(len(report.Kube.UnanalyzeablePods)).Should(gomega.Equal(0))
 			gomega.Expect(len(report.Kube.UnparseableImages)).Should(gomega.Equal(0))
+		})
+
+		ginkgo.It("All Kube<->Perceptor data should be in order", func() {
+			gomega.Expect(len(report.KubePerceptor.ConflictingAnnotationsPods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.ConflictingLabelsPods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.FinishedJustKubePods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.FinishedJustPerceptorPods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.JustKubeImages)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.JustKubePods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.JustPerceptorImages)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.JustPerceptorPods)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.KubePerceptor.UnanalyzeablePods)).Should(gomega.Equal(0))
+		})
+
+		ginkgo.It("All Perceptor<->Hub data should be in order", func() {
+			gomega.Expect(len(report.PerceptorHub.JustHubImages)).Should(gomega.Equal(0))
+			gomega.Expect(len(report.PerceptorHub.JustPerceptorImages)).Should(gomega.Equal(0))
 		})
 
 		ginkgo.It("All Hub data should be in order", func() {
