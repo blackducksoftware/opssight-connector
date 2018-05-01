@@ -1,3 +1,3 @@
-go test -c -o basictest ./basicskyfire/
+go test -c -o ./mirage/basictest ./basicskyfire/
 
-./basictest --skyfireBaseURL http://192.168.99.100:31567
+./mirage/basictest --skyfireBaseURL http://192.168.99.100:31567
