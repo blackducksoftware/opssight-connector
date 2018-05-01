@@ -1,0 +1,6 @@
+{
+  "UseInClusterConfig": false,
+  "MasterURL": "https://192.168.99.100:8443",
+  "KubeConfigPath": "/Users/mfenwick/.kube/config",
+  "LogLevel": "debug"
+}
