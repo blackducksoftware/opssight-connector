@@ -2,7 +2,7 @@ steps:
 - name: 'gcr.io/cloud-builders/go'
   args: ['test', '-c',  '-o', './cmd/mirage', './basicskyfire/']
   env:
-  - 'PROJECT_ROOT=github.com/blackducksoftware/opssight-connector'
+  - 'PROJECT_ROOT=github.com/blackducksoftware/opssight-connector/e2e'
   - 'CGO_ENABLED=0'
   - 'GOOS=linux'
   - 'GOARCH=amd64'
