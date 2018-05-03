@@ -67,7 +67,7 @@ items:
             valueFrom:
               secretKeyRef:
                 name: db-creds
-                key: blackduck
+                key: blackduck_user
           - name: POSTGRESQL_DATABASE
             value: blackduck
           - name: POSTGRESQL_ADMIN_PASSWORD
