@@ -24,28 +24,31 @@ package annotations
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"time"
 )
 
 type summaryEntry struct {
 	Label         string `json:"label"`
-	Score         int    `json:"score"`
+	Data          string `json:"data"`
 	SeverityIndex int    `json:"severityIndex"`
+	Reference     string `json:"reference"`
 }
 
 // BlackDuckAnnotation create annotations that correspond to the
-// Openshift Container Security guide (https://people.redhat.com/aweiteka/docs/preview/20170510/security/container_content.html)
+// Openshift Container Security guide (https://docs.openshift.com/container-platform/3.9/security/container_content.html)
 type BlackDuckAnnotation struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Timestamp   int64          `json:"timestamp"`
-	Reference   string         `json:"reference"`
-	Compliant   bool           `json:"compliant"`
-	Summary     []summaryEntry `json:"summary"`
+	Name           string         `json:"name"`
+	Description    string         `json:"description"`
+	Timestamp      string         `json:"timestamp"`
+	Reference      string         `json:"reference"`
+	ScannerVersion string         `json:"scannerVersion"`
+	Compliant      bool           `json:"compliant"`
+	Summary        []summaryEntry `json:"summary"`
 }
 
 // AsString makes a map corresponding to the Openshift
-// Container Security guide (https://people.redhat.com/aweiteka/docs/preview/20170510/security/container_content.html)
+// Container Security guide (https://docs.openshift.com/container-platform/3.9/security/container_content.html)
 func (bda *BlackDuckAnnotation) AsString() string {
 	mp, _ := json.Marshal(bda)
 	return string(mp)
@@ -55,13 +58,16 @@ func (bda *BlackDuckAnnotation) AsString() string {
 // values while ignoring fields that will be different (like timestamp).
 // Returns true if the values are the same, false otherwise
 func (bda *BlackDuckAnnotation) Compare(newBda *BlackDuckAnnotation) bool {
-	if bda.Name != newBda.Name {
+	if strings.Compare(bda.Name, newBda.Name) != 0 {
 		return false
 	}
-	if bda.Description != newBda.Description {
+	if strings.Compare(bda.Description, newBda.Description) != 0 {
 		return false
 	}
-	if bda.Reference != newBda.Reference {
+	if strings.Compare(bda.Reference, newBda.Reference) != 0 {
+		return false
+	}
+	if strings.Compare(bda.ScannerVersion, newBda.ScannerVersion) != 0 {
 		return false
 	}
 	if bda.Compliant != newBda.Compliant {
@@ -90,17 +96,18 @@ func NewBlackDuckAnnotationFromJSON(data string) (*BlackDuckAnnotation, error) {
 
 // CreateBlackDuckVulnerabilityAnnotation returns an annotation containing
 // vulnerabilities
-func CreateBlackDuckVulnerabilityAnnotation(hasVulns bool, url string, vulnCount int) *BlackDuckAnnotation {
+func CreateBlackDuckVulnerabilityAnnotation(hasVulns bool, url string, vulnCount int, version string) *BlackDuckAnnotation {
 	return &BlackDuckAnnotation{
 		"BlackDucksoftware",
 		"Vulnerability Info",
-		time.Now().Unix(),
+		time.Now().Format(time.RFC3339),
 		url,
+		version,
 		!hasVulns, // no vunls -> compliant.
 		[]summaryEntry{
 			{
 				Label:         "high",
-				Score:         vulnCount,
+				Data:          string(vulnCount),
 				SeverityIndex: 1,
 			},
 		},
@@ -109,17 +116,18 @@ func CreateBlackDuckVulnerabilityAnnotation(hasVulns bool, url string, vulnCount
 
 // CreateBlackDuckPolicyAnnotation returns an annotation containing
 // policy violations
-func CreateBlackDuckPolicyAnnotation(hasPolicyViolations bool, url string, policyCount int) *BlackDuckAnnotation {
+func CreateBlackDuckPolicyAnnotation(hasPolicyViolations bool, url string, policyCount int, version string) *BlackDuckAnnotation {
 	return &BlackDuckAnnotation{
 		"BlackDucksoftware",
 		"Policy Info",
-		time.Now().Unix(),
+		time.Now().Format(time.RFC3339),
 		url,
+		version,
 		!hasPolicyViolations, // no violations -> compliant
 		[]summaryEntry{
 			{
 				Label:         "important",
-				Score:         policyCount,
+				Data:          string(policyCount),
 				SeverityIndex: 1,
 			},
 		},

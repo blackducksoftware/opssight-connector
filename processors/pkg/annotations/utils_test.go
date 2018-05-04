@@ -128,14 +128,14 @@ func TestMapContainsBlackDuckEntries(t *testing.T) {
 		},
 		{
 			description: "image annotation prefix with same json value",
-			orig:        map[string]string{"otherkey": "othervalue", ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
-			new:         map[string]string{ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
+			orig:        map[string]string{"otherkey": "othervalue", ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
+			new:         map[string]string{ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
 			retval:      true,
 		},
 		{
 			description: "image annotation prefix with different json value",
-			orig:        map[string]string{"otherkey": "othervalue", ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
-			new:         map[string]string{ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 10).AsString()},
+			orig:        map[string]string{"otherkey": "othervalue", ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
+			new:         map[string]string{ImageAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 10, "1.2.3").AsString()},
 			retval:      false,
 		},
 		{
@@ -152,14 +152,14 @@ func TestMapContainsBlackDuckEntries(t *testing.T) {
 		},
 		{
 			description: "pod annotation prefix with same json value",
-			orig:        map[string]string{"otherkey": "othervalue", PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
-			new:         map[string]string{PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
+			orig:        map[string]string{"otherkey": "othervalue", PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
+			new:         map[string]string{PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
 			retval:      true,
 		},
 		{
 			description: "pod annotation prefix with different json value",
-			orig:        map[string]string{"otherkey": "othervalue", PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20).AsString()},
-			new:         map[string]string{PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 10).AsString()},
+			orig:        map[string]string{"otherkey": "othervalue", PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 20, "1.2.3").AsString()},
+			new:         map[string]string{PodAnnotationPrefix: CreateBlackDuckVulnerabilityAnnotation(true, "url", 10, "1.2.3").AsString()},
 			retval:      false,
 		},
 	}

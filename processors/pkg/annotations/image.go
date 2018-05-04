@@ -66,8 +66,8 @@ func CreateImageAnnotations(obj interface{}, name string, count int) map[string]
 	newAnnotations[fmt.Sprintf("%sblackducksoftware.com/attestation-server-version", imagePrefix)] = imageData.GetServerVersion()
 	newAnnotations[fmt.Sprintf("%sblackducksoftware.com/project-endpoint", imagePrefix)] = imageData.GetComponentsURL()
 
-	vulnAnnotations := CreateBlackDuckVulnerabilityAnnotation(imageData.HasVulnerabilities() == true, imageData.GetComponentsURL(), imageData.GetVulnerabilityCount())
-	policyAnnotations := CreateBlackDuckPolicyAnnotation(imageData.HasPolicyViolations() == true, imageData.GetComponentsURL(), imageData.GetPolicyViolationCount())
+	vulnAnnotations := CreateBlackDuckVulnerabilityAnnotation(imageData.HasVulnerabilities() == true, imageData.GetComponentsURL(), imageData.GetVulnerabilityCount(), imageData.GetScanClientVersion())
+	policyAnnotations := CreateBlackDuckPolicyAnnotation(imageData.HasPolicyViolations() == true, imageData.GetComponentsURL(), imageData.GetPolicyViolationCount(), imageData.GetScanClientVersion())
 
 	newAnnotations[fmt.Sprintf("%s%s/vulnerability.blackduck", imagePrefix, ImageAnnotationPrefix)] = vulnAnnotations.AsString()
 	newAnnotations[fmt.Sprintf("%s%s/policy.blackduck", imagePrefix, ImageAnnotationPrefix)] = policyAnnotations.AsString()

@@ -48,8 +48,8 @@ func CreatePodLabels(obj interface{}) map[string]string {
 func CreatePodAnnotations(obj interface{}) map[string]string {
 	podData := obj.(*annotations.PodAnnotationData)
 	newAnnotations := make(map[string]string)
-	vulnAnnotations := CreateBlackDuckVulnerabilityAnnotation(podData.HasVulnerabilities() == true, "", podData.GetVulnerabilityCount())
-	policyAnnotations := CreateBlackDuckPolicyAnnotation(podData.HasPolicyViolations() == true, "", podData.GetPolicyViolationCount())
+	vulnAnnotations := CreateBlackDuckVulnerabilityAnnotation(podData.HasVulnerabilities() == true, "", podData.GetVulnerabilityCount(), podData.GetScanClientVersion())
+	policyAnnotations := CreateBlackDuckPolicyAnnotation(podData.HasPolicyViolations() == true, "", podData.GetPolicyViolationCount(), podData.GetScanClientVersion())
 
 	newAnnotations[fmt.Sprintf("%s/vulnerability.blackduck", PodAnnotationPrefix)] = vulnAnnotations.AsString()
 	newAnnotations[fmt.Sprintf("%s/policy.blackduck", PodAnnotationPrefix)] = policyAnnotations.AsString()
