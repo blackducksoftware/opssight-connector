@@ -1,19 +1,32 @@
 # Black Duck Hub On Kubernetes / Openshift.
 
+## Existing hub customers: Migrating to a new version.
+
+### First: 4.6 and earlier, postgres migration required if you have data you need to keep .
+If you have a previous version of the hub (4.6 or earlier), migrate your postgres data on your storage mount like so:
+
+- Assuming you have a storage volume, which on disk, is rooted as `/data/bd1`, mounted into yout pod as `/var/lib/postgresql/data`, run `sudo chown -R 70 /data/bd/1` and then copy it to a new directory `sudo chown -R 70 /data/bd2/`. 
+- Then, make sure that your persistent volume mounted to postgres is mounted from `/data/bd2`.
+
+### Second: bring down the hub, and bring it back up.
+
+- Stop all containers for the hub.  You can do this by deleting the deployments, make sure you dont lose any data in the process.
+- Follow the directions in this respository, replacing the volume mounts with your original mounts in your old hub.
+
+At this point, your hub should be happily deployed.  Expose its webserver service (or deployment controller) if you havent already, and you can begin scanning.
+
 ## Requirements
 
 The hub is extensively tested on kubernetes 1.8 / openshift 3.6.
 
 Other versions are supported as well, so long as all the API constructs in these YAMLs are supported in the corresponding orchestration version.
 
-## Installing the Hub quickly.
+### Installing the Hub quickly.
 
 All below commands assume:
 - you are using the namespace (or openshift project name) 'myhub'.
 - you have a cluster with at least 10 cores / 20GB of allocatable memory.
 - you have administrative access to your cluster.
-
-### Hub setup instructions 
 
 #### If you're in a hurry, skip to the quickstart section:
 
