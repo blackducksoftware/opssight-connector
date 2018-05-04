@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./deployer-help.1 /help.1
 
-COPY ./protoform ./protoform
+COPY ./_output ./opssight-deployer
 
 LABEL name="Black Duck OpsSight Deployer" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Deployer" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./protoform"]
+CMD ["./opssight-deployer"]
