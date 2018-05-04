@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./image-processor-help.1 /help.1
 
-COPY ./_output/image-perceiver ./image-perceiver
+COPY ./_output/image-processor ./image-processor
 
 LABEL name="Black Duck OpsSight Image Processor" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Image Processor" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./image-perceiver"]
+CMD ["./image-processor"]
