@@ -371,8 +371,8 @@ The Job Runner and scan pods are the only services that are scalable.
 They can be scaled up or down using:
 
 ```
-kubectl scale dc jobrunner --replicas=2
-kubectl scale dc hub-scan --replicas=2
+kubectl scale deployment jobrunner --replicas=2
+kubectl scale deployment hub-scan --replicas=2
 ```
 
 #### External PostgreSQL Settings
