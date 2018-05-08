@@ -217,9 +217,9 @@ items:
           name: logstash
           resources:
             requests:
-              memory: 640M
+              memory: 1G
             limits:
-              memory: 640M
+              memory: 1G
           volumeMounts:
           - mountPath: "/var/lib/logstash/data"
             name: dir-logstash
