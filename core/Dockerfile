@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./core-help.1 /help.1
 
-COPY ./perceptor ./perceptor
+COPY ./opssight-core ./opssight-core
 
 LABEL name="Black Duck OpsSight Core" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Core" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./perceptor"]
+CMD ["./opssight-core"]
