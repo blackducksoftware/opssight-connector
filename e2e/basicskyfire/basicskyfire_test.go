@@ -23,6 +23,7 @@ package basicskyfire
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -30,15 +31,23 @@ import (
 	"time"
 
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
-	ginkgo "github.com/onsi/ginkgo"
-	gomega "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
+var skyfireHost string
+var skyfirePort string
+
+func init() {
+	flag.StringVar(&skyfireHost, "skyfireHost", "", "skyfireHost is where to find skyfire")
+	flag.StringVar(&skyfirePort, "skyfirePort", "", "skyfirePort is where to find skyfire port")
+}
+
 func TestBasicSkyfire(t *testing.T) {
-	skyfireURL := "http://skyfire:3187/latestreport"
+	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", skyfireHost, skyfirePort)
 	BasicSkyfireTests(skyfireURL)
-	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "basic-skyfire")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "basic-skyfire")
 }
 
 func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
@@ -70,39 +79,39 @@ func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
 func BasicSkyfireTests(skyfireURL string) {
 	report, err := FetchSkyfireReport(skyfireURL)
 	if err != nil {
-		ginkgo.Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
+		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
 		return
 	}
 
-	ginkgo.Describe("All report data should be self-consistent", func() {
-		ginkgo.It("All Kube data should be in order", func() {
-			gomega.Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.Kube.PartiallyLabeledPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.Kube.UnanalyzeablePods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.Kube.UnparseableImages)).Should(gomega.Equal(0))
+	Describe("All report data should be self-consistent", func() {
+		It("All Kube data should be in order", func() {
+			Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(Equal(0))
+			Expect(len(report.Kube.PartiallyLabeledPods)).Should(Equal(0))
+			Expect(len(report.Kube.UnanalyzeablePods)).Should(Equal(0))
+			Expect(len(report.Kube.UnparseableImages)).Should(Equal(0))
 		})
 
-		ginkgo.It("All Kube<->Perceptor data should be in order", func() {
-			gomega.Expect(len(report.KubePerceptor.ConflictingAnnotationsPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.ConflictingLabelsPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.FinishedJustKubePods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.FinishedJustPerceptorPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.JustKubeImages)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.JustKubePods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.JustPerceptorImages)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.JustPerceptorPods)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.KubePerceptor.UnanalyzeablePods)).Should(gomega.Equal(0))
+		It("All Kube<->Perceptor data should be in order", func() {
+			Expect(len(report.KubePerceptor.ConflictingAnnotationsPods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.ConflictingLabelsPods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.FinishedJustKubePods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.FinishedJustPerceptorPods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.JustKubeImages)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.JustKubePods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.JustPerceptorImages)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.JustPerceptorPods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.UnanalyzeablePods)).Should(Equal(0))
 		})
 
-		ginkgo.It("All Perceptor<->Hub data should be in order", func() {
-			gomega.Expect(len(report.PerceptorHub.JustHubImages)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.PerceptorHub.JustPerceptorImages)).Should(gomega.Equal(0))
+		It("All Perceptor<->Hub data should be in order", func() {
+			Expect(len(report.PerceptorHub.JustHubImages)).Should(Equal(0))
+			Expect(len(report.PerceptorHub.JustPerceptorImages)).Should(Equal(0))
 		})
 
-		ginkgo.It("All Hub data should be in order", func() {
-			gomega.Expect(len(report.Hub.ProjectsMultipleVersions)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.Hub.VersionsMultipleCodeLocations)).Should(gomega.Equal(0))
-			gomega.Expect(len(report.Hub.CodeLocationsMultipleScanSummaries)).Should(gomega.Equal(0))
+		It("All Hub data should be in order", func() {
+			Expect(len(report.Hub.ProjectsMultipleVersions)).Should(Equal(0))
+			Expect(len(report.Hub.VersionsMultipleCodeLocations)).Should(Equal(0))
+			Expect(len(report.Hub.CodeLocationsMultipleScanSummaries)).Should(Equal(0))
 		})
 	})
 }
