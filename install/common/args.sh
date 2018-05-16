@@ -110,7 +110,7 @@ print_help ()
 	printf '\t%s\n' "-U,--hub-user: hub user (default: 'sysadmin')"
 	printf '\t%s\n' "-W,--hub-password: hub password"
 	printf '\t%s\n' "-H,--hub-host: hub hostname  (default: 'webserver')"
-	printf '\t%s\n' "-P,--hub-port: hub port  (default: '8443')"
+	printf '\t%s\n' "-P,--hub-port: hub port  (default: '443')"
 	printf '\t%s\n' "-T,--hub-client-timeout-perceptor-seconds: hub client timeout for opssight-core in seconds  (default: '5')"
 	printf '\t%s\n' "-s,--hub-client-timeout-scanner-seconds: hub client timeout for opssight-scanner in seconds  (default: '120')"
 	printf '\t%s\n' "-C,--hub-max-concurrent-scans: maximum scans at a time for the hub (default: '7')"
