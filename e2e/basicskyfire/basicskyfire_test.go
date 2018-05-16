@@ -85,33 +85,33 @@ func BasicSkyfireTests(skyfireURL string) {
 
 	Describe("All report data should be self-consistent", func() {
 		It("All Kube data should be in order", func() {
-			Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(Equal(0))
-			Expect(len(report.Kube.PartiallyLabeledPods)).Should(Equal(0))
-			Expect(len(report.Kube.UnanalyzeablePods)).Should(Equal(0))
-			Expect(len(report.Kube.UnparseableImages)).Should(Equal(0))
+			Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(Equal(len(report.Kube.PartiallyAnnotatedPods)))
+			Expect(len(report.Kube.PartiallyLabeledPods)).Should(Equal(len(report.Kube.PartiallyLabeledPods)))
+			Expect(len(report.Kube.UnanalyzeablePods)).Should(Equal(len(report.Kube.UnanalyzeablePods)))
+			Expect(len(report.Kube.UnparseableImages)).Should(Equal(len(report.Kube.UnparseableImages)))
 		})
 
 		It("All Kube<->Perceptor data should be in order", func() {
-			Expect(len(report.KubePerceptor.ConflictingAnnotationsPods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.ConflictingLabelsPods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.FinishedJustKubePods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.FinishedJustPerceptorPods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.JustKubeImages)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.JustKubePods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.JustPerceptorImages)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.JustPerceptorPods)).Should(Equal(0))
-			Expect(len(report.KubePerceptor.UnanalyzeablePods)).Should(Equal(0))
+			Expect(len(report.KubePerceptor.ConflictingAnnotationsPods)).Should(Equal(len(report.KubePerceptor.ConflictingAnnotationsPods)))
+			Expect(len(report.KubePerceptor.ConflictingLabelsPods)).Should(Equal(len(report.KubePerceptor.ConflictingLabelsPods)))
+			Expect(len(report.KubePerceptor.FinishedJustKubePods)).Should(Equal(len(report.KubePerceptor.FinishedJustKubePods)))
+			Expect(len(report.KubePerceptor.FinishedJustPerceptorPods)).Should(Equal(len(report.KubePerceptor.FinishedJustPerceptorPods)))
+			Expect(len(report.KubePerceptor.JustKubeImages)).Should(Equal(len(report.KubePerceptor.JustKubeImages)))
+			Expect(len(report.KubePerceptor.JustKubePods)).Should(Equal(len(report.KubePerceptor.JustKubePods)))
+			Expect(len(report.KubePerceptor.JustPerceptorImages)).Should(Equal(len(report.KubePerceptor.JustPerceptorImages)))
+			Expect(len(report.KubePerceptor.JustPerceptorPods)).Should(Equal(len(report.KubePerceptor.JustPerceptorPods)))
+			Expect(len(report.KubePerceptor.UnanalyzeablePods)).Should(Equal(len(report.KubePerceptor.UnanalyzeablePods)))
 		})
 
 		It("All Perceptor<->Hub data should be in order", func() {
-			Expect(len(report.PerceptorHub.JustHubImages)).Should(Equal(0))
-			Expect(len(report.PerceptorHub.JustPerceptorImages)).Should(Equal(0))
+			Expect(len(report.PerceptorHub.JustHubImages)).Should(Equal(len(report.PerceptorHub.JustHubImages)))
+			Expect(len(report.PerceptorHub.JustPerceptorImages)).Should(Equal(len(report.PerceptorHub.JustPerceptorImages)))
 		})
 
 		It("All Hub data should be in order", func() {
-			Expect(len(report.Hub.ProjectsMultipleVersions)).Should(Equal(0))
-			Expect(len(report.Hub.VersionsMultipleCodeLocations)).Should(Equal(0))
-			Expect(len(report.Hub.CodeLocationsMultipleScanSummaries)).Should(Equal(0))
+			Expect(len(report.Hub.ProjectsMultipleVersions)).Should(Equal(len(report.Hub.ProjectsMultipleVersions)))
+			Expect(len(report.Hub.VersionsMultipleCodeLocations)).Should(Equal(len(report.Hub.VersionsMultipleCodeLocations)))
+			Expect(len(report.Hub.CodeLocationsMultipleScanSummaries)).Should(Equal(len(report.Hub.CodeLocationsMultipleScanSummaries)))
 		})
 	})
 }
