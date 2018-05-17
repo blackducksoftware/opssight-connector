@@ -23,9 +23,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/blackducksoftware/perceivers/cmd/pod-perceiver/app"
 	"github.com/blackducksoftware/perceivers/pkg/annotations"
-	"github.com/blackducksoftware/perceivers/pod/cmd/app"
 
 	oca "github.com/blackducksoftware/opssight-connector/processors/pkg/annotations"
 
@@ -34,6 +35,9 @@ import (
 
 func main() {
 	log.Info("starting pod-processor")
+
+        configPath := os.Args[1]
+        log.Printf("Config path: %s", configPath)
 
 	handler := annotations.PodAnnotatorHandlerFuncs{
 		PodLabelCreationFunc:      oca.CreatePodLabels,
@@ -48,7 +52,7 @@ func main() {
 	}
 
 	// Create the Pod Perceiver
-	processor, err := app.NewPodPerceiver(handler)
+	processor, err := app.NewPodPerceiver(handler, configPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to create pod-processor: %v", err))
 	}
