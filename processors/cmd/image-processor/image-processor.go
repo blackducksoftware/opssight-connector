@@ -23,8 +23,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/blackducksoftware/perceivers/image/cmd/app"
+	"github.com/blackducksoftware/perceivers/cmd/image-perceiver/app"
 	"github.com/blackducksoftware/perceivers/pkg/annotations"
 
 	oca "github.com/blackducksoftware/opssight-connector/processors/pkg/annotations"
@@ -35,6 +36,9 @@ import (
 func main() {
 	log.Info("starting image-processor")
 
+        configPath := os.Args[1]
+        log.Printf("Config path: %s", configPath)
+
 	handler := annotations.ImageAnnotatorHandlerFuncs{
 		ImageLabelCreationFunc:      oca.CreateImageLabels,
 		ImageAnnotationCreationFunc: oca.CreateImageAnnotations,
@@ -43,7 +47,7 @@ func main() {
 		},
 	}
 	// Create the Image Perceiver
-	processor, err := app.NewImagePerceiver(handler)
+	processor, err := app.NewImagePerceiver(handler, configPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to create image-processor: %v", err))
 	}
