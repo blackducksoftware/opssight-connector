@@ -35,7 +35,7 @@ func TestProto(t *testing.T) {
 	d.DefaultMem = "1300Mi"
 
 	installer := NewInstaller(d, "../../cmd/protoform.json")
-	installer.init()
+	installer.AddPerceptorResources()
 	rcsArray := installer.replicationControllers
 
 	var imageRegexp = regexp.MustCompile("(.+)/(.+):(.+)")

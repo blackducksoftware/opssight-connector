@@ -38,6 +38,7 @@ func main() {
 func runProtoform(configPath string) {
 	defaults := createDefaults()
 	installer := protoform.NewInstaller(defaults, configPath)
+	installer.AddPerceptorResources()
 	installer.Run()
 }
 

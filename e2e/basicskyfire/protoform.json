@@ -1,4 +1,5 @@
 {
   "DefaultCPU": "100m",
-  "DefaultMem": "100Mi"
+  "DefaultMem": "100Mi",
+  "DryRun": true
 }

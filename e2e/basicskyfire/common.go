@@ -26,37 +26,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/blackducksoftware/perceptor-protoform/pkg/api"
-	"github.com/blackducksoftware/perceptor-protoform/pkg/protoform"
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 )
 
-type Pod struct {
-	Name      string
-	ImageName string
-	Port      int32
-}
-
-var pods []*Pod
-
 func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
-	httpClient := http.Client{Timeout: 5 * time.Second}
-	resp, err := httpClient.Get(skyfireURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	bodyBytes, err := getHttpResponse(skyfireURL, 200)
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("invalid status code %d, expected 200", resp.StatusCode)
+		panic(fmt.Sprintf("Unable to get the response for %s due to %+v", skyfireURL, err.Error()))
 	}
 
 	var report *skyfire.Report
@@ -68,48 +47,22 @@ func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
 	return report, nil
 }
 
-func createDefaults() *api.ProtoformDefaults {
-	d := protoform.NewDefaultsObj()
-	d.Namespace = "perceptor"
-	d.DefaultCPU = "100m"
-	d.DefaultMem = "100Mi"
-	return d
-}
-
-func addPods(name string, imageName string, port int32) {
-	pod := &Pod{Name: name, ImageName: imageName, Port: port}
-	pods = append(pods, pod)
-}
-
-func createPods() {
-	os.Setenv("PCP_HUBUSERPASSWORD", "example")
-	defaults := createDefaults()
-	i := protoform.NewInstaller(defaults, "protoform.json")
-
-	fmt.Printf("Default CPU is %s \n", defaults.DefaultCPU)
-	fmt.Printf("Default Memory is %s \n", defaults.DefaultMem)
-
-	defaultCPU, err := i.GenerateDefaultCPU(defaults.DefaultCPU)
+func getHttpResponse(url string, responseCode int) ([]byte, error) {
+	httpClient := http.Client{Timeout: 5 * time.Second}
+	resp, err := httpClient.Get(url)
 	if err != nil {
-		fmt.Errorf("Generating default CPU failed for %s due to %+v", defaults.DefaultCPU, err.Error())
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	defaultMemory, err := i.GenerateDefaultMemory(defaults.DefaultMem)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Errorf("Generating default memory failed for %s due to %+v", defaults.DefaultMem, err.Error())
+		return nil, err
 	}
 
-	for _, pod := range pods {
-		i.AddPod([]*protoform.ReplicationController{
-			{
-				Name:   pod.Name,
-				Image:  pod.ImageName,
-				CPU:    defaultCPU,
-				Memory: defaultMemory,
-				Port:   pod.Port,
-			},
-		})
+	if resp.StatusCode != responseCode {
+		return nil, fmt.Errorf("invalid status code %d, expected 200", resp.StatusCode)
 	}
 
-	i.RunUpstream()
+	return bodyBytes, nil
 }
