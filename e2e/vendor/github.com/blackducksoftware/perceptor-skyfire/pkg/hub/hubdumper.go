@@ -144,7 +144,7 @@ func (hd *HubDumper) DumpVersion(hubVersion *hubapi.ProjectVersion) (*Version, e
 	if err != nil {
 		return nil, err
 	}
-	hubCodeLocations, err := hd.HubClient.ListCodeLocations(*codeLocationsLink)
+	hubCodeLocations, err := hd.HubClient.ListCodeLocations(*codeLocationsLink, nil)
 	if err != nil {
 		return nil, err
 	}

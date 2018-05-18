@@ -1,0 +1,4 @@
+{
+  "DefaultCPU": "100m",
+  "DefaultMem": "100Mi"
+}

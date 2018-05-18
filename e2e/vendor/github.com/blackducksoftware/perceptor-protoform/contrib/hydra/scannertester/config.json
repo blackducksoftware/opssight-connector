@@ -1,0 +1,22 @@
+{
+  "MasterURL": "https://192.168.99.100:8443",
+  "KubeConfigPath": "/Users/mfenwick/.kube/config",
+
+  "HubHost": "the-hub-hub.54.67.89.98.xip.io",
+  "HubUser": "sysadmin",
+  "HubUserPassword": "blackduck",
+  "HubPort": 443,
+  "HubPasswordSecretName": "hub-password",
+  "HubPasswordSecretKey": "hub-user-password",
+
+  "ScannerMemory": "100Mi",
+  "JavaInitialHeapSizeMBs": 10,
+  "JavaMaxHeapSizeMBs": 200,
+
+  "LogLevel": "debug",
+
+  "PerceptorHost": "perceptor",
+  "PerceptorPort": 4945,
+  "ImageFacadePort": 9876,
+  "ScannerPort": 2345
+}

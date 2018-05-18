@@ -3,7 +3,7 @@ import:
 - package: github.com/sirupsen/logrus
   version: v1.0.5
 - package: github.com/blackducksoftware/hub-client-go
-  version: v0.9.2
+  version: v0.9.3
   repo: git@github.com:blackducksoftware/hub-client-go.git
   vcs: git
   subpackages:

@@ -189,7 +189,7 @@ func (hf *Fetcher) fetchImageScanUsingProject(project hubapi.Project, image Imag
 		log.Errorf("error getting code locations link: %v", err)
 		return nil, err
 	}
-	codeLocationsList, err := client.ListCodeLocations(*codeLocationsLink)
+	codeLocationsList, err := client.ListCodeLocations(*codeLocationsLink, nil)
 	recordHubResponse("codeLocations", err == nil)
 	if err != nil {
 		log.Errorf("error fetching code locations: %v", err)

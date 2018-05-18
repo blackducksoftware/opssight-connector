@@ -1,4 +1,7 @@
 steps:
+
+# Skyfire: Perceptor test platform
+
 - name: 'gcr.io/cloud-builders/go'
   args: ['build', '-o', './cmd/skyfire/skyfire', './cmd/skyfire/skyfire.go']
   env:
@@ -10,3 +13,17 @@ steps:
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/skyfire:$BRANCH_NAME', './cmd/skyfire/.']
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/blackducksoftware/skyfire:$BRANCH_NAME']
+
+# Freeway: Hub performance testing
+
+- name: 'gcr.io/cloud-builders/go'
+  args: ['build', '-o', './cmd/freeway/freeway', './cmd/freeway/freeway.go']
+  env:
+  - 'PROJECT_ROOT=github.com/blackducksoftware/perceptor-skyfire'
+  - 'CGO_ENABLED=0'
+  - 'GOOS=linux'
+  - 'GOARCH=amd64'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/blackducksoftware/freeway:$BRANCH_NAME', './cmd/freeway/.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/blackducksoftware/freeway:$BRANCH_NAME']

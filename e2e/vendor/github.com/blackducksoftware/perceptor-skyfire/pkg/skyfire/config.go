@@ -39,9 +39,9 @@ type Config struct {
 
 	Port int
 
-	HubHost     string
-	HubUser     string
-	HubPassword string
+	HubHost               string
+	HubUser               string
+	HubUserPasswordEnvVar string
 
 	PerceptorHost string
 	PerceptorPort int

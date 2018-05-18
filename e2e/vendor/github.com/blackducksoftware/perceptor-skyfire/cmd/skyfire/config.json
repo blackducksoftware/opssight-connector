@@ -8,7 +8,7 @@
 
   "HubHost": "",
   "HubUser": "sysadmin",
-  "HubPassword": "",
+  "HubUserPasswordEnvVar": "PCP_HUBUSERPASSWORD",
 
   "KubeDumpIntervalSeconds": 15,
   "PerceptorDumpIntervalSeconds": 15,

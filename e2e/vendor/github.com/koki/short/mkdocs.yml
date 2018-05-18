@@ -1,0 +1,39 @@
+site_name: Koki Short
+pages:
+ - Home: index.md
+ - User Guide:
+   - Getting Started: user-guide/index.md
+   - Command Line: user-guide/command-line.md
+   - Getting Help: user-guide/getting-help.md
+   - Best Practices: user-guide/best-practices.md
+   - Integrating with Drone: user-guide/drone.md
+ - Resources: 
+   - Introduction: resources/index.md
+   - ConfigMap: resources/config-map.md
+   - ControllerRevision: resources/controller-revision.md
+   - CronJob: resources/cron-job.md
+   - CustomResourceDefinition: resources/custom-resource-definition.md
+   - DaemonSet: resources/daemon-set.md
+   - Deployment: resources/deployment.md
+   - Endpoint: resources/endpoint.md
+   - Ingress: resources/ingress.md
+   - Job: resources/job.md
+   - Pod: resources/pod.md
+   - PersistentVolume: resources/persistent-volume.md
+   - PersistentVolumeClaim: resources/persistent-volume-claim.md
+   - ReplicaSet: resources/replica-set.md
+   - ReplicationController: resources/replication-controller.md
+   - Secret: resources/secret.md
+   - Service: resources/service.md
+   - StatefulSet: resources/stateful-set.md
+   - StorageClass: resources/storage-class.md
+ - Modules:
+   - Introduction: modules/index.md
+theme: cinder
+extra_css:
+   - custom/tweaks.css
+repo_url: https://github.com/koki/short
+site_favicon: favicon.ico
+google_analytics:
+   - UA-111365986-1
+   - auto 

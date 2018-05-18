@@ -1,0 +1,8 @@
+{
+  "LogLevel": "debug",
+  "Port": 3999,
+
+  "HubHost": "",
+  "HubUser": "sysadmin",
+  "HubPassword": "",
+}

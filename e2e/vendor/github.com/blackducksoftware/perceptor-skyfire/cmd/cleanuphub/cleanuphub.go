@@ -67,7 +67,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			codeLocationsList, err := hubClient.ListCodeLocations(*codeLocationsLink)
+			codeLocationsList, err := hubClient.ListCodeLocations(*codeLocationsLink, nil)
 			if err != nil {
 				panic(err)
 			}

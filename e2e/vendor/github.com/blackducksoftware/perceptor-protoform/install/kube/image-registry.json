@@ -1,0 +1,29 @@
+{
+  "pod": [
+    {
+      "name": "pod-perceiver",
+      "image": "pod-perceiver",
+      "tag": "master"
+    },
+    {
+      "name": "perceptor",
+      "image": "perceptor",
+      "tag": "master"
+    },
+    {
+      "name": "perceptor-imagefacade",
+      "image": "perceptor-imagefacade",
+      "tag": "master"
+    },
+    {
+      "name": "perceptor-scanner",
+      "image": "perceptor-scanner",
+      "tag": "master"
+    },
+    {
+      "name": "perceptor-protoform",
+      "image": "perceptor-protoform",
+      "tag": "master"
+    }
+  ]
+}

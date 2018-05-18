@@ -22,6 +22,7 @@ under the License.
 package skyfire
 
 import (
+	"os"
 	"time"
 
 	"github.com/blackducksoftware/perceptor-skyfire/pkg/hub"
@@ -50,7 +51,7 @@ func NewScraper(config *Config) (*Scraper, error) {
 
 	perceptorDumper := perceptor.NewPerceptorDumper(config.PerceptorHost, config.PerceptorPort)
 
-	hubDumper, err := hub.NewHubDumper(config.HubHost, config.HubUser, config.HubPassword)
+	hubDumper, err := hub.NewHubDumper(config.HubHost, config.HubUser, os.Getenv(config.HubUserPasswordEnvVar))
 	if err != nil {
 		return nil, err
 	}

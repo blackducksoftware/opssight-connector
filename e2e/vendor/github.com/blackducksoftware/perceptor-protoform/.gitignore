@@ -1,0 +1,3 @@
+install/kube/protoform.yaml
+install/kube/rbac.yaml
+install/openshift/protoform.yaml

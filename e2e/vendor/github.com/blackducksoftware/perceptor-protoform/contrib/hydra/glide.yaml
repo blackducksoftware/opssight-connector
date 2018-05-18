@@ -1,0 +1,17 @@
+package: github.com/blackducksoftware/perceptor-protoform
+import:
+- package: github.com/spf13/viper
+  version: v1.0.0
+- package: k8s.io/api
+  subpackages:
+  - core/v1
+  - extensions/v1beta1
+- package: k8s.io/apimachinery
+  subpackages:
+  - pkg/api/resource
+  - pkg/apis/meta/v1
+- package: k8s.io/client-go
+  version: v6.0.0
+  subpackages:
+  - kubernetes
+  - tools/clientcmd

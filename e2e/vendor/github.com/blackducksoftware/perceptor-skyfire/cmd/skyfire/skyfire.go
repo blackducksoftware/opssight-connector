@@ -33,6 +33,7 @@ import (
 
 func main() {
 	configPath := os.Args[1]
+	fmt.Printf("Config path: %s", configPath)
 	config, err := skyfire.ReadConfig(configPath)
 	if err != nil {
 		panic(err)

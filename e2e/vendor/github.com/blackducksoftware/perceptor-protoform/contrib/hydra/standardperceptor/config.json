@@ -1,0 +1,32 @@
+{
+  "MasterURL": "https://192.168.99.100:8443",
+  "KubeConfigPath": "/Users/mfenwick/.kube/config",
+
+  "HubHost": "35.224.116.128",
+  "HubUser": "sysadmin",
+  "HubUserPassword": "blackduck",
+  "HubPort": 443,
+  "HubPasswordSecretName": "hub-password",
+  "HubPasswordSecretKey": "hub-user-password",
+
+  "ConcurrentScanLimit": 2,
+  "PerceptorPort": 3001,
+  "UseMockPerceptorMode": false,
+
+  "ImagePerceiverPort": 4003,
+  "PodPerceiverPort": 4008,
+  "PodPerceiverReplicationCount": 1,
+  "AnnotationIntervalSeconds": 30,
+  "DumpIntervalMinutes": 30,
+
+  "ScannerReplicationCount": 1,
+  "ScannerPort": 3777,
+  "ScannerMemory": "2Gi",
+  "ImageFacadePort": 3931,
+  "JavaInitialHeapSizeMBs": 64,
+  "JavaMaxHeapSizeMBs": 1024,
+
+  "SkyfirePort": 3187,
+
+  "LogLevel": "debug"
+}

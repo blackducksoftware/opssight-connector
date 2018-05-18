@@ -1,0 +1,16 @@
+{
+  "MasterURL": "https://192.168.99.100:8443",
+  "KubeConfigPath": "/Users/mfenwick/.kube/config",
+
+  "AnnotationIntervalSeconds": 30,
+  "DumpIntervalMinutes": 30,
+  "PodPerceiverPort": 8992,
+  "ImagePerceiverPort": 7321,
+
+  "CreateImagesOnly": true,
+  "ImageFacadePort": 3116,
+
+  "PifTesterPort": 3005,
+
+  "LogLevel": "debug"
+}

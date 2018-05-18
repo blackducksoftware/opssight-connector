@@ -1,38 +1,12 @@
-hash: db4a2a0deae28926ab78b42a81f3bd921ad02feff875fc463d5eeded5b65f848
-updated: 2018-05-01T16:53:01.662513872-04:00
+hash: 5f84ebfcaab7b1fbb789ec8378c6e78bd1a1687cb7f7f1d1328bc741fd9589b2
+updated: 2018-05-18T10:44:26.085556-04:00
 imports:
-- name: github.com/blackducksoftware/perceptor-skyfire
-  version: 84abf544fbeea22b07bd75fb979bc3d3793772b2
-  repo: git@github.com:blackducksoftware/perceptor-skyfire.git
-  vcs: git
-  subpackages:
-  - pkg/hub
-  - pkg/kube
-  - pkg/perceptor
-  - pkg/report
-- name: github.com/onsi/gomega
-  version: 003f63b7f4cff3fc95357005358af2de0f5fe152
-  subpackages:
-  - format
-  - internal/assertion
-  - internal/asyncassertion
-  - internal/oraclematcher
-  - internal/testingtsupport
-  - matchers
-  - matchers/support/goraph/bipartitegraph
-  - matchers/support/goraph/edge
-  - matchers/support/goraph/node
-  - matchers/support/goraph/util
-  - types
-- name: github.com/sirupsen/logrus
-  version: c155da19408a8799da419ed3eeb0cb5db0ad5dbc
-testImports:
 - name: github.com/beorn7/perks
-  version: 3a771d992973f24aa725d07868b467d1ddfceafb
+  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
   - quantile
 - name: github.com/blackducksoftware/hub-client-go
-  version: 2a8f3fb460e113ce9d2fabcbc1099ddf1d17c656
+  version: bca82a6cdff1082bb17cf71211a15e170156f49b
   repo: git@github.com:blackducksoftware/hub-client-go.git
   vcs: git
   subpackages:
@@ -45,6 +19,24 @@ testImports:
   subpackages:
   - pkg/api
   - pkg/hub
+- name: github.com/blackducksoftware/perceptor-protoform
+  version: 5b2f304acfb7b30036c29f5bedc0e3067b0aebe3
+  repo: git@github.com:blackducksoftware/perceptor-protoform.git
+  vcs: git
+  subpackages:
+  - pkg/api
+  - pkg/protoform
+- name: github.com/blackducksoftware/perceptor-skyfire
+  version: a869ece0a44276d41173daae2e35f1e84e4fd7a0
+  repo: git@github.com:blackducksoftware/perceptor-skyfire.git
+  vcs: git
+  subpackages:
+  - pkg/hub
+  - pkg/kube
+  - pkg/perceptor
+  - pkg/report
+- name: github.com/fsnotify/fsnotify
+  version: 629574ca2a5df945712d3079857300b5e4da0236
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
 - name: github.com/go-resty/resty
@@ -72,58 +64,101 @@ testImports:
   - OpenAPIv2
   - compiler
   - extensions
+- name: github.com/hashicorp/hcl
+  version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
 - name: github.com/howeyc/gopass
   version: bf9dde6d0d2c004a008c27aaee91170c786f6db8
 - name: github.com/imdario/mergo
   version: 6633656539c1639d9d78127b7d47c622b5d7b6dc
 - name: github.com/json-iterator/go
   version: 13f86432b882000a51c6e610c620974462691a97
+- name: github.com/koki/json
+  version: e521cbda08e38a4d446cf3df04f927a6da8c002d
+  subpackages:
+  - jsonutil
+- name: github.com/koki/short
+  version: f54b64185a0d5bcf2e1fe5d55d4a33545914ad2b
+  subpackages:
+  - converter/converters
+  - converter/converters/affinity
+  - parser
+  - parser/expressions
+  - types
+  - util
+  - util/floatstr
+  - util/intbool
+  - yaml
+- name: github.com/koki/structurederrors
+  version: 6b997eb5e2cadc3ba8649b3c9958644057bf3ddf
+- name: github.com/kr/pretty
+  version: 73f6ac0b30a98e433b289500d779f50c1a6f0712
+- name: github.com/kr/text
+  version: e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f
+- name: github.com/magiconair/properties
+  version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/matttproud/golang_protobuf_extensions
-  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
+  version: fc2b8d3a73c4867e51861bbdd5ae3c1f0869dd6a
   subpackages:
   - pbutil
-- name: github.com/onsi/ginkgo
-  version: 9eda700730cba42af70d53180f9dcce9266bc2bc
+- name: github.com/mitchellh/mapstructure
+  version: bb74f1db0675b241733089d5a1faa5dd8b0ef57b
+- name: github.com/onsi/gomega
+  version: 62bff4df71bdbc266561a0caee19f0594b17c240
   subpackages:
-  - config
-  - internal/codelocation
-  - internal/containernode
-  - internal/failer
-  - internal/leafnodes
-  - internal/remote
-  - internal/spec
-  - internal/spec_iterator
-  - internal/specrunner
-  - internal/suite
-  - internal/testingtproxy
-  - internal/writer
-  - reporters
-  - reporters/stenographer
-  - reporters/stenographer/support/go-colorable
-  - reporters/stenographer/support/go-isatty
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
   - types
+- name: github.com/pelletier/go-toml
+  version: 66540cf1fcd2c3aee6f6787dfa32a6ae9a870f12
 - name: github.com/prometheus/client_golang
   version: 967789050ba94deca04a5e84cce8ad472ce313c1
   subpackages:
   - prometheus
 - name: github.com/prometheus/client_model
-  version: 99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c
+  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: d811d2e9bf898806ecfb6ef6296774b13ffc314c
+  version: 13ba4ddd0caa9c28ca7b7bffe1dfa9ed8d5ef207
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: 8b1c2da0d56deffdbb9e48d4414b4e674bd8083e
+  version: 65c1f6f8f0fc1e2185eb9863a3bc751496404259
   subpackages:
-  - internal/util
-  - nfs
   - xfs
+- name: github.com/sirupsen/logrus
+  version: c155da19408a8799da419ed3eeb0cb5db0ad5dbc
+- name: github.com/spf13/afero
+  version: 63644898a8da0bc22138abf860edaf5277b6102e
+  subpackages:
+  - mem
+- name: github.com/spf13/cast
+  version: 8965335b8c7107321228e3e3702cab9832751bac
+- name: github.com/spf13/jwalterweatherman
+  version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
   version: 4c012f6dcd9546820e378d0bdda4d8fc772cdfea
+- name: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - name: golang.org/x/crypto
   version: 81e90905daefcd6fd217b62423c0908922eadb30
   subpackages:
@@ -140,6 +175,7 @@ testImports:
   - idna
   - lex/httplex
   - publicsuffix
+  - websocket
 - name: golang.org/x/sys
   version: 95c6576299259db960f6c5b9b69ea52422860fce
   subpackages:
@@ -205,6 +241,11 @@ testImports:
   - storage/v1
   - storage/v1alpha1
   - storage/v1beta1
+- name: k8s.io/apiextensions-apiserver
+  version: ab3e6971b48ebf5dbda5d69c8295bb667add6f8d
+  subpackages:
+  - pkg/apis/apiextensions
+  - pkg/apis/apiextensions/v1beta1
 - name: k8s.io/apimachinery
   version: 302974c03f7e50f16561ba237db776ab93594ef6
   subpackages:
@@ -295,3 +336,29 @@ testImports:
   - util/flowcontrol
   - util/homedir
   - util/integer
+- name: k8s.io/kube-aggregator
+  version: 0f202e69e84122d3966e4690b36265d096678b4b
+  subpackages:
+  - pkg/apis/apiregistration
+  - pkg/apis/apiregistration/v1beta1
+testImports:
+- name: github.com/onsi/ginkgo
+  version: fa5fabab2a1bfbd924faf4c067d07ae414e2aedf
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/spec_iterator
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+  - types

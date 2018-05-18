@@ -1,0 +1,13 @@
+replica_set:
+  annotations:
+    meta: _test
+  cluster: test_cluster
+  labels:
+    app: meta_test
+  name: meta_test
+  namespace: test
+  replicas_status: {}
+  selector:
+    app: web
+  version: apps/v1beta2
+

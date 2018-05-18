@@ -22,15 +22,10 @@ under the License.
 package basicskyfire
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"testing"
-	"time"
 
-	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -45,43 +40,54 @@ func init() {
 
 func TestBasicSkyfire(t *testing.T) {
 	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", skyfireHost, skyfirePort)
+	// skyfireURL := "http://192.168.99.100:30039/latestreport"
 	BasicSkyfireTests(skyfireURL)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "basic-skyfire")
 }
 
-func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
-	httpClient := http.Client{Timeout: 5 * time.Second}
-	resp, err := httpClient.Get(skyfireURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("invalid status code %d, expected 200", resp.StatusCode)
-	}
-
-	var report *skyfire.Report
-	err = json.Unmarshal(bodyBytes, &report)
-	if err != nil {
-		return nil, err
-	}
-
-	return report, nil
-}
-
 func BasicSkyfireTests(skyfireURL string) {
+	fmt.Printf("skyfireURL: %s", skyfireURL)
 	report, err := FetchSkyfireReport(skyfireURL)
 	if err != nil {
 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
 		return
 	}
+
+	addPods("alpine", "docker.io/alpine", int32(3007))
+	addPods("alpine3-7", "docker.io/alpine:3.7", int32(3007))
+	addPods("alpine3-6", "docker.io/alpine:3.6", int32(3007))
+	addPods("alpine3-5", "docker.io/alpine:3.5", int32(3007))
+	addPods("alpine3-4", "docker.io/alpine:3.4", int32(3007))
+	addPods("alpine3-3", "docker.io/alpine:3.3", int32(3007))
+	addPods("alpine3-2", "docker.io/alpine:3.2", int32(3007))
+	addPods("alpine3-1", "docker.io/alpine:3.1", int32(3007))
+	addPods("golang1-9-stretch", "docker.io/golang:1.9-stretch", int32(3007))
+	addPods("golang1-9-6-stretch", "docker.io/golang:1.9.6-stretch", int32(3007))
+	addPods("golang-stretch", "docker.io/golang:stretch", int32(3007))
+	addPods("golang-1-stretch", "docker.io/golang:1-stretch", int32(3007))
+	addPods("golang-1-10-stretch", "docker.io/golang:1.10-stretch", int32(3007))
+	addPods("golang-1-10-2-stretch", "docker.io/golang:1.10.2-stretch", int32(3007))
+	addPods("golang-1-9-alpine", "docker.io/golang:1.9-alpine", int32(3007))
+	addPods("golang-1-9-6-alpine", "docker.io/golang:1.9.6-alpine", int32(3007))
+	addPods("golang-1-9-alpine3-6", "docker.io/golang:1.9-alpine3.6", int32(3007))
+	addPods("golang-1-9-6-alpine3-6", "docker.io/golang:1.9.6-alpine3.6", int32(3007))
+	addPods("golang-1-9-alpine3-7", "docker.io/golang:1.9-alpine3.7", int32(3007))
+	addPods("golang-1-9-6-alpine3-7", "docker.io/golang:1.9.6-alpine3.7", int32(3007))
+	addPods("golang-alpine", "docker.io/golang:alpine", int32(3007))
+	addPods("golang-1-alpine", "docker.io/golang:1-alpine", int32(3007))
+	addPods("golang-1-10-alpine", "docker.io/golang:1.10-alpine", int32(3007))
+	addPods("hello-world-linux", "docker.io/hello-world:linux", int32(3007))
+	addPods("consul", "docker.io/consul", int32(3007))
+	addPods("consul-1-1-0", "docker.io/consul:1.1.0", int32(3007))
+	addPods("kibana-5-6-9", "docker.io/kibana:5.6.9", int32(3007))
+	addPods("kibana-4", "docker.io/kibana:4", int32(3007))
+	addPods("kibana-4-6", "docker.io/kibana:4.6", int32(3007))
+	addPods("kibana-4-6-6", "docker.io/kibana:4.6.6", int32(3007))
+	addPods("kibana-5", "docker.io/kibana:5", int32(3007))
+	addPods("kibana-5-6", "docker.io/kibana:5.6", int32(3007))
+
+	createPods()
 
 	Describe("All report data should be self-consistent", func() {
 		It("All Kube data should be in order", func() {

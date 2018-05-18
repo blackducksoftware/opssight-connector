@@ -1,0 +1,15 @@
+pod:
+  annotations:
+    meta: _test
+  cluster: test_cluster
+  labels:
+    app: meta_test
+  name: meta_test
+  namespace: test
+  tolerations:
+  - selector: key=value:NoSchedule
+  - selector: key:NoSchedule
+  - selector: '*:NoExecute'
+  - selector: key=value:NoExecute
+  - selector: '*'
+  version: v1

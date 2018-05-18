@@ -1,0 +1,19 @@
+{
+  "DryRun":"true",
+  "Openshift": "true",
+  "DefaultCPU": "300m",
+  "DefaultMem": "1300Mi",
+  "InternalDockerRegistries": ["docker-registry.default.svc:5000", "172.1.1.0:5000"],
+  "PerceptorSkyfire": "true",
+  "HubUser": "sysadmin",
+  "HubHost": "nginx-webapp-logstash",
+  "HubPort": "8443",
+  "DefaultVersion": "master",
+  "Registry": "gcr.io",
+  "ImagePath": "gke-verification/blackducksoftware",
+  "Namespace": "perceptor",
+  "LogLevel": "info",
+  "HubClientTimeoutPerceptorSeconds": 5,
+  "HubClientTimeoutScannerSeconds": 120,
+  "ConcurrentScanLimit": 7
+}
