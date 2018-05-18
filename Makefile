@@ -41,7 +41,7 @@ push: container
 	$(foreach p,${BINARY},$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:latest;)
 
 test:
-	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/ossight-connector golang:1.9 go test ./pkg/...
+	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.9 go test ./pkg/...
 
 clean:
 	rm -rf ${OUTDIR} ${BUILDDIR}
