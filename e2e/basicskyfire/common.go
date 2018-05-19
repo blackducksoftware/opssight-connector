@@ -24,6 +24,7 @@ package basicskyfire
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -47,6 +48,17 @@ func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
 	return report, nil
 }
 
+func getHttpResponseBody(url string, responseCode int) (io.ReadCloser, error) {
+	httpClient := http.Client{Timeout: 5 * time.Second}
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return resp.Body, err
+}
+
 func getHttpResponse(url string, responseCode int) ([]byte, error) {
 	httpClient := http.Client{Timeout: 5 * time.Second}
 	resp, err := httpClient.Get(url)
@@ -65,4 +77,9 @@ func getHttpResponse(url string, responseCode int) ([]byte, error) {
 	}
 
 	return bodyBytes, nil
+}
+
+func PrettyPrint(v interface{}) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	println(string(b))
 }
