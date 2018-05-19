@@ -36,7 +36,7 @@ func imageScan(vulnerabilityCount int, status hub.ScanSummaryStatus) *hub.ImageS
 		},
 		RiskProfile: hub.RiskProfile{
 			Categories: map[hub.RiskProfileCategory]hub.RiskProfileStatusCounts{
-				hub.RiskProfileCategoryVulnerability: hub.RiskProfileStatusCounts{
+				hub.RiskProfileCategoryVulnerability: {
 					StatusCounts: map[hub.RiskProfileStatus]int{
 						hub.RiskProfileStatusHigh: vulnerabilityCount,
 					},
@@ -50,14 +50,14 @@ func recheckModel(vulnCount int) *m.Model {
 	model := m.NewModel(&m.Config{ConcurrentScanLimit: 3}, "abc")
 	model.AddImage(image1)
 	model.SetImageScanStatus(image1.Sha, m.ScanStatusComplete)
-	model.Images[image1.Sha].ScanResults = imageScan(vulnCount, hub.ScanSummaryStatusSuccess)
+	model.Images[image1.Sha].SetScanResults(imageScan(vulnCount, hub.ScanSummaryStatusSuccess))
 	return model
 }
 
-func TestHubRecheckResultsError(t *testing.T) {
+func TestFetchScanRefreshError(t *testing.T) {
 	vulnCount := 3
 	model := recheckModel(vulnCount)
-	hrr := HubRecheckResults{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: nil, Err: fmt.Errorf("")}}
+	hrr := FetchScanRefresh{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: nil, Err: fmt.Errorf("")}}
 	hrr.Apply(model)
 
 	actual := model.Images[image1.Sha].ScanResults
@@ -65,10 +65,10 @@ func TestHubRecheckResultsError(t *testing.T) {
 	assertEqual(t, actual, expected)
 }
 
-func TestHubRecheckResultsNotFound(t *testing.T) {
+func TestFetchScanRefreshNotFound(t *testing.T) {
 	vulnCount := 3
 	model := recheckModel(vulnCount)
-	hrr := HubRecheckResults{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: nil, Err: nil}}
+	hrr := FetchScanRefresh{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: nil, Err: nil}}
 	hrr.Apply(model)
 
 	actual := model.Images[image1.Sha].ScanResults
@@ -76,10 +76,10 @@ func TestHubRecheckResultsNotFound(t *testing.T) {
 	assertEqual(t, actual, expected)
 }
 
-func TestHubRecheckResultsInProgress(t *testing.T) {
+func TestFetchScanRefreshInProgress(t *testing.T) {
 	vulnCount := 3
 	model := recheckModel(vulnCount)
-	hrr := HubRecheckResults{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(8, hub.ScanSummaryStatusInProgress), Err: nil}}
+	hrr := FetchScanRefresh{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(8, hub.ScanSummaryStatusInProgress), Err: nil}}
 	hrr.Apply(model)
 
 	actual := model.Images[image1.Sha].ScanResults
@@ -87,10 +87,10 @@ func TestHubRecheckResultsInProgress(t *testing.T) {
 	assertEqual(t, actual, expected)
 }
 
-func TestHubRecheckResultsFailed(t *testing.T) {
+func TestFetchScanRefreshFailed(t *testing.T) {
 	vulnCount := 3
 	model := recheckModel(vulnCount)
-	hrr := HubRecheckResults{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(17, hub.ScanSummaryStatusFailure), Err: nil}}
+	hrr := FetchScanRefresh{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(17, hub.ScanSummaryStatusFailure), Err: nil}}
 	hrr.Apply(model)
 
 	actual := model.Images[image1.Sha].ScanResults
@@ -98,10 +98,10 @@ func TestHubRecheckResultsFailed(t *testing.T) {
 	assertEqual(t, actual, expected)
 }
 
-func TestHubRecheckResultsSuccess(t *testing.T) {
+func TestFetchScanRefreshSuccess(t *testing.T) {
 	vulnCount := 3
 	model := recheckModel(vulnCount)
-	hrr := HubRecheckResults{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(18, hub.ScanSummaryStatusSuccess), Err: nil}}
+	hrr := FetchScanRefresh{Scan: &m.HubImageScan{Sha: image1.Sha, Scan: imageScan(18, hub.ScanSummaryStatusSuccess), Err: nil}}
 	hrr.Apply(model)
 
 	actual := model.Images[image1.Sha].ScanResults

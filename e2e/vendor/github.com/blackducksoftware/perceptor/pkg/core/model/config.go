@@ -31,13 +31,15 @@ import (
 
 // Config contains all configuration for Perceptor
 type Config struct {
-	HubHost               string
-	HubUser               string
-	HubUserPasswordEnvVar string
-	ConcurrentScanLimit   int
-	UseMockMode           bool
-	Port                  int
-	LogLevel              string
+	HubHost                 string
+	HubUser                 string
+	HubUserPasswordEnvVar   string
+	HubClientTimeoutSeconds int
+	HubPort                 int
+	ConcurrentScanLimit     int
+	UseMockMode             bool
+	Port                    int
+	LogLevel                string
 }
 
 func (config *Config) GetLogLevel() (log.Level, error) {
@@ -45,11 +47,10 @@ func (config *Config) GetLogLevel() (log.Level, error) {
 }
 
 // GetConfig returns a configuration object to configure Perceptor
-func GetConfig() (*Config, error) {
+func GetConfig(configPath string) (*Config, error) {
 	var config *Config
 
-	viper.SetConfigName("perceptor_conf")
-	viper.AddConfigPath("/etc/perceptor")
+	viper.SetConfigFile(configPath)
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -66,7 +67,7 @@ func GetConfig() (*Config, error) {
 
 // StartWatch will start watching the Perceptor configuration file and
 // call the passed handler function when the configuration file has changed
-func (p *Config) StartWatch(handler func(fsnotify.Event)) {
+func (config *Config) StartWatch(handler func(fsnotify.Event)) {
 	viper.WatchConfig()
 	viper.OnConfigChange(handler)
 }

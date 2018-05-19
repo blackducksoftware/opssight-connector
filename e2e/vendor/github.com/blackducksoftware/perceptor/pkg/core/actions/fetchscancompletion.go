@@ -27,11 +27,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type HubCheckResults struct {
+type FetchScanCompletion struct {
 	Scan *m.HubImageScan
 }
 
-func (h *HubCheckResults) Apply(model *m.Model) {
+func (h *FetchScanCompletion) Apply(model *m.Model) {
 	scan := h.Scan
 
 	// case 1: error
@@ -65,6 +65,6 @@ func (h *HubCheckResults) Apply(model *m.Model) {
 		return
 	}
 
-	imageInfo.ScanResults = scan.Scan
+	imageInfo.SetScanResults(scan.Scan)
 	model.SetImageScanStatus(scan.Sha, m.ScanStatusComplete)
 }

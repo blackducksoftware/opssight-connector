@@ -22,17 +22,15 @@ under the License.
 package actions
 
 import (
-	m "github.com/blackducksoftware/perceptor/pkg/core/model"
+	"testing"
+
+	log "github.com/sirupsen/logrus"
 )
 
-type GetRunningHubScans struct {
-	Continuation func(images []m.Image)
-}
+func TestMetrics(t *testing.T) {
+	recordRequeueStalledScan("abc")
 
-func (g *GetRunningHubScans) Apply(model *m.Model) {
-	scans := []m.Image{}
-	for _, image := range model.InProgressHubScans() {
-		scans = append(scans, image)
-	}
-	go g.Continuation(scans)
+	message := "finished test case"
+	t.Log(message)
+	log.Info(message)
 }

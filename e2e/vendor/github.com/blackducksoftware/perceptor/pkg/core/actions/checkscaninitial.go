@@ -23,12 +23,15 @@ package actions
 
 import (
 	m "github.com/blackducksoftware/perceptor/pkg/core/model"
+	log "github.com/sirupsen/logrus"
 )
 
-type DebugGetModel struct {
-	Continuation func(model *m.Model)
+type CheckScanInitial struct {
+	Continuation func(image *m.Image)
 }
 
-func (d *DebugGetModel) Apply(model *m.Model) {
-	go d.Continuation(model)
+func (g *CheckScanInitial) Apply(model *m.Model) {
+	log.Debugf("looking for next image to search for in hub")
+	image := model.GetNextImageFromHubCheckQueue()
+	go g.Continuation(image)
 }

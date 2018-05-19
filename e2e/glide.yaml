@@ -1,15 +1,21 @@
 package: github.com/blackducksoftware/opssight-connector/e2e
 import:
-- package: github.com/blackducksoftware/perceptor-skyfire
-  repo: git@github.com:blackducksoftware/perceptor-skyfire.git
+- package: github.com/blackducksoftware/perceptor
+  repo: git@github.com:blackducksoftware/perceptor.git
   vcs: git
-- package: github.com/blackducksoftware/perceptor-protoform
-  repo: git@github.com:blackducksoftware/perceptor-protoform.git
-  vcs: git
+  version: master
 - package: github.com/blackducksoftware/hub-client-go
   repo: git@github.com:blackducksoftware/hub-client-go.git
   vcs: git
   version: v0.9.3
+- package: github.com/blackducksoftware/perceptor-skyfire
+  repo: git@github.com:blackducksoftware/perceptor-skyfire.git
+  vcs: git
+  version: master
+- package: github.com/blackducksoftware/perceptor-protoform
+  repo: git@github.com:blackducksoftware/perceptor-protoform.git
+  vcs: git
+  version: master
 - package: github.com/sirupsen/logrus
   version: ^1.0.5
 - package: github.com/onsi/gomega

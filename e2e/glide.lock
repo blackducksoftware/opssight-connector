@@ -1,5 +1,5 @@
-hash: 5f84ebfcaab7b1fbb789ec8378c6e78bd1a1687cb7f7f1d1328bc741fd9589b2
-updated: 2018-05-18T10:44:26.085556-04:00
+hash: 67d00ca3b427257f69888bfc0ff241270a56cfd7c54b0129f5554ff2fb9c1258
+updated: 2018-05-18T23:20:07.859367-04:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -13,14 +13,14 @@ imports:
   - hubapi
   - hubclient
 - name: github.com/blackducksoftware/perceptor
-  version: 97f2bdf1bbf5afaeff50a0943d0b33c02a64b0b2
+  version: c3c93f0484c6b9ba74b56d92adb2deb4de3b5b4f
   repo: git@github.com:blackducksoftware/perceptor.git
   vcs: git
   subpackages:
   - pkg/api
   - pkg/hub
 - name: github.com/blackducksoftware/perceptor-protoform
-  version: 5b2f304acfb7b30036c29f5bedc0e3067b0aebe3
+  version: 0b8515e4cf587ecc5a4d1698e52824fd74089e84
   repo: git@github.com:blackducksoftware/perceptor-protoform.git
   vcs: git
   subpackages:

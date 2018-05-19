@@ -27,22 +27,31 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type HubRecheckResults struct {
+type FetchScanRefresh struct {
 	Scan *m.HubImageScan
 }
 
-func (h *HubRecheckResults) Apply(model *m.Model) {
+func (h *FetchScanRefresh) Apply(model *m.Model) {
 	scan := h.Scan
+
+	// case 0: unable to fetch scan results
+	if scan.Err != nil {
+		log.Errorf("unable to fetch updated scan results for sha %s: %s", scan.Sha, scan.Err.Error())
+		return
+	}
+
+	// case 1: image mysteriously gone from model
 	imageInfo, ok := model.Images[scan.Sha]
 	if !ok {
 		log.Errorf("expected to already have image %s, but did not", string(scan.Sha))
 		return
 	}
 
-	// case 1: unable to fetch scan results
-	if scan.Err != nil {
-		log.Errorf("unable to fetch updated scan results for sha %s: %s", scan.Sha, scan.Err.Error())
-		return
+	err := model.RemoveImageFromRefreshQueue(scan.Sha)
+	if err != nil {
+		log.Errorf("unable to remove %s from refresh queue: %s", scan.Sha, err.Error())
+		// no need to return -- this should only happen if it wasn't in the refresh
+		// queue already
 	}
 
 	// 2. successfully hit hub, but didn't find project
@@ -61,5 +70,5 @@ func (h *HubRecheckResults) Apply(model *m.Model) {
 
 	// 4. successfully found project: update the image results
 	log.Infof("received results for hub rechecking for sha %s: %+v", scan.Sha, scan.Scan)
-	imageInfo.ScanResults = scan.Scan
+	imageInfo.SetScanResults(scan.Scan)
 }

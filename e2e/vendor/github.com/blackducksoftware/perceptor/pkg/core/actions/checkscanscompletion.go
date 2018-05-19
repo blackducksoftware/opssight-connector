@@ -19,18 +19,16 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package model
+package actions
 
-type Metrics struct {
-	ScanStatusCounts      map[ScanStatus]int
-	NumberOfPods          int
-	NumberOfImages        int
-	ContainerCounts       map[int]int
-	ImageCountHistogram   map[int]int
-	PodStatus             map[string]int
-	ImageStatus           map[string]int
-	PodPolicyViolations   map[int]int
-	ImagePolicyViolations map[int]int
-	PodVulnerabilities    map[int]int
-	ImageVulnerabilities  map[int]int
+import (
+	m "github.com/blackducksoftware/perceptor/pkg/core/model"
+)
+
+type CheckScansCompletion struct {
+	Continuation func(images *[]m.Image)
+}
+
+func (g *CheckScansCompletion) Apply(model *m.Model) {
+	go g.Continuation(model.InProgressHubScans())
 }

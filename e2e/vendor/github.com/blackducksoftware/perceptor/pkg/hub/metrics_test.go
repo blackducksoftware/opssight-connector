@@ -19,18 +19,21 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package model
+package hub
 
-type Metrics struct {
-	ScanStatusCounts      map[ScanStatus]int
-	NumberOfPods          int
-	NumberOfImages        int
-	ContainerCounts       map[int]int
-	ImageCountHistogram   map[int]int
-	PodStatus             map[string]int
-	ImageStatus           map[string]int
-	PodPolicyViolations   map[int]int
-	ImagePolicyViolations map[int]int
-	PodVulnerabilities    map[int]int
-	ImageVulnerabilities  map[int]int
+import (
+	"testing"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+)
+
+func TestMetrics(t *testing.T) {
+	recordHubData("abc", true)
+	recordHubResponse("qrs", false)
+	recordHubResponseTime("abc", time.Now().Sub(time.Now()))
+
+	message := "finished test case"
+	t.Log(message)
+	log.Info(message)
 }

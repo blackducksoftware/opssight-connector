@@ -22,16 +22,37 @@ under the License.
 package actions
 
 import (
+	"time"
+
 	m "github.com/blackducksoftware/perceptor/pkg/core/model"
 	log "github.com/sirupsen/logrus"
 )
 
-type GetInitialHubCheckImage struct {
-	Continuation func(image *m.Image)
-}
+type EnqueueImagesNeedingRefreshing struct{}
 
-func (g *GetInitialHubCheckImage) Apply(model *m.Model) {
-	log.Debugf("looking for next image to search for in hub")
-	image := model.GetNextImageFromHubCheckQueue()
-	go g.Continuation(image)
+var refreshThresholdDuration = 30 * time.Minute
+
+func (e *EnqueueImagesNeedingRefreshing) Apply(model *m.Model) {
+	for sha, imageInfo := range model.Images {
+		isComplete := imageInfo.ScanStatus == m.ScanStatusComplete
+		if !isComplete {
+			continue
+		}
+
+		_, isInRefreshQueue := model.ImageRefreshQueueSet[sha]
+		if !isInRefreshQueue {
+			continue
+		}
+
+		hasBeenRefreshedRecently := time.Now().Sub(imageInfo.TimeOfLastRefresh) < refreshThresholdDuration
+		if hasBeenRefreshedRecently {
+			continue
+		}
+
+		err := model.AddImageToRefreshQueue(sha)
+		if err != nil {
+			log.Error(err.Error())
+			recordError("EnqueueImagesNeedingRefreshing", "unable to add image to refresh queue")
+		}
+	}
 }

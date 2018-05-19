@@ -19,18 +19,29 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package model
+package actions
 
-type Metrics struct {
-	ScanStatusCounts      map[ScanStatus]int
-	NumberOfPods          int
-	NumberOfImages        int
-	ContainerCounts       map[int]int
-	ImageCountHistogram   map[int]int
-	PodStatus             map[string]int
-	ImageStatus           map[string]int
-	PodPolicyViolations   map[int]int
-	ImagePolicyViolations map[int]int
-	PodVulnerabilities    map[int]int
-	ImageVulnerabilities  map[int]int
+import (
+	"time"
+
+	m "github.com/blackducksoftware/perceptor/pkg/core/model"
+	log "github.com/sirupsen/logrus"
+)
+
+type CheckHubAccessibility struct{}
+
+func (c *CheckHubAccessibility) Apply(model *m.Model) {
+	if model.HubCircuitBreaker.State != m.HubCircuitBreakerStateDisabled {
+		return
+	}
+
+	if time.Now().Before(*model.HubCircuitBreaker.NextCheckTime) {
+		return
+	}
+
+	err := model.HubCircuitBreaker.MoveToCheckingState()
+	if err != nil {
+		log.Errorf("unable to move to checking state: %s (circuit breaker: %+v)", err.Error(), model.HubCircuitBreaker)
+		recordError("CheckHubAccessibility", "unable to move to checking state")
+	}
 }
