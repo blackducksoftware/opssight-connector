@@ -24,33 +24,29 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[override]]
+[[constraint]]
   branch = "master"
-  name = "github.com/docker/docker"
+  name = "github.com/blackducksoftware/perceptor-scanner"
 
 [[constraint]]
-  name = "github.com/blackducksoftware/perceptor"
   branch = "master"
+  name = "github.com/blackducksoftware/perceptor"
 
 [[constraint]]
   branch = "master"
   name = "github.com/blackducksoftware/perceptor-protoform"
 
 [[constraint]]
+  branch = "master"
   name = "github.com/blackducksoftware/perceivers"
-  branch = "master"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/blackducksoftware/perceptor-scanner"
-
-[[constraint]]
-  name = "github.com/sirupsen/logrus"
   version = "1.0.5"
+  name = "github.com/sirupsen/logrus"
 
 [[constraint]]
-  name = "github.com/fsouza/go-dockerclient"
   version = "1.2.0"
+  name = "github.com/fsouza/go-dockerclient"
 
 [prune]
   go-tests = true

@@ -175,10 +175,10 @@
   version = "v0.3.3"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/libnetwork"
   packages = ["ipamutils"]
-  revision = "6d23f11e681f24ee31802939e243fe8be41a75eb"
-  version = "v0.8.0-dev.2"
+  revision = "67348f5260289ca8bd3a61a6f83bde656ba35765"
 
 [[projects]]
   name = "github.com/fsnotify/fsnotify"
@@ -791,6 +791,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "003564c6266ac60d379c0f57fd553a33fcb36fd2da200a62633b1ebf86290bba"
+  inputs-digest = "fc187976c4c88984fea734c7ebbffcda2b769fd8c4d380711225d0f5ffa7f9cb"
   solver-name = "gps-cdcl"
   solver-version = 1
