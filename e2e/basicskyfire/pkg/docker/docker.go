@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package basicskyfire
+package docker
 
 import (
 	"encoding/json"
@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	http "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/http"
 	dockerClient "github.com/fsouza/go-dockerclient"
 )
 
@@ -44,9 +45,9 @@ type Result struct {
 }
 
 type Image struct {
-	imageName string
-	version   string
-	podName   string
+	ImageName string
+	Tag       string
+	PodName   string
 }
 
 var dockerRepos = []string{"centos", "alpine", "nginx", "busybox", "redis", "ubuntu", "mongo", "memcached", "mysql", "postgres",
@@ -88,9 +89,9 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 			var body []byte
 			var err error
 			if strings.Contains(repo.Name, "/") {
-				body, err = getHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
+				body, err = http.GetHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
 			} else {
-				body, err = getHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
+				body, err = http.GetHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
 			}
 
 			if err != nil {
@@ -106,9 +107,9 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 
 			tagCount := 0
 			randomCount := random(1, 10)
-			fmt.Printf("Randome count: %d \n", randomCount)
+			fmt.Printf("Random count: %d \n", randomCount)
 			for _, tag := range tags.Results {
-				images = append(images, Image{imageName: repo.Name, version: tag.Name, podName: fmt.Sprintf("%s%d", podName, tagCount)})
+				images = append(images, Image{ImageName: repo.Name, Tag: tag.Name, PodName: fmt.Sprintf("%s%d", podName, tagCount)})
 				count++
 				if count == imageCount {
 					return images

@@ -19,21 +19,23 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package basicskyfire
+package common
 
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"time"
 
+	http "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/http"
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 )
 
+func PrettyPrint(v interface{}) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	println(string(b))
+}
+
 func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
-	bodyBytes, err := getHttpResponse(skyfireURL, 200)
+	bodyBytes, err := http.GetHttpResponse(skyfireURL, 200)
 
 	if err != nil {
 		panic(fmt.Sprintf("Unable to get the response for %s due to %+v", skyfireURL, err.Error()))
@@ -46,40 +48,4 @@ func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
 	}
 
 	return report, nil
-}
-
-func getHttpResponseBody(url string, responseCode int) (io.ReadCloser, error) {
-	httpClient := http.Client{Timeout: 5 * time.Second}
-	resp, err := httpClient.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	return resp.Body, err
-}
-
-func getHttpResponse(url string, responseCode int) ([]byte, error) {
-	httpClient := http.Client{Timeout: 5 * time.Second}
-	resp, err := httpClient.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != responseCode {
-		return nil, fmt.Errorf("invalid status code %d, expected 200", resp.StatusCode)
-	}
-
-	return bodyBytes, nil
-}
-
-func PrettyPrint(v interface{}) {
-	b, _ := json.MarshalIndent(v, "", "  ")
-	println(string(b))
 }

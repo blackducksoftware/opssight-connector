@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package basicskyfire
+package pod
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ type Pod struct {
 	Port      int32
 }
 
-var pods []*Pod
+var Pods []*Pod
 
 func createDefaults() *api.ProtoformDefaults {
 	d := protoform.NewDefaultsObj()
@@ -45,15 +45,15 @@ func createDefaults() *api.ProtoformDefaults {
 	return d
 }
 
-func addPods(name string, imageName string, port int32) {
+func AddPods(name string, imageName string, port int32) {
 	pod := &Pod{Name: name, ImageName: imageName, Port: port}
-	pods = append(pods, pod)
+	Pods = append(Pods, pod)
 }
 
-func createPods() {
+func CreatePods(configPath string) {
 	os.Setenv("PCP_HUBUSERPASSWORD", "example")
 	defaults := createDefaults()
-	i := protoform.NewInstaller(defaults, "protoform.json")
+	i := protoform.NewInstaller(defaults, configPath)
 
 	fmt.Printf("Default CPU is %s \n", i.Config.DefaultCPU)
 	fmt.Printf("Default Memory is %s \n", i.Config.DefaultMem)
@@ -68,7 +68,7 @@ func createPods() {
 		fmt.Errorf("Generating default memory failed for %s due to %+v", i.Config.DefaultMem, err.Error())
 	}
 
-	for _, pod := range pods {
+	for _, pod := range Pods {
 		i.AddPod([]*protoform.ReplicationController{
 			{
 				Name:   pod.Name,
