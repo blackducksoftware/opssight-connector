@@ -9,13 +9,14 @@ spec:
 #      name: viper-input
   containers:
     - name: mirage
-      image: gcr.io/gke-verification/blackducksoftware/opssight-mirage:e2e-stub
+#      image: gcr.io/gke-verification/blackducksoftware/opssight-mirage:viper-input
+      image: docker.io/msenmurugan/mirage:latest
       imagePullPolicy: Always
       command: ["./mirage"]
-      args: ["--skyfireBaseURL", "http://www.google.com"]
+      args: ["--skyfireHost", "skyfire", "--skyfirePort", "3005"]
 #      ports:
 #     - containerPort: 3002
       terminationMessagePath: /dev/termination-log
   restartPolicy: Never
-#  serviceAccountName: mirage-sa
-#  serviceAccount: mirage-sa
+  serviceAccountName: perceiver
+  serviceAccount: perceiver
