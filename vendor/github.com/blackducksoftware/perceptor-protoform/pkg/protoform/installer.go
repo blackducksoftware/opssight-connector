@@ -46,7 +46,8 @@ import (
 
 // Installer handles deploying configured components to a cluster
 type Installer struct {
-	config                 protoformConfig
+	// Config will have all viper inputs and default values
+	Config                 protoformConfig
 	replicationControllers []*types.ReplicationController
 	pods                   []*types.Pod
 	configMaps             []*types.ConfigMap
@@ -60,12 +61,12 @@ func NewInstaller(defaults *api.ProtoformDefaults, path string) *Installer {
 	i := Installer{}
 	i.readConfig(path)
 	i.setDefaults(defaults)
-	i.prettyPrint(i.config)
+	i.prettyPrint(i.Config)
 	return &i
 }
 
 func (i *Installer) setDefaults(defaults *api.ProtoformDefaults) {
-	configFields := reflect.ValueOf(&i.config).Elem()
+	configFields := reflect.ValueOf(&i.Config).Elem()
 	defaultFields := reflect.ValueOf(defaults).Elem()
 	for cnt := 0; cnt < configFields.NumField(); cnt++ {
 		fieldName := configFields.Type().Field(cnt).Name
@@ -105,8 +106,8 @@ func (i *Installer) readConfig(configPath string) {
 		panic("No hub database password secret supplied.  Please inject PCP_HUBUSERPASSWORD as a secret and restart")
 	}
 
-	i.config.HubUserPasswordEnvVar = "PCP_HUBUSERPASSWORD"
-	i.config.ViperSecret = "viper-secret"
+	i.Config.HubUserPasswordEnvVar = "PCP_HUBUSERPASSWORD"
+	i.Config.ViperSecret = "viper-secret"
 	log.Print(configPath)
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -116,7 +117,7 @@ func (i *Installer) readConfig(configPath string) {
 	internalRegistry := viper.GetStringSlice("InternalDockerRegistries")
 	viper.Set("InternalDockerRegistries", internalRegistry)
 
-	viper.Unmarshal(&i.config)
+	viper.Unmarshal(&i.Config)
 	log.Print("*************** [protoform] done reading in config ****************")
 
 }
@@ -195,7 +196,7 @@ func (i *Installer) AddConfigMap(conf api.ConfigMapConfig) {
 
 // Run will start the installer
 func (i *Installer) Run() {
-	if !i.config.DryRun {
+	if !i.Config.DryRun {
 		// creates the in-cluster config
 		config, err := rest.InClusterConfig()
 		if err != nil {
@@ -209,14 +210,13 @@ func (i *Installer) Run() {
 		}
 	}
 
-	i.init()
 	i.deploy()
 	log.Println("Entering pod listing loop!")
 
 	// continually print out pod statuses .  can exit any time.  maybe use this as a stub for self testing.
-	if !i.config.DryRun {
+	if !i.Config.DryRun {
 		for cnt := 0; cnt < 10; cnt++ {
-			pods, _ := i.client.Core().Pods(i.config.Namespace).List(v1meta.ListOptions{})
+			pods, _ := i.client.Core().Pods(i.Config.Namespace).List(v1meta.ListOptions{})
 			for _, pod := range pods.Items {
 				log.Printf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
 			}
@@ -228,7 +228,8 @@ func (i *Installer) Run() {
 	return
 }
 
-func (i *Installer) init() {
+// AddPerceptorResources method is to support perceptor projects TODO: Remove perceptor specific code
+func (i *Installer) AddPerceptorResources() {
 	i.addDefaultServiceAccounts()
 	isValid := i.sanityCheckServices()
 	if isValid == false {
@@ -241,26 +242,26 @@ func (i *Installer) init() {
 }
 
 func (i *Installer) substituteDefaultImageVersion() {
-	if len(i.config.PerceptorContainerVersion) == 0 {
-		i.config.PerceptorContainerVersion = i.config.DefaultVersion
+	if len(i.Config.PerceptorContainerVersion) == 0 {
+		i.Config.PerceptorContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.ScannerContainerVersion) == 0 {
-		i.config.ScannerContainerVersion = i.config.DefaultVersion
+	if len(i.Config.ScannerContainerVersion) == 0 {
+		i.Config.ScannerContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.PerceiverContainerVersion) == 0 {
-		i.config.PerceiverContainerVersion = i.config.DefaultVersion
+	if len(i.Config.PerceiverContainerVersion) == 0 {
+		i.Config.PerceiverContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.ImageFacadeContainerVersion) == 0 {
-		i.config.ImageFacadeContainerVersion = i.config.DefaultVersion
+	if len(i.Config.ImageFacadeContainerVersion) == 0 {
+		i.Config.ImageFacadeContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.SkyfireContainerVersion) == 0 {
-		i.config.SkyfireContainerVersion = i.config.DefaultVersion
+	if len(i.Config.SkyfireContainerVersion) == 0 {
+		i.Config.SkyfireContainerVersion = i.Config.DefaultVersion
 	}
 }
 
 func (i *Installer) addDefaultServiceAccounts() {
 	// TODO Viperize these env vars.
-	if len(i.config.ServiceAccounts) == 0 {
+	if len(i.Config.ServiceAccounts) == 0 {
 		log.Println("NO SERVICE ACCOUNTS FOUND.  USING DEFAULTS: MAKE SURE THESE EXIST!")
 
 		svcAccounts := map[string]string{
@@ -271,7 +272,7 @@ func (i *Installer) addDefaultServiceAccounts() {
 		}
 		// TODO programatically validate rather then sanity check.
 		i.prettyPrint(svcAccounts)
-		i.config.ServiceAccounts = svcAccounts
+		i.Config.ServiceAccounts = svcAccounts
 	}
 }
 
@@ -476,11 +477,11 @@ func (i *Installer) addPerceptorResources() {
 
 	// WARNING: THE SERVICE ACCOUNT IN THE FIRST CONTAINER IS USED FOR THE GLOBAL SVC ACCOUNT FOR ALL PODS !!!!!!!!!!!!!
 	// MAKE SURE IF YOU NEED A SVC ACCOUNT THAT ITS IN THE FIRST CONTAINER...
-	defaultMem, err := i.GenerateDefaultMemory(i.config.DefaultMem)
+	defaultMem, err := i.GenerateDefaultMemory(i.Config.DefaultMem)
 	if err != nil {
 		panic(err)
 	}
-	defaultCPU, err := i.GenerateDefaultCPU(i.config.DefaultCPU)
+	defaultCPU, err := i.GenerateDefaultCPU(i.Config.DefaultCPU)
 	if err != nil {
 		panic(err)
 	}
@@ -491,14 +492,14 @@ func (i *Installer) addPerceptorResources() {
 			ConfigMapMounts: map[string]string{"perceptor": "/etc/perceptor"},
 			Env: []envSecret{
 				{
-					EnvName:       i.config.HubUserPasswordEnvVar,
-					SecretName:    i.config.ViperSecret,
+					EnvName:       i.Config.HubUserPasswordEnvVar,
+					SecretName:    i.Config.ViperSecret,
 					KeyFromSecret: "HubUserPassword",
 				},
 			},
-			Name:   i.config.PerceptorImageName,
+			Name:   i.Config.PerceptorImageName,
 			Image:  paths["perceptor"],
-			Port:   int32(i.config.PerceptorPort),
+			Port:   int32(i.Config.PerceptorPort),
 			Cmd:    []string{"./perceptor"},
 			Arg:    []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor/perceptor.yaml", 0)},
 			CPU:    defaultCPU,
@@ -513,13 +514,13 @@ func (i *Installer) addPerceptorResources() {
 			EmptyDirMounts: map[string]string{
 				"logs": "/tmp",
 			},
-			Name:               i.config.PodPerceiverImageName,
+			Name:               i.Config.PodPerceiverImageName,
 			Image:              paths["pod-perceiver"],
-			Port:               int32(i.config.PerceiverPort),
+			Port:               int32(i.Config.PerceiverPort),
 			Cmd:                []string{"./pod-perceiver"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceiver/perceiver.yaml", 0)},
-			ServiceAccountName: i.config.ServiceAccounts["pod-perceiver"],
-			ServiceAccount:     i.config.ServiceAccounts["pod-perceiver"],
+			ServiceAccountName: i.Config.ServiceAccounts["pod-perceiver"],
+			ServiceAccount:     i.Config.ServiceAccounts["pod-perceiver"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -527,26 +528,26 @@ func (i *Installer) addPerceptorResources() {
 
 	i.AddReplicationControllerAndService([]*ReplicationController{
 		{
-			Replicas:        int32(math.Ceil(float64(i.config.ConcurrentScanLimit) / 2.0)),
+			Replicas:        int32(math.Ceil(float64(i.Config.ConcurrentScanLimit) / 2.0)),
 			ConfigMapMounts: map[string]string{"perceptor-scanner": "/etc/perceptor_scanner"},
 			Env: []envSecret{
 				{
-					EnvName:       i.config.HubUserPasswordEnvVar,
-					SecretName:    i.config.ViperSecret,
+					EnvName:       i.Config.HubUserPasswordEnvVar,
+					SecretName:    i.Config.ViperSecret,
 					KeyFromSecret: "HubUserPassword",
 				},
 			},
 			EmptyDirMounts: map[string]string{
 				"var-images": "/var/images",
 			},
-			Name:               i.config.ScannerImageName,
+			Name:               i.Config.ScannerImageName,
 			Image:              paths["perceptor-scanner"],
 			DockerSocket:       false,
-			Port:               int32(i.config.ScannerPort),
+			Port:               int32(i.Config.ScannerPort),
 			Cmd:                []string{"./perceptor-scanner"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_scanner/perceptor_scanner.yaml", 0)},
-			ServiceAccount:     i.config.ServiceAccounts["perceptor-image-facade"],
-			ServiceAccountName: i.config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccount:     i.Config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccountName: i.Config.ServiceAccounts["perceptor-image-facade"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -555,14 +556,14 @@ func (i *Installer) addPerceptorResources() {
 			EmptyDirMounts: map[string]string{
 				"var-images": "/var/images",
 			},
-			Name:               i.config.ImageFacadeImageName,
+			Name:               i.Config.ImageFacadeImageName,
 			Image:              paths["perceptor-imagefacade"],
 			DockerSocket:       true,
-			Port:               int32(i.config.ImageFacadePort),
+			Port:               int32(i.Config.ImageFacadePort),
 			Cmd:                []string{"./perceptor-imagefacade"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_imagefacade/perceptor_imagefacade.yaml", 0)},
-			ServiceAccount:     i.config.ServiceAccounts["perceptor-image-facade"],
-			ServiceAccountName: i.config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccount:     i.Config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccountName: i.Config.ServiceAccounts["perceptor-image-facade"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -570,7 +571,7 @@ func (i *Installer) addPerceptorResources() {
 
 	// We dont create openshift perceivers if running kube... This needs to be avoided b/c the svc accounts
 	// won't exist.
-	if i.config.Openshift {
+	if i.Config.Openshift {
 		i.AddReplicationControllerAndService([]*ReplicationController{
 			{
 				Replicas:        1,
@@ -578,20 +579,20 @@ func (i *Installer) addPerceptorResources() {
 				EmptyDirMounts: map[string]string{
 					"logs": "/tmp",
 				},
-				Name:               i.config.ImagePerceiverImageName,
+				Name:               i.Config.ImagePerceiverImageName,
 				Image:              paths["image-perceiver"],
-				Port:               int32(i.config.PerceiverPort),
+				Port:               int32(i.Config.PerceiverPort),
 				Cmd:                []string{"./image-perceiver"},
 				Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceiver/perceiver.yaml", 0)},
-				ServiceAccount:     i.config.ServiceAccounts["image-perceiver"],
-				ServiceAccountName: i.config.ServiceAccounts["image-perceiver"],
+				ServiceAccount:     i.Config.ServiceAccounts["image-perceiver"],
+				ServiceAccountName: i.Config.ServiceAccounts["image-perceiver"],
 				CPU:                defaultCPU,
 				Memory:             defaultMem,
 			},
 		})
 	}
 
-	if i.config.PerceptorSkyfire {
+	if i.Config.PerceptorSkyfire {
 		i.AddReplicationControllerAndService([]*ReplicationController{
 			{
 				Replicas:        1,
@@ -601,18 +602,18 @@ func (i *Installer) addPerceptorResources() {
 				},
 				Env: []envSecret{
 					{
-						EnvName:       i.config.HubUserPasswordEnvVar,
-						SecretName:    i.config.ViperSecret,
+						EnvName:       i.Config.HubUserPasswordEnvVar,
+						SecretName:    i.Config.ViperSecret,
 						KeyFromSecret: "HubUserPassword",
 					},
 				},
-				Name:               i.config.SkyfireImageName,
+				Name:               i.Config.SkyfireImageName,
 				Image:              paths["perceptor-skyfire"],
 				Port:               3005,
 				Cmd:                []string{"./skyfire"},
 				Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/skyfire/skyfire.yaml", 0)},
-				ServiceAccount:     i.config.ServiceAccounts["image-perceiver"],
-				ServiceAccountName: i.config.ServiceAccounts["image-perceiver"],
+				ServiceAccount:     i.Config.ServiceAccounts["image-perceiver"],
+				ServiceAccountName: i.Config.ServiceAccounts["image-perceiver"],
 				CPU:                defaultCPU,
 				Memory:             defaultMem,
 			},
@@ -620,6 +621,7 @@ func (i *Installer) addPerceptorResources() {
 	}
 }
 
+// Deploy function will create the config maps, replication controllers, pods and services that have been added to the global list
 func (i *Installer) deploy() {
 	// Create all the resources.  Note that we'll panic after creating ANY
 	// resource that fails.  Thats intentional
@@ -634,9 +636,9 @@ func (i *Installer) deploy() {
 		}
 		log.Println("*********************************************")
 		log.Println("Creating config maps:", configMap)
-		if !i.config.DryRun {
+		if !i.Config.DryRun {
 			log.Println("creating config map")
-			_, err := i.client.Core().ConfigMaps(i.config.Namespace).Create(configMap)
+			_, err := i.client.Core().ConfigMaps(i.Config.Namespace).Create(configMap)
 			if err != nil {
 				panic(err)
 			}
@@ -653,8 +655,8 @@ func (i *Installer) deploy() {
 			panic(err)
 		}
 		i.prettyPrint(rc)
-		if !i.config.DryRun {
-			_, err := i.client.Core().ReplicationControllers(i.config.Namespace).Create(rc)
+		if !i.Config.DryRun {
+			_, err := i.client.Core().ReplicationControllers(i.Config.Namespace).Create(rc)
 			if err != nil {
 				panic(err)
 			}
@@ -669,8 +671,8 @@ func (i *Installer) deploy() {
 			panic(err)
 		}
 		i.prettyPrint(pod)
-		if !i.config.DryRun {
-			_, err := i.client.Core().Pods(i.config.Namespace).Create(pod)
+		if !i.Config.DryRun {
+			_, err := i.client.Core().Pods(i.Config.Namespace).Create(pod)
 			if err != nil {
 				panic(err)
 			}
@@ -684,11 +686,11 @@ func (i *Installer) deploy() {
 		if err != nil {
 			panic(err)
 		}
-		if i.config.DryRun {
+		if i.Config.DryRun {
 			// service dont really need much debug...
 			// i.prettyPrint(svcI)
 		} else {
-			_, err := i.client.Core().Services(i.config.Namespace).Create(svcI)
+			_, err := i.client.Core().Services(i.Config.Namespace).Create(svcI)
 			if err != nil {
 				panic(err)
 			}
@@ -705,7 +707,7 @@ func (i *Installer) sanityCheckServices() bool {
 		}
 		return false
 	}
-	for cn := range i.config.ServiceAccounts {
+	for cn := range i.Config.ServiceAccounts {
 		if !isValid(cn) {
 			log.Print("[protoform] failed at verifiying that the container name for a svc account was valid!")
 			log.Fatalln(cn)
@@ -715,10 +717,10 @@ func (i *Installer) sanityCheckServices() bool {
 }
 
 func (i *Installer) createConfigMaps() {
-	for k, v := range i.config.toMap() {
+	for k, v := range i.Config.toMap() {
 		mapConfig := api.ConfigMapConfig{
 			Name:      k,
-			Namespace: i.config.Namespace,
+			Namespace: i.Config.Namespace,
 			Data:      v,
 		}
 		i.AddConfigMap(mapConfig)
@@ -726,7 +728,7 @@ func (i *Installer) createConfigMaps() {
 }
 
 func (i *Installer) generateContainerPaths() map[string]string {
-	config := i.config
+	config := i.Config
 	return map[string]string{
 		"perceptor":             fmt.Sprintf("%s/%s/%s:%s", config.Registry, config.ImagePath, config.PerceptorImageName, config.PerceptorContainerVersion),
 		"perceptor-scanner":     fmt.Sprintf("%s/%s/%s:%s", config.Registry, config.ImagePath, config.ScannerImageName, config.ScannerContainerVersion),

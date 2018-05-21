@@ -49,9 +49,9 @@ type Scanner struct {
 func NewScanner(config *Config) (*Scanner, error) {
 	log.Infof("instantiating Scanner with config %+v", config)
 
-	hubPassword := os.Getenv(config.HubUserPasswordEnvVar)
-	if hubPassword == "" {
-		return nil, fmt.Errorf("unable to read hub password")
+	hubPassword, ok := os.LookupEnv(config.HubUserPasswordEnvVar)
+	if !ok {
+		return nil, fmt.Errorf("unable to get Hub password: environment variable %s not set", config.HubUserPasswordEnvVar)
 	}
 
 	err := os.Setenv("BD_HUB_PASSWORD", hubPassword)

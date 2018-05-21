@@ -50,7 +50,6 @@
     "hubclient"
   ]
   revision = "373ae7b666893f7ea9285f02d31eceb552946b25"
-  source = "git@github.com:blackducksoftware/hub-client-go.git"
   version = "v0.9.4"
 
 [[projects]]
@@ -82,7 +81,7 @@
     "pkg/hub",
     "pkg/logging"
   ]
-  revision = "c3c93f0484c6b9ba74b56d92adb2deb4de3b5b4f"
+  revision = "b4b4bbe99831c0044b5e489d0ff51ef80cfafafb"
 
 [[projects]]
   branch = "master"
@@ -91,7 +90,7 @@
     "pkg/api",
     "pkg/protoform"
   ]
-  revision = "606d5ad2325336bce88f652908e4d647f18772e8"
+  revision = "0b8515e4cf587ecc5a4d1698e52824fd74089e84"
 
 [[projects]]
   branch = "master"
@@ -105,7 +104,7 @@
     "pkg/imagefacade",
     "pkg/scanner"
   ]
-  revision = "6f83f9459c0a92562cfe419a9b79f6668f2db2d2"
+  revision = "416eac0154f5a77653b38704e9eecb2dc85143ef"
 
 [[projects]]
   branch = "master"
@@ -116,7 +115,7 @@
     "pkg/perceptor",
     "pkg/report"
   ]
-  revision = "a869ece0a44276d41173daae2e35f1e84e4fd7a0"
+  revision = "e1086b45d2e7a83409ca25b39b865af172c1ab58"
 
 [[projects]]
   branch = "master"
