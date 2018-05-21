@@ -24,7 +24,6 @@ package basicskyfire
 import (
 	"flag"
 	"fmt"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -57,13 +56,9 @@ func BasicSkyfireTests(skyfireURL string) {
 
 	images := GetDockerImages(30)
 
-	imageCount := 0
 	for _, image := range images {
-		podName := strings.Replace(fmt.Sprintf("%s%d", image.name, imageCount), "/", "-", -1)
-		podName = strings.Replace(podName, ".", "-", -1)
-		fmt.Printf("pod name: %s, image: %s:%s \n", podName, image.name, image.version)
-		addPods(podName, fmt.Sprintf("%s:%s", image.name, image.version), int32(3007))
-		imageCount++
+		fmt.Printf("pod name: %s, image: %s:%s \n", image.podName, image.imageName, image.version)
+		addPods(image.podName, fmt.Sprintf("%s:%s", image.imageName, image.version), int32(3007))
 	}
 
 	createPods()

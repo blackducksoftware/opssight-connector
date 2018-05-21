@@ -44,8 +44,9 @@ type Result struct {
 }
 
 type Image struct {
-	name    string
-	version string
+	imageName string
+	version   string
+	podName   string
 }
 
 var dockerRepos = []string{"centos", "alpine", "nginx", "busybox", "redis", "ubuntu", "mongo", "memcached", "mysql", "postgres",
@@ -86,25 +87,35 @@ func GetDockerImages(imageCount int) []Image {
 		repos, _ := docker.Client.SearchImages(dockerRepo)
 		for _, repo := range repos {
 			var body []byte
+			var err error
 			if strings.Contains(repo.Name, "/") {
-				body, _ = getHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
+				body, err = getHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
 			} else {
-				body, _ = getHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
+				body, err = getHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
+			}
+
+			if err != nil {
+				fmt.Errorf("Unable to get docker tags for the repo %s due to %+v", repo.Name, err)
 			}
 
 			var tags Tag
-			err := json.Unmarshal(body, &tags)
-			fmt.Errorf("Unable to unmarshall docker tag response: %+v", err)
+			err = json.Unmarshal(body, &tags)
+			fmt.Errorf("Unable to unmarshall docker tag response for the repo %s due to %+v", repo.Name, err)
+
+			podName := strings.Replace(repo.Name, "/", "-", -1)
+			podName = strings.Replace(podName, ".", "-", -1)
 
 			tagCount := 0
+			randomCount := random(1, 10)
+			fmt.Printf("Randome count: %d \n", randomCount)
 			for _, tag := range tags.Results {
-				images = append(images, Image{name: repo.Name, version: tag.Name})
+				images = append(images, Image{imageName: repo.Name, version: tag.Name, podName: fmt.Sprintf("%s%d", podName, tagCount)})
 				count++
 				if count == imageCount {
 					return images
 				}
 				tagCount++
-				if tagCount == random(1, 10) {
+				if tagCount == randomCount {
 					break
 				}
 			}
