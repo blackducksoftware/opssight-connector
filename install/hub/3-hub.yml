@@ -49,10 +49,10 @@ items:
           resources:
             requests:
               cpu: 1
-              memory: 4608M
+              memory: 8G
             limits:
-              cpu: 1
-              memory: 4608M
+              cpu: 2
+              memory: 8G
           env:
           - name: HUB_MAX_MEMORY
             valueFrom:
