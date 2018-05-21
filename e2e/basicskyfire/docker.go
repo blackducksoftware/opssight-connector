@@ -79,12 +79,11 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-func GetDockerImages(imageCount int) []Image {
+func (d *Docker) GetDockerImages(imageCount int) []Image {
 	var images []Image
-	docker, _ := NewDocker()
 	count := 0
 	for _, dockerRepo := range dockerRepos {
-		repos, _ := docker.Client.SearchImages(dockerRepo)
+		repos, _ := d.Client.SearchImages(dockerRepo)
 		for _, repo := range repos {
 			var body []byte
 			var err error

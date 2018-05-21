@@ -54,7 +54,11 @@ func BasicSkyfireTests(skyfireURL string) {
 		return
 	}
 
-	images := GetDockerImages(30)
+	dockerClient, err := NewDocker()
+	if err != nil {
+		fmt.Errorf("Unable to instantiate Docker client due to %+v", err)
+	}
+	images := dockerClient.GetDockerImages(30)
 
 	for _, image := range images {
 		fmt.Printf("pod name: %s, image: %s:%s \n", image.podName, image.imageName, image.version)
