@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package docker
+package basicskyfire
 
 import (
 	"encoding/json"
@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	http "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/http"
 	dockerClient "github.com/fsouza/go-dockerclient"
 )
 
@@ -89,9 +88,9 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 			var body []byte
 			var err error
 			if strings.Contains(repo.Name, "/") {
-				body, err = http.GetHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
+				body, err = getHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
 			} else {
-				body, err = http.GetHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
+				body, err = getHttpResponse(fmt.Sprintf("https://registry.hub.docker.com/v2/repositories/library/%s/tags/", repo.Name), 200)
 			}
 
 			if err != nil {

@@ -19,33 +19,31 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package common
+package basicskyfire
 
 import (
-	"encoding/json"
 	"fmt"
-
-	http "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/http"
-	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
+	"io/ioutil"
+	"net/http"
+	"time"
 )
 
-func PrettyPrint(v interface{}) {
-	b, _ := json.MarshalIndent(v, "", "  ")
-	println(string(b))
-}
-
-func FetchSkyfireReport(skyfireURL string) (*skyfire.Report, error) {
-	bodyBytes, err := http.GetHttpResponse(skyfireURL, 200)
-
+func getHttpResponse(url string, responseCode int) ([]byte, error) {
+	httpClient := http.Client{Timeout: 5 * time.Second}
+	resp, err := httpClient.Get(url)
 	if err != nil {
-		panic(fmt.Sprintf("Unable to get the response for %s due to %+v", skyfireURL, err.Error()))
+		return nil, err
 	}
+	defer resp.Body.Close()
 
-	var report *skyfire.Report
-	err = json.Unmarshal(bodyBytes, &report)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return report, nil
+	if resp.StatusCode != responseCode {
+		return nil, fmt.Errorf("invalid status code %d, expected 200", resp.StatusCode)
+	}
+
+	return bodyBytes, nil
 }

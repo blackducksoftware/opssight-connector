@@ -1,3 +1,3 @@
-go test -c -o ./basictest ./basicskyfire/test/
+go test -c -o ./basictest ./basicskyfire/
 
 ./basictest --skyfireHost skyfire --skyfirePort 3005

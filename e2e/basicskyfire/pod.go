@@ -19,7 +19,7 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package pod
+package basicskyfire
 
 import (
 	"fmt"
@@ -45,12 +45,12 @@ func createDefaults() *api.ProtoformDefaults {
 	return d
 }
 
-func AddPods(name string, imageName string, port int32) {
+func addPods(name string, imageName string, port int32) {
 	pod := &Pod{Name: name, ImageName: imageName, Port: port}
 	Pods = append(Pods, pod)
 }
 
-func CreatePods(configPath string) {
+func createPods(configPath string) {
 	os.Setenv("PCP_HUBUSERPASSWORD", "example")
 	defaults := createDefaults()
 	i := protoform.NewInstaller(defaults, configPath)

@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/common"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -49,7 +48,7 @@ func TestBasicSkyfire(t *testing.T) {
 
 func BasicSkyfireTests(skyfireURL string) {
 	fmt.Printf("skyfireURL: %s\n", skyfireURL)
-	_, err := FetchSkyfireReport(skyfireURL)
+	_, err := fetchSkyfireReport(skyfireURL)
 	if err != nil {
 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
 		return

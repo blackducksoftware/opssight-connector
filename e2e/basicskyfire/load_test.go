@@ -25,9 +25,6 @@ import (
 	"fmt"
 	"testing"
 
-	common "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/common"
-	docker "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/docker"
-	pod "github.com/blackducksoftware/opssight-connector/e2e/basicskyfire/pkg/pod"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -42,13 +39,13 @@ func TestLoad(t *testing.T) {
 
 func LoadTests(skyfireURL string) {
 	fmt.Printf("skyfireURL: %s\n", skyfireURL)
-	_, err := common.FetchSkyfireReport(skyfireURL)
+	_, err := fetchSkyfireReport(skyfireURL)
 	if err != nil {
 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
 		return
 	}
 
-	dockerClient, err := docker.NewDocker()
+	dockerClient, err := NewDocker()
 	if err != nil {
 		fmt.Errorf("Unable to instantiate Docker client due to %+v", err)
 	}
@@ -56,10 +53,10 @@ func LoadTests(skyfireURL string) {
 
 	for _, image := range images {
 		fmt.Printf("pod name: %s, image: %s:%s \n", image.PodName, image.ImageName, image.Tag)
-		pod.AddPods(image.PodName, fmt.Sprintf("%s:%s", image.ImageName, image.Tag), int32(3007))
+		addPods(image.PodName, fmt.Sprintf("%s:%s", image.ImageName, image.Tag), int32(3007))
 	}
 
-	pod.CreatePods("protoform.json")
+	createPods("protoform.json")
 
 	// TODO: write test cases to verify the created pod by using skyfire
 }
