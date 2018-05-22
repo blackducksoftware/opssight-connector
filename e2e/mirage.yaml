@@ -1,22 +1,50 @@
 apiVersion: v1
-kind: Pod
+kind: List
 metadata:
-  name: mirage
-spec:
-#  volumes:
-#  - name: viper-input
-#    configMap:
-#      name: viper-input
-  containers:
-    - name: mirage
-#      image: gcr.io/gke-verification/blackducksoftware/opssight-mirage:viper-input
-      image: docker.io/msenmurugan/mirage:latest
-      imagePullPolicy: Always
-      command: ["./mirage"]
-      args: ["--skyfireHost", "skyfire", "--skyfirePort", "3005"]
-#      ports:
-#     - containerPort: 3002
-      terminationMessagePath: /dev/termination-log
-  restartPolicy: Never
-  serviceAccountName: perceiver
-  serviceAccount: perceiver
+  name: "Mirage Automation"
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    name: mirage
+  spec:
+    volumes:
+      - name: mirage
+        configMap:
+          name: mirage
+      - name: dir-docker-socket
+        hostPath:
+          path: /var/run/docker.sock
+    containers:
+      - name: mirage
+        image: docker.io/msenmurugan/mirage:latest
+        volumeMounts:
+          - name: mirage
+            mountPath: /etc/mirage
+          - mountPath: /var/run/docker.sock
+            name: dir-docker-socket
+        imagePullPolicy: Always
+        command:
+          - "./mirage"
+        args:
+          - "--skyfireHost"
+          - "skyfire"
+          - "--skyfirePort"
+          - "3005"
+          - "--noOfPods"
+          - "40"
+          - "--configPath"
+          - "/etc/mirage/mirage.yaml"
+        terminationMessagePath: /dev/termination-log
+    restartPolicy: Never
+    serviceAccountName: perceiver
+    serviceAccount: perceiver
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: mirage
+  data:
+    mirage.yaml: |
+      DefaultCPU: "100m"
+      DefaultMem: "100Mi"
+      DryRun: false

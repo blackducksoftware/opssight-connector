@@ -11,7 +11,7 @@ sleep $sleepseconds
 # verify skyfire stats
 echo "about to run basic skyfire tests"
 set +e
-ginkgo ./basicskyfire -- --skyfireHost $1 --skyfirePort $2
+ginkgo ./basicskyfire -- --skyfireHost $1 --skyfirePort $2 --noOfPods $3 --configPath $4
 set -e
 
 # spin up new pod
@@ -29,7 +29,7 @@ sleep $sleepseconds
 # verify skyfire tests
 echo "about to run basic skyfire tests"
 set +e
-ginkgo ./basicskyfire -- --skyfireHost $1 --skyfirePort $2
+ginkgo ./basicskyfire -- --skyfireHost $1 --skyfirePort $2 --noOfPods $3 --configPath $4
 set -e
 
 # ???? tests
