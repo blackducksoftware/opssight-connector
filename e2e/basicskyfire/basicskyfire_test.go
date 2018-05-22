@@ -34,14 +34,15 @@ var err error
 
 func init() {
 	flag.StringVar(&configPath, "configPath", "protoform.json", "configPath to find the config files")
+}
+
+func TestBasicSkyfire(t *testing.T) {
+	log.Printf("Config Path: %s", configPath)
 	config, err = GetConfig(configPath)
 
 	if err != nil {
 		log.Errorf("Failed to load the viper config due to %+v", err.Error())
 	}
-}
-
-func TestBasicSkyfire(t *testing.T) {
 	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
 	BasicSkyfireTests(skyfireURL)
 	RegisterFailHandler(Fail)

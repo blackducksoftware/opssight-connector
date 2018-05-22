@@ -42,8 +42,8 @@ items:
       DefaultCPU: "10m"
       DefaultMem: "64Mi"
       DryRun: false
-      "Namespace": "perceptor",
-      "SkyfireHost": "skyfire",
-      "SkyfirePort": "3005",
-      "NoOfPods": 30,
-      "LogLevel": "debug"
+      Namespace: "perceptor"
+      SkyfireHost: "skyfire"
+      SkyfirePort: "3005"
+      NoOfPods: 30
+      LogLevel: "debug"

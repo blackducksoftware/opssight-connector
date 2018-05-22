@@ -24,9 +24,7 @@ package basicskyfire
 import (
 	"fmt"
 	"testing"
-	"time"
 
-	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -41,22 +39,22 @@ func TestLoad(t *testing.T) {
 
 func LoadTests(skyfireURL string) {
 	log.Printf("skyfireURL: %s", skyfireURL)
-	var report *skyfire.Report
+	// var report *skyfire.Report
 	var err error
-	for {
-		report, err = fetchSkyfireReport(skyfireURL)
-		if err != nil {
-			Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
-			return
-		}
-
-		log.Debugf("report: %v", report)
-		if report != nil {
-			break
-		} else {
-			time.Sleep(10 * time.Second)
-		}
-	}
+	// for {
+	// 	report, err = fetchSkyfireReport(skyfireURL)
+	// 	if err != nil {
+	// 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
+	// 		return
+	// 	}
+	//
+	// 	log.Debugf("report: %v", report)
+	// 	if report != nil {
+	// 		break
+	// 	} else {
+	// 		time.Sleep(10 * time.Second)
+	// 	}
+	// }
 
 	log.Debugln("Outside the skyfire for loop")
 
@@ -71,6 +69,7 @@ func LoadTests(skyfireURL string) {
 		addPods(image.PodName, fmt.Sprintf("%s:%s", image.ImageName, image.Tag), int32(3007))
 	}
 
+	log.Debugf("Config Path: %s", configPath)
 	createPods(configPath)
 
 	// TODO: write test cases to verify the created pod by using skyfire
