@@ -46,4 +46,4 @@ items:
       SkyfireHost: "skyfire"
       SkyfirePort: "3005"
       NoOfPods: 30
-      LogLevel: "debug"
+      LogLevel: "info"

@@ -24,7 +24,9 @@ package basicskyfire
 import (
 	"fmt"
 	"testing"
+	"time"
 
+	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -38,23 +40,22 @@ func TestLoad(t *testing.T) {
 }
 
 func LoadTests(skyfireURL string) {
-	log.Printf("skyfireURL: %s", skyfireURL)
-	// var report *skyfire.Report
+	var report *skyfire.Report
 	var err error
-	// for {
-	// 	report, err = fetchSkyfireReport(skyfireURL)
-	// 	if err != nil {
-	// 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
-	// 		return
-	// 	}
-	//
-	// 	log.Debugf("report: %v", report)
-	// 	if report != nil {
-	// 		break
-	// 	} else {
-	// 		time.Sleep(10 * time.Second)
-	// 	}
-	// }
+	for {
+		report, err = fetchSkyfireReport(skyfireURL)
+		if err != nil {
+			Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
+			return
+		}
+
+		log.Debugf("report: %v", report)
+		if report != nil {
+			break
+		} else {
+			time.Sleep(10 * time.Second)
+		}
+	}
 
 	log.Debugln("Outside the skyfire for loop")
 
@@ -65,12 +66,24 @@ func LoadTests(skyfireURL string) {
 	images := dockerClient.GetDockerImages(config.NoOfPods)
 
 	for _, image := range images {
-		log.Printf("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+		log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
 		addPods(image.PodName, fmt.Sprintf("%s:%s", image.ImageName, image.Tag), int32(3007))
 	}
 
-	log.Debugf("Config Path: %s", configPath)
 	createPods(configPath)
 
 	// TODO: write test cases to verify the created pod by using skyfire
+	// for _, image := range images {
+	// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+	//   Describe("OpsSight e2e Test", func() {
+	// 		It("Check whether the pod load created the pods in the cluster", func() {
+	//       report.Dump.Kube.PodsByName.
+	// 			Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(Equal(len(report.Kube.PartiallyAnnotatedPods)))
+	// 			Expect(len(report.Kube.PartiallyLabeledPods)).Should(Equal(len(report.Kube.PartiallyLabeledPods)))
+	// 			Expect(len(report.Kube.UnanalyzeablePods)).Should(Equal(len(report.Kube.UnanalyzeablePods)))
+	// 			Expect(len(report.Kube.UnparseableImages)).Should(Equal(len(report.Kube.UnparseableImages)))
+	// 		})
+	// 	})
+	// }
+
 }

@@ -36,6 +36,7 @@ type Pod struct {
 }
 
 var Pods []*Pod
+var PodNames map[string]bool
 
 func createDefaults() *api.ProtoformDefaults {
 	d := protoform.NewDefaultsObj()
@@ -43,8 +44,14 @@ func createDefaults() *api.ProtoformDefaults {
 }
 
 func addPods(name string, imageName string, port int32) {
-	pod := &Pod{Name: name, ImageName: imageName, Port: port}
-	Pods = append(Pods, pod)
+	if PodNames == nil {
+		PodNames = make(map[string]bool)
+	}
+	if !PodNames[name] {
+		PodNames[name] = true
+		pod := &Pod{Name: name, ImageName: imageName, Port: port}
+		Pods = append(Pods, pod)
+	}
 }
 
 func createPods(configPath string) {
@@ -52,8 +59,8 @@ func createPods(configPath string) {
 	defaults := createDefaults()
 	i := protoform.NewInstaller(defaults, configPath)
 
-	log.Printf("Default CPU is %s", i.Config.DefaultCPU)
-	log.Printf("Default Memory is %s", i.Config.DefaultMem)
+	log.Debugf("Default CPU is %s", i.Config.DefaultCPU)
+	log.Debugf("Default Memory is %s", i.Config.DefaultMem)
 
 	defaultCPU, err := i.GenerateDefaultCPU(i.Config.DefaultCPU)
 	if err != nil {

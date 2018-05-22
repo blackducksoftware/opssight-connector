@@ -100,7 +100,10 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 
 			var tags Tag
 			err = json.Unmarshal(body, &tags)
-			log.Errorf("Unable to unmarshall docker tag response for the repo %s due to %+v", repo.Name, err)
+			if err != nil {
+				log.Errorf("Unable to unmarshall docker tag response for the repo %s due to %+v", repo.Name, err)
+				continue
+			}
 
 			podName := strings.Replace(repo.Name, "/", "-", -1)
 			podName = strings.Replace(podName, ".", "-", -1)
@@ -108,7 +111,7 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 
 			tagCount := 0
 			randomCount := random(1, 10)
-			log.Printf("Random count: %d", randomCount)
+			log.Debugf("Random count: %d", randomCount)
 			for _, tag := range tags.Results {
 				images = append(images, Image{ImageName: repo.Name, Tag: tag.Name, PodName: fmt.Sprintf("%s%d", podName, tagCount)})
 				count++

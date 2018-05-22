@@ -37,7 +37,7 @@ func init() {
 }
 
 func TestBasicSkyfire(t *testing.T) {
-	log.Printf("Config Path: %s", configPath)
+	log.Infof("Config Path: %s", configPath)
 	config, err = GetConfig(configPath)
 
 	if err != nil {
@@ -50,7 +50,7 @@ func TestBasicSkyfire(t *testing.T) {
 }
 
 func BasicSkyfireTests(skyfireURL string) {
-	log.Printf("skyfireURL: %s", skyfireURL)
+	log.Infof("skyfireURL: %s", skyfireURL)
 	_, err := fetchSkyfireReport(skyfireURL)
 	if err != nil {
 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
