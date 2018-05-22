@@ -1,5 +1,10 @@
 {
   "DefaultCPU": "100m",
   "DefaultMem": "100Mi",
-  "DryRun": true
+  "DryRun": true,
+  "Namespace": "perceptor",
+  "SkyfireHost": "192.168.99.100",
+  "SkyfirePort": "32247",
+  "NoOfPods": 30,
+  "LogLevel": "debug"
 }

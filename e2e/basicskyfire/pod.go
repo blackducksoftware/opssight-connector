@@ -22,11 +22,11 @@ under the License.
 package basicskyfire
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/protoform"
+	log "github.com/sirupsen/logrus"
 )
 
 type Pod struct {
@@ -39,9 +39,6 @@ var Pods []*Pod
 
 func createDefaults() *api.ProtoformDefaults {
 	d := protoform.NewDefaultsObj()
-	d.Namespace = "perceptor"
-	// d.DefaultCPU = "100m"
-	// d.DefaultMem = "100Mi"
 	return d
 }
 
@@ -55,17 +52,17 @@ func createPods(configPath string) {
 	defaults := createDefaults()
 	i := protoform.NewInstaller(defaults, configPath)
 
-	fmt.Printf("Default CPU is %s \n", i.Config.DefaultCPU)
-	fmt.Printf("Default Memory is %s \n", i.Config.DefaultMem)
+	log.Printf("Default CPU is %s", i.Config.DefaultCPU)
+	log.Printf("Default Memory is %s", i.Config.DefaultMem)
 
 	defaultCPU, err := i.GenerateDefaultCPU(i.Config.DefaultCPU)
 	if err != nil {
-		fmt.Errorf("Generating default CPU failed for %s due to %+v", i.Config.DefaultCPU, err.Error())
+		log.Errorf("Generating default CPU failed for %s due to %+v", i.Config.DefaultCPU, err.Error())
 	}
 
 	defaultMemory, err := i.GenerateDefaultMemory(i.Config.DefaultMem)
 	if err != nil {
-		fmt.Errorf("Generating default memory failed for %s due to %+v", i.Config.DefaultMem, err.Error())
+		log.Errorf("Generating default memory failed for %s due to %+v", i.Config.DefaultMem, err.Error())
 	}
 
 	for _, pod := range Pods {

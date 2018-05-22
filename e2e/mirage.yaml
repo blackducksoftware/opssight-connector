@@ -27,12 +27,6 @@ items:
         command:
           - "./mirage"
         args:
-          - "--skyfireHost"
-          - "skyfire"
-          - "--skyfirePort"
-          - "3005"
-          - "--noOfPods"
-          - "40"
           - "--configPath"
           - "/etc/mirage/mirage.yaml"
         terminationMessagePath: /dev/termination-log
@@ -45,6 +39,11 @@ items:
     name: mirage
   data:
     mirage.yaml: |
-      DefaultCPU: "100m"
-      DefaultMem: "100Mi"
+      DefaultCPU: "10m"
+      DefaultMem: "64Mi"
       DryRun: false
+      "Namespace": "perceptor",
+      "SkyfireHost": "skyfire",
+      "SkyfirePort": "3005",
+      "NoOfPods": 30,
+      "LogLevel": "debug"

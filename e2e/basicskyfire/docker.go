@@ -29,6 +29,7 @@ import (
 	"time"
 
 	dockerClient "github.com/fsouza/go-dockerclient"
+	log "github.com/sirupsen/logrus"
 )
 
 type Docker struct {
@@ -94,19 +95,20 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 			}
 
 			if err != nil {
-				fmt.Errorf("Unable to get docker tags for the repo %s due to %+v", repo.Name, err)
+				log.Errorf("Unable to get docker tags for the repo %s due to %+v", repo.Name, err)
 			}
 
 			var tags Tag
 			err = json.Unmarshal(body, &tags)
-			fmt.Errorf("Unable to unmarshall docker tag response for the repo %s due to %+v", repo.Name, err)
+			log.Errorf("Unable to unmarshall docker tag response for the repo %s due to %+v", repo.Name, err)
 
 			podName := strings.Replace(repo.Name, "/", "-", -1)
 			podName = strings.Replace(podName, ".", "-", -1)
+			podName = strings.Replace(podName, "_", "-", -1)
 
 			tagCount := 0
 			randomCount := random(1, 10)
-			fmt.Printf("Random count: %d \n", randomCount)
+			log.Printf("Random count: %d", randomCount)
 			for _, tag := range tags.Results {
 				images = append(images, Image{ImageName: repo.Name, Tag: tag.Name, PodName: fmt.Sprintf("%s%d", podName, tagCount)})
 				count++

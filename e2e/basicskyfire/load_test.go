@@ -29,17 +29,18 @@ import (
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 )
 
 func TestLoad(t *testing.T) {
-	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", skyfireHost, skyfirePort)
+	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
 	LoadTests(skyfireURL)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "load-test")
 }
 
 func LoadTests(skyfireURL string) {
-	fmt.Printf("skyfireURL: %s\n", skyfireURL)
+	log.Printf("skyfireURL: %s", skyfireURL)
 	var report *skyfire.Report
 	var err error
 	for {
@@ -49,7 +50,7 @@ func LoadTests(skyfireURL string) {
 			return
 		}
 
-		fmt.Printf("report: %v", report)
+		log.Debugf("report: %v", report)
 		if report != nil {
 			break
 		} else {
@@ -57,16 +58,16 @@ func LoadTests(skyfireURL string) {
 		}
 	}
 
-	fmt.Println("Outside the for loop")
+	log.Debugln("Outside the skyfire for loop")
 
 	dockerClient, err := NewDocker()
 	if err != nil {
-		fmt.Errorf("Unable to instantiate Docker client due to %+v", err)
+		log.Errorf("Unable to instantiate Docker client due to %+v", err)
 	}
-	images := dockerClient.GetDockerImages(noOfPods)
+	images := dockerClient.GetDockerImages(config.NoOfPods)
 
 	for _, image := range images {
-		fmt.Printf("pod name: %s, image: %s:%s \n", image.PodName, image.ImageName, image.Tag)
+		log.Printf("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
 		addPods(image.PodName, fmt.Sprintf("%s:%s", image.ImageName, image.Tag), int32(3007))
 	}
 

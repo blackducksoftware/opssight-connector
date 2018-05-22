@@ -25,29 +25,31 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
 )
 
-var skyfireHost string
-var skyfirePort string
-var noOfPods int
 var configPath string
+var config *Config
+var err error
 
 func init() {
-	flag.StringVar(&skyfireHost, "skyfireHost", "192.168.99.100", "skyfireHost is where to find skyfire")
-	flag.StringVar(&skyfirePort, "skyfirePort", "31747", "skyfirePort is where to find skyfire port")
-	flag.IntVar(&noOfPods, "noOfPods", 1, "number of pods that need to be created")
 	flag.StringVar(&configPath, "configPath", "protoform.json", "configPath to find the config files")
+	config, err = GetConfig(configPath)
+
+	if err != nil {
+		log.Errorf("Failed to load the viper config due to %+v", err.Error())
+	}
 }
 
 func TestBasicSkyfire(t *testing.T) {
-	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", skyfireHost, skyfirePort)
+	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
 	BasicSkyfireTests(skyfireURL)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "basic-skyfire")
 }
 
 func BasicSkyfireTests(skyfireURL string) {
-	fmt.Printf("skyfireURL: %s\n", skyfireURL)
+	log.Printf("skyfireURL: %s", skyfireURL)
 	_, err := fetchSkyfireReport(skyfireURL)
 	if err != nil {
 		Fail(fmt.Sprintf("unable to fetch skyfire report from %s: %s", skyfireURL, err.Error()))
