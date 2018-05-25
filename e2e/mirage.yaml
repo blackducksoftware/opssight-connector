@@ -17,7 +17,7 @@ items:
           path: /var/run/docker.sock
     containers:
       - name: mirage
-        image: docker.io/msenmurugan/mirage:latest
+        image: docker.io/msenmurugan/mirage_test:latest
         volumeMounts:
           - name: mirage
             mountPath: /etc/mirage
@@ -42,8 +42,8 @@ items:
       DefaultCPU: "10m"
       DefaultMem: "64Mi"
       DryRun: false
-      Namespace: "perceptor"
+      Namespace: "mirage-test"
       SkyfireHost: "skyfire"
       SkyfirePort: "3005"
-      NoOfPods: 30
+      NoOfPods: 5
       LogLevel: "info"

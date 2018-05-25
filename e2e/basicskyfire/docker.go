@@ -84,10 +84,12 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 	var images []Image
 	count := 0
 	for _, dockerRepo := range dockerRepos {
+		log.Debugf("Docker repo master name: %s", dockerRepo)
 		repos, _ := d.Client.SearchImages(dockerRepo)
 		for _, repo := range repos {
 			var body []byte
 			var err error
+			log.Debugf("Docker repo slave name: %s", repo.Name)
 			if strings.Contains(repo.Name, "/") {
 				body, err = getHttpResponse(fmt.Sprintf("https://hub.docker.com/v2/repositories/%s/tags/", repo.Name), 200)
 			} else {
@@ -96,6 +98,7 @@ func (d *Docker) GetDockerImages(imageCount int) []Image {
 
 			if err != nil {
 				log.Errorf("Unable to get docker tags for the repo %s due to %+v", repo.Name, err)
+				continue
 			}
 
 			var tags Tag

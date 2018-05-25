@@ -23,21 +23,20 @@ package basicskyfire
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	//. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 )
 
-func TestLoad(t *testing.T) {
-	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
-	LoadTests(skyfireURL)
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "load-test")
-}
+// func TestLoad(t *testing.T) {
+// 	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
+// 	LoadTests(skyfireURL)
+// 	RegisterFailHandler(Fail)
+// 	RunSpecs(t, "load-test")
+// }
 
 func LoadTests(skyfireURL string) {
 	var report *skyfire.Report
@@ -59,6 +58,35 @@ func LoadTests(skyfireURL string) {
 
 	log.Debugln("Outside the skyfire for loop")
 
+	images := loadPodsIntoCluster()
+
+	log.Infof("Number of images created %d", len(images))
+
+	Describe("Load tons of pods into a cluster", func() {
+		It("Should actually have created all the pods in the cluster", func() {
+			// for _, image := range images {
+			// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+			// 	Expect(image.PodName).Should(Equal(report.Dump.Kube.PodsByName[image.PodName].Name))
+			// }
+		})
+
+		It("Should have all pods in Perceptor", func() {
+			// for _, image := range images {
+			// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+			// 	Expect(image.PodName).Should(Equal(report.Dump.Perceptor.PodsByName[image.PodName].Name))
+			// }
+		})
+
+		It("Should have correct annotations and labels for pods for which all images have been scanned", func() {
+			// Check the status of the pod, if the pod status is completed, get the project version for the pod and validate it against the annotation", func() {
+
+		})
+
+	})
+
+}
+
+func loadPodsIntoCluster() []Image {
 	dockerClient, err := NewDocker()
 	if err != nil {
 		log.Errorf("Unable to instantiate Docker client due to %+v", err)
@@ -72,18 +100,5 @@ func LoadTests(skyfireURL string) {
 
 	createPods(configPath)
 
-	// TODO: write test cases to verify the created pod by using skyfire
-	// for _, image := range images {
-	// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
-	//   Describe("OpsSight e2e Test", func() {
-	// 		It("Check whether the pod load created the pods in the cluster", func() {
-	//       report.Dump.Kube.PodsByName.
-	// 			Expect(len(report.Kube.PartiallyAnnotatedPods)).Should(Equal(len(report.Kube.PartiallyAnnotatedPods)))
-	// 			Expect(len(report.Kube.PartiallyLabeledPods)).Should(Equal(len(report.Kube.PartiallyLabeledPods)))
-	// 			Expect(len(report.Kube.UnanalyzeablePods)).Should(Equal(len(report.Kube.UnanalyzeablePods)))
-	// 			Expect(len(report.Kube.UnparseableImages)).Should(Equal(len(report.Kube.UnparseableImages)))
-	// 		})
-	// 	})
-	// }
-
+	return images
 }

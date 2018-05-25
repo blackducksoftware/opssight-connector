@@ -45,6 +45,7 @@ func TestBasicSkyfire(t *testing.T) {
 	}
 	skyfireURL := fmt.Sprintf("http://%s:%s/latestreport", config.SkyfireHost, config.SkyfirePort)
 	BasicSkyfireTests(skyfireURL)
+	LoadTests(skyfireURL)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "basic-skyfire")
 }
