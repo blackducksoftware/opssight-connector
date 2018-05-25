@@ -62,7 +62,7 @@ items:
               name: hub-db-config-granular
           env:
           - name: POSTGRESQL_USER
-            value: blackduck_user
+            value: blackduck
           - name: POSTGRESQL_PASSWORD
             valueFrom:
               secretKeyRef:
