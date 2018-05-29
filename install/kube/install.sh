@@ -15,7 +15,7 @@ kubectl create -f protoform.yaml -n $_arg_pcp_namespace
 
 if [[ "$_arg_prometheus_metrics" == "on" ]] ; then
   kubectl create -f ../common/prometheus-deployment.yaml -n $_arg_pcp_namespace
-  kubectl expose service prometheus --port=9090 --name=prometheus-metrics -n $_arg_pcp_namespace
+  kubectl expose service prometheus --type=LoadBalancer --port=9090 --name=prometheus-metrics -n $_arg_pcp_namespace
 fi
 
 rm -rf rbac.yaml
