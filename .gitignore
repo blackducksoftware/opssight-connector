@@ -8,3 +8,5 @@ perceptor/perceptor
 install/kube/protoform.yaml
 install/kube/rbac.yaml
 e2e/mirage/mirage
+install/.DS_Store
+.DS_Store

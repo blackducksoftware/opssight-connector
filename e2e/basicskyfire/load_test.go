@@ -27,7 +27,7 @@ import (
 
 	skyfire "github.com/blackducksoftware/perceptor-skyfire/pkg/report"
 	. "github.com/onsi/ginkgo"
-	//. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -64,17 +64,27 @@ func LoadTests(skyfireURL string) {
 
 	Describe("Load tons of pods into a cluster", func() {
 		It("Should actually have created all the pods in the cluster", func() {
-			// for _, image := range images {
-			// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
-			// 	Expect(image.PodName).Should(Equal(report.Dump.Kube.PodsByName[image.PodName].Name))
-			// }
+			for _, image := range images {
+				for {
+					if len(report.Dump.Kube.PodsByName[image.PodName].Name) == 0 {
+						time.Sleep(5 * time.Second)
+					}
+				}
+				log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+				Expect(image.PodName).Should(Equal(report.Dump.Kube.PodsByName[image.PodName].Name))
+			}
 		})
 
 		It("Should have all pods in Perceptor", func() {
-			// for _, image := range images {
-			// 	log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
-			// 	Expect(image.PodName).Should(Equal(report.Dump.Perceptor.PodsByName[image.PodName].Name))
-			// }
+			for _, image := range images {
+				log.Infof("pod name: %s, image: %s:%s", image.PodName, image.ImageName, image.Tag)
+				for {
+					if len(report.Dump.Perceptor.PodsByName[image.PodName].Name) == 0 {
+						time.Sleep(10 * time.Second)
+					}
+				}
+				Expect(image.PodName).Should(Equal(report.Dump.Perceptor.PodsByName[image.PodName].Name))
+			}
 		})
 
 		It("Should have correct annotations and labels for pods for which all images have been scanned", func() {
