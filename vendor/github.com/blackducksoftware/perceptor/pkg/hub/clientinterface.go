@@ -21,16 +21,15 @@ under the License.
 
 package hub
 
-// RiskProfileStatusCounts .....
-type RiskProfileStatusCounts struct {
-	StatusCounts map[RiskProfileStatus]int
-}
+import "github.com/blackducksoftware/hub-client-go/hubapi"
 
-// HighRiskVulnerabilityCount .....
-func (r *RiskProfileStatusCounts) HighRiskVulnerabilityCount() int {
-	highCount, ok := r.StatusCounts[RiskProfileStatusHigh]
-	if !ok {
-		return 0
-	}
-	return highCount
+// ClientInterface provides an interface around hub-client-go's client,
+// allowing it to be mocked for testing.
+type ClientInterface interface {
+	ListProjects(options *hubapi.GetListOptions) (*hubapi.ProjectList, error)
+	ListProjectVersions(link hubapi.ResourceLink, options *hubapi.GetListOptions) (*hubapi.ProjectVersionList, error)
+	ListScanSummaries(link hubapi.ResourceLink) (*hubapi.ScanSummaryList, error)
+	GetProjectVersionRiskProfile(link hubapi.ResourceLink) (*hubapi.ProjectVersionRiskProfile, error)
+	GetProjectVersionPolicyStatus(link hubapi.ResourceLink) (*hubapi.ProjectVersionPolicyStatus, error)
+	ListCodeLocations(link hubapi.ResourceLink, options *hubapi.GetListOptions) (*hubapi.CodeLocationList, error)
 }

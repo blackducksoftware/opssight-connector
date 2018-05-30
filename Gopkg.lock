@@ -44,13 +44,13 @@
   revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
+  branch = "master"
   name = "github.com/blackducksoftware/hub-client-go"
   packages = [
     "hubapi",
     "hubclient"
   ]
-  revision = "373ae7b666893f7ea9285f02d31eceb552946b25"
-  version = "v0.9.4"
+  revision = "21556e0ded16e8469d9871fcafda87bb782d5fcb"
 
 [[projects]]
   branch = "master"
@@ -81,7 +81,7 @@
     "pkg/hub",
     "pkg/logging"
   ]
-  revision = "b4b4bbe99831c0044b5e489d0ff51ef80cfafafb"
+  revision = "e07c4bfb0e64259e91d5b7f7e10b24ca057c1d68"
 
 [[projects]]
   branch = "master"
@@ -90,7 +90,7 @@
     "pkg/api",
     "pkg/protoform"
   ]
-  revision = "0b8515e4cf587ecc5a4d1698e52824fd74089e84"
+  revision = "cf5d94f80fa8abc277f2c1ac2b5d82b68b1731f3"
 
 [[projects]]
   branch = "master"
@@ -104,7 +104,7 @@
     "pkg/imagefacade",
     "pkg/scanner"
   ]
-  revision = "416eac0154f5a77653b38704e9eecb2dc85143ef"
+  revision = "3b6e06f679dc4ac9b22d754c08fbbd3af3d68ea0"
 
 [[projects]]
   branch = "master"
@@ -790,6 +790,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fc187976c4c88984fea734c7ebbffcda2b769fd8c4d380711225d0f5ffa7f9cb"
+  inputs-digest = "6b9b7e7bafc3485b313c2d6f6a738dc34f824d319652ba130c4bfbc9113c4dd6"
   solver-name = "gps-cdcl"
   solver-version = 1

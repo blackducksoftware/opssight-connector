@@ -19,22 +19,13 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package actions
+package api
 
-import (
-	m "github.com/blackducksoftware/perceptor/pkg/core/model"
-	log "github.com/sirupsen/logrus"
-)
-
-type SetConcurrentScanLimit struct {
-	Limit int
-}
-
-func (s *SetConcurrentScanLimit) Apply(model *m.Model) {
-	limit := s.Limit
-	if limit < 0 {
-		log.Errorf("cannot set concurrent scan limit to less than 0 (got %d)", limit)
-		return
-	}
-	model.ConcurrentScanLimit = limit
+// PostConfig allows certain config parameters to be changed.
+type PostConfig struct {
+	ConcurrentScanLimit                 *int
+	HubClientTimeoutMilliseconds        *int
+	LogLevel                            *string
+	ImageRefreshThresholdSeconds        *int
+	EnqueueImagesForRefreshPauseSeconds *int
 }

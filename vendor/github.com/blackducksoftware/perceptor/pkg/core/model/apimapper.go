@@ -28,24 +28,28 @@ import (
 
 // api -> model
 
+// APIImageToCoreImage .....
 func APIImageToCoreImage(apiImage api.Image) *Image {
 	return NewImage(apiImage.Name, DockerImageSha(apiImage.Sha))
 }
 
-func ApiContainerToCoreContainer(apiContainer api.Container) *Container {
+// APIContainerToCoreContainer .....
+func APIContainerToCoreContainer(apiContainer api.Container) *Container {
 	return NewContainer(*APIImageToCoreImage(apiContainer.Image), apiContainer.Name)
 }
 
+// APIPodToCorePod .....
 func APIPodToCorePod(apiPod api.Pod) *Pod {
 	containers := []Container{}
 	for _, apiContainer := range apiPod.Containers {
-		containers = append(containers, *ApiContainerToCoreContainer(apiContainer))
+		containers = append(containers, *APIContainerToCoreContainer(apiContainer))
 	}
 	return NewPod(apiPod.Name, apiPod.UID, apiPod.Namespace, containers)
 }
 
 // model -> api
 
+// CoreContainerToAPIContainer .....
 func CoreContainerToAPIContainer(coreContainer Container) *api.Container {
 	return &api.Container{
 		Image: api.Image{
@@ -56,6 +60,7 @@ func CoreContainerToAPIContainer(coreContainer Container) *api.Container {
 	}
 }
 
+// CorePodToAPIPod .....
 func CorePodToAPIPod(corePod Pod) *api.Pod {
 	containers := []api.Container{}
 	for _, coreContainer := range corePod.Containers {
@@ -69,7 +74,8 @@ func CorePodToAPIPod(corePod Pod) *api.Pod {
 	}
 }
 
-func (model *Model) APIModel() *api.Model {
+// CoreModelToAPIModel .....
+func CoreModelToAPIModel(model *Model) *api.Model {
 	// pods
 	pods := map[string]*api.Pod{}
 	for podName, pod := range model.Pods {
@@ -98,25 +104,35 @@ func (model *Model) APIModel() *api.Model {
 	}
 	// return value
 	return &api.Model{
-		Pods:   pods,
-		Images: images,
+		Pods:               pods,
+		Images:             images,
+		HubVersion:         model.HubVersion,
+		ImageHubCheckQueue: hubQueue,
+		ImageScanQueue:     scanQueue,
 		Config: &api.ModelConfig{
-			ConcurrentScanLimit:     model.Config.ConcurrentScanLimit,
-			HubHost:                 model.Config.HubHost,
-			HubPassword:             "...redacted...",
-			HubClientTimeoutSeconds: model.Config.HubClientTimeoutSeconds,
-			HubUser:                 model.Config.HubUser,
-			LogLevel:                model.Config.LogLevel,
-			Port:                    model.Config.Port,
-			UseMockMode:             model.Config.UseMockMode,
+			HubHost:             model.Config.HubHost,
+			HubUser:             model.Config.HubUser,
+			HubPort:             model.Config.HubPort,
+			LogLevel:            model.Config.LogLevel,
+			Port:                model.Config.Port,
+			ConcurrentScanLimit: model.Config.ConcurrentScanLimit,
 		},
-		ConcurrentScanLimit: model.ConcurrentScanLimit,
-		HubVersion:          model.HubVersion,
-		ImageHubCheckQueue:  hubQueue,
-		ImageScanQueue:      scanQueue,
+		Timings: &api.ModelTimings{
+			CheckForStalledScansPause:      *api.NewModelTime(model.Timings.CheckForStalledScansPause),
+			CheckHubForCompletedScansPause: *api.NewModelTime(model.Timings.CheckHubForCompletedScansPause),
+			CheckHubThrottle:               *api.NewModelTime(model.Timings.CheckHubThrottle),
+			EnqueueImagesForRefreshPause:   *api.NewModelTime(model.Timings.EnqueueImagesForRefreshPause),
+			HubClientTimeout:               *api.NewModelTime(model.Timings.HubClientTimeout),
+			HubReloginPause:                *api.NewModelTime(model.Timings.HubReloginPause),
+			ModelMetricsPause:              *api.NewModelTime(model.Timings.ModelMetricsPause),
+			RefreshImagePause:              *api.NewModelTime(model.Timings.RefreshImagePause),
+			RefreshThresholdDuration:       *api.NewModelTime(model.Timings.RefreshThresholdDuration),
+			StalledScanClientTimeout:       *api.NewModelTime(model.Timings.StalledScanClientTimeout),
+		},
 	}
 }
 
+// ScanResults .....
 func (model *Model) ScanResults() api.ScanResults {
 	// pods
 	pods := []api.ScannedPod{}

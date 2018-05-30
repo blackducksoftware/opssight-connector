@@ -4,7 +4,7 @@ Copyright (C) 2018 Synopsys, Inc.
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
 distributed with this work for additional information
-regarding copyright ownershii. The ASF licenses this file
+regarding copyright ownership. The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -25,11 +25,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"math"
 	"path/filepath"
 	"reflect"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api"
 
@@ -99,7 +100,8 @@ func (i *Installer) setDefaults(defaults *api.ProtoformDefaults) {
 // If users want to dynamically reload,
 // they can update the individual perceptor containers configmaps.
 func (i *Installer) readConfig(configPath string) {
-	log.Print("*************** [protoform] initializing  ****************")
+	log.Debug("*************** [protoform] initializing  ****************")
+	log.Infof("Config Path: %s", configPath)
 	viper.SetConfigFile(configPath)
 
 	// these need to be set before we read in the config!
@@ -107,22 +109,28 @@ func (i *Installer) readConfig(configPath string) {
 	viper.BindEnv("HubUserPassword")
 	if viper.GetString("hubuserpassword") == "" {
 		viper.Debug()
-		panic("No hub database password secret supplied.  Please inject PCP_HUBUSERPASSWORD as a secret and restart")
+		log.Panic("no hub database password secret supplied.  Please inject PCP_HUBUSERPASSWORD as a secret and restart")
 	}
 
 	i.Config.HubUserPasswordEnvVar = "PCP_HUBUSERPASSWORD"
 	i.Config.ViperSecret = "viper-secret"
-	log.Print(configPath)
+
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Print(" ^^ Didnt see a config file! Using defaults for everything")
+		log.Errorf("unable to read the config file! The input config file path is %s. Using defaults for everything", configPath)
 	}
 
 	internalRegistry := viper.GetStringSlice("InternalDockerRegistries")
 	viper.Set("InternalDockerRegistries", internalRegistry)
 
 	viper.Unmarshal(&i.Config)
-	log.Print("*************** [protoform] done reading in config ****************")
+
+	// Set the Log level by reading the loglevel from config
+	log.Infof("Log level : %s", i.Config.LogLevel)
+	level, err := log.ParseLevel(i.Config.LogLevel)
+	log.SetLevel(level)
+
+	log.Debug("*************** [protoform] done reading in config ****************")
 
 }
 
@@ -204,33 +212,32 @@ func (i *Installer) Run() {
 		// creates the in-cluster config
 		config, err := rest.InClusterConfig()
 		if err != nil {
-			log.Printf("Error getting in cluster config. Fallback to native config. Error message: %s", err)
-			config, err = NewKubeClientFromOutsideCluster()
+			log.Errorf("error getting in cluster config. Fallback to native config. Error message: %s", err)
+			config, err = newKubeClientFromOutsideCluster()
 		}
 
 		if err != nil {
-			log.Printf("Error creating default client config: %s", err)
-			panic(err.Error())
+			log.Panicf("error getting the default client config: %s", err.Error())
 		} else {
 			// creates the client
 			i.client, err = kubernetes.NewForConfig(config)
 			if err != nil {
-				panic(err.Error())
+				log.Panicf("error creating the kubernetes client : %s", err.Error())
 			}
 		}
 	}
 
 	i.deploy()
-	log.Println("Entering pod listing loop!")
+	log.Debug("Entering pod listing loop!")
 
 	// continually print out pod statuses .  can exit any time.  maybe use this as a stub for self testing.
 	if !i.Config.DryRun {
 		for cnt := 0; cnt < 10; cnt++ {
 			pods, _ := i.client.Core().Pods(i.Config.Namespace).List(v1meta.ListOptions{})
 			for _, pod := range pods.Items {
-				log.Printf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
+				log.Debugf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
 			}
-			log.Printf("***************")
+			log.Debug("***************")
 			time.Sleep(10 * time.Second)
 		}
 	}
@@ -243,7 +250,7 @@ func (i *Installer) AddPerceptorResources() {
 	i.addDefaultServiceAccounts()
 	isValid := i.sanityCheckServices()
 	if isValid == false {
-		panic("Please set the service accounts correctly!")
+		log.Panic("Please set the service accounts correctly!")
 	}
 
 	i.substituteDefaultImageVersion()
@@ -272,7 +279,7 @@ func (i *Installer) substituteDefaultImageVersion() {
 func (i *Installer) addDefaultServiceAccounts() {
 	// TODO Viperize these env vars.
 	if len(i.Config.ServiceAccounts) == 0 {
-		log.Println("NO SERVICE ACCOUNTS FOUND.  USING DEFAULTS: MAKE SURE THESE EXIST!")
+		log.Info("No service accounts exist.  Using defaults: make sure these are exist!")
 
 		svcAccounts := map[string]string{
 			// WARNING: These service accounts need to exist !
@@ -297,7 +304,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		mounts := []types.VolumeMount{}
 
 		for cfgMapName, cfgMapMount := range desc.ConfigMapMounts {
-			log.Print("Adding config mounts now.")
+			log.Debug("Adding config mounts now.")
 			if addedMounts[cfgMapName] == "" {
 				addedMounts[cfgMapName] = cfgMapName
 				TheVolumes[cfgMapName] = types.Volume{
@@ -306,7 +313,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 					},
 				}
 			} else {
-				log.Print(fmt.Sprintf("Not adding volume, already added: %v", cfgMapName))
+				log.Debugf(fmt.Sprintf("Not adding volume, already added: %v", cfgMapName))
 			}
 			mounts = append(mounts, types.VolumeMount{
 				Store:     cfgMapName,
@@ -318,7 +325,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		// keep track of emptyDirs, only once, since it can be referenced in
 		// multiple pods
 		for emptyDirName, emptyDirMount := range desc.EmptyDirMounts {
-			log.Print("Adding empty mounts now.")
+			log.Debug("Adding empty mounts now.")
 			if addedMounts[emptyDirName] == "" {
 				addedMounts[emptyDirName] = emptyDirName
 				TheVolumes[emptyDirName] = types.Volume{
@@ -327,7 +334,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 					},
 				}
 			} else {
-				log.Print(fmt.Sprintf("Not adding volume, already added: %v", emptyDirName))
+				log.Debugf(fmt.Sprintf("Not adding volume, already added: %v", emptyDirName))
 			}
 			mounts = append(mounts, types.VolumeMount{
 				Store:     emptyDirName,
@@ -361,7 +368,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		for _, env := range desc.Env {
 			new, err := types.NewEnvFromSecret(env.EnvName, env.SecretName, env.KeyFromSecret)
 			if err != nil {
-				panic(err)
+				log.Panic("error while adding the secret: %s", err.Error())
 			}
 			envVar = append(envVar, new)
 		}
@@ -391,7 +398,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		// Each RC has only one pod, but can have many containers.
 		TheContainers = append(TheContainers, container)
 
-		log.Print(fmt.Sprintf("privileged = %v %v %v", desc.Name, desc.DockerSocket, *container.Privileged))
+		log.Debugf(fmt.Sprintf("privileged = %v %v %v", desc.Name, desc.DockerSocket, *container.Privileged))
 	}
 	return TheVolumes, TheContainers
 }
@@ -489,11 +496,11 @@ func (i *Installer) addPerceptorResources() {
 	// MAKE SURE IF YOU NEED A SVC ACCOUNT THAT ITS IN THE FIRST CONTAINER...
 	defaultMem, err := i.GenerateDefaultMemory(i.Config.DefaultMem)
 	if err != nil {
-		panic(err)
+		log.Panicf("error while setting the default memory for the container due to %s", err.Error())
 	}
 	defaultCPU, err := i.GenerateDefaultCPU(i.Config.DefaultCPU)
 	if err != nil {
-		panic(err)
+		log.Panicf("error while setting the default cpu for the container due to %s", err.Error())
 	}
 
 	i.AddReplicationControllerAndService([]*ReplicationController{
@@ -637,20 +644,19 @@ func (i *Installer) deploy() {
 	// resource that fails.  Thats intentional
 
 	// Create the configmaps first
-	log.Println("Creating config maps : Dry Run ")
+	log.Debug("Creating config maps : Dry Run ")
 	for _, kconfigMap := range i.configMaps {
 		wrapper := &types.ConfigMapWrapper{ConfigMap: *kconfigMap}
 		configMap, err := converters.Convert_Koki_ConfigMap_to_Kube_v1_ConfigMap(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the config map to koki format due to %s", err.Error())
 		}
-		log.Println("*********************************************")
-		log.Println("Creating config maps:", configMap)
+		log.Debug("*********************************************")
+		log.Infof("Creating config map %s", configMap.Name)
 		if !i.Config.DryRun {
-			log.Println("creating config map")
 			_, err := i.client.Core().ConfigMaps(i.Config.Namespace).Create(configMap)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the config map in kubernetes cluster due to %s", err.Error())
 			}
 		} else {
 			i.prettyPrint(configMap)
@@ -662,14 +668,17 @@ func (i *Installer) deploy() {
 		wrapper := &types.ReplicationControllerWrapper{ReplicationController: *krc}
 		rc, err := converters.Convert_Koki_ReplicationController_to_Kube_v1_ReplicationController(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the replication controller %s to koki format due to %s", krc.Name, err.Error())
 		}
-		i.prettyPrint(rc)
+
+		log.Infof("Creating replication controller %s", rc.Name)
 		if !i.Config.DryRun {
 			_, err := i.client.Core().ReplicationControllers(i.Config.Namespace).Create(rc)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the replication controller in kubernetes cluster due to %s", err.Error())
 			}
+		} else {
+			i.prettyPrint(rc)
 		}
 	}
 
@@ -678,14 +687,17 @@ func (i *Installer) deploy() {
 		wrapper := &types.PodWrapper{Pod: *kpod}
 		pod, err := converters.Convert_Koki_Pod_to_Kube_v1_Pod(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the pod %s to koki format due to %s", kpod.Name, err.Error())
 		}
-		i.prettyPrint(pod)
+
+		log.Infof("Creating pod %s", pod.Name)
 		if !i.Config.DryRun {
 			_, err := i.client.Core().Pods(i.Config.Namespace).Create(pod)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the pod %s in kubernetes cluster due to %s", pod.Name, err.Error())
 			}
+		} else {
+			i.prettyPrint(pod)
 		}
 	}
 
@@ -694,15 +706,16 @@ func (i *Installer) deploy() {
 		sWrapper := &types.ServiceWrapper{Service: *ksvcI}
 		svcI, err := converters.Convert_Koki_Service_To_Kube_v1_Service(sWrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the service %s to koki format due to %s", ksvcI.Name, err.Error())
 		}
+
+		log.Infof("Creating service %s", svcI.Name)
 		if i.Config.DryRun {
-			// service dont really need much debug...
-			// i.prettyPrint(svcI)
+			i.prettyPrint(svcI)
 		} else {
 			_, err := i.client.Core().Services(i.Config.Namespace).Create(svcI)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the service %s in kubernetes cluster due to %s", svcI.Name, err.Error())
 			}
 		}
 	}
@@ -719,8 +732,7 @@ func (i *Installer) sanityCheckServices() bool {
 	}
 	for cn := range i.Config.ServiceAccounts {
 		if !isValid(cn) {
-			log.Print("[protoform] failed at verifiying that the container name for a svc account was valid!")
-			log.Fatalln(cn)
+			log.Panic("[protoform] failed at verifiying that the container name for a svc account was valid!")
 		}
 	}
 	return true
@@ -754,7 +766,7 @@ func (i *Installer) prettyPrint(v interface{}) {
 	println(string(b))
 }
 
-func NewKubeClientFromOutsideCluster() (*rest.Config, error) {
+func newKubeClientFromOutsideCluster() (*rest.Config, error) {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -765,7 +777,7 @@ func NewKubeClientFromOutsideCluster() (*rest.Config, error) {
 
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
-		log.Printf("Error creating default client config: %s", err)
+		log.Errorf("error creating default client config: %s", err)
 		return nil, err
 	}
 	return config, err

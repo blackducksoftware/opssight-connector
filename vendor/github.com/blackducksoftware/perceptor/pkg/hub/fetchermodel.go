@@ -21,16 +21,11 @@ under the License.
 
 package hub
 
-// RiskProfileStatusCounts .....
-type RiskProfileStatusCounts struct {
-	StatusCounts map[RiskProfileStatus]int
-}
+import "time"
 
-// HighRiskVulnerabilityCount .....
-func (r *RiskProfileStatusCounts) HighRiskVulnerabilityCount() int {
-	highCount, ok := r.StatusCounts[RiskProfileStatusHigh]
-	if !ok {
-		return 0
-	}
-	return highCount
+// FetcherModel holds the state of the fetcher
+type FetcherModel struct {
+	State               CircuitBreakerState
+	NextCheckTime       *time.Time
+	ConsecutiveFailures int
 }
