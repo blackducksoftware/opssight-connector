@@ -83,11 +83,15 @@ Otherwise, choose external.
 
 *Note: Obviously, you only need to do ONE of the two below steps, before moving on to step 3 ~ choose EITHER Internal OR External database setup!*.
 
+
+#### BEFORE YOU PROCEED
+
+Note: the default yaml files don't have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes other than postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do thousands of scans early on.  IF your postgres container is bounced, you'll lose your data and the webbapp won't load.  If this is a fully production deployment, make sure to back your postgres with a persistent Volume, replacing the emptyDir clauses!
+
+
 ##### Step 3 (INTERNAL database setup option)
 
 If you are okay using an internal database, and are able to run containers as user 70, then you can (in most cases) just start the hub using the snippet of kubectl create statements below.
-
-- Note: the default yaml files don't have persistent volumes.  You will need to replace all emptyDir volumes with a persistentVolumeClaim (or Volume) of your choosing.  1G is enough for all volumes other than postgres.  Postgres should have 100G, to ensure it will have plenty of storage even if you do thousands of scans early on.
 
 - Note: before doing this, there is an initPod that runs as user 0 to set storage permissions.  If you don't want to run it as user 0, and are sure your storage will be writeable by the postgres user, delete that initPod clause entirely.
 
