@@ -4,6 +4,12 @@ ifdef IMAGE_PREFIX
 PREFIX="$(IMAGE_PREFIX)-"
 endif
 
+TAG="latest"
+ifdef CUSTOM_TAG
+TAG="$(CUSTOM_TAG)"
+endif
+
+
 ifneq (, $(findstring gcr.io,$(REGISTRY))) 
 PREFIX_CMD="gcloud"
 DOCKER_OPTS="--"
@@ -38,7 +44,7 @@ container_prep: ${OUTDIR} $(BINARY)
 	$(foreach p,${BINARY},mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p;)
 
 push: container
-	$(foreach p,${BINARY},$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:latest;)
+	$(foreach p,${BINARY},$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:$(TAG);)
 
 test:
 	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.9 go test ./pkg/...
