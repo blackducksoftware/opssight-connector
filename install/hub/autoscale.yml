@@ -20,7 +20,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: hub0scan
+    name: hub-scan
   minReplicas: 1
   maxReplicas: 10
   # Increasing the number will slow the rate of scaling.
