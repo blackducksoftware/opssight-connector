@@ -23,8 +23,8 @@ items:
   metadata:
     name: hub-config-resources
   data:
-    webapp-mem: 10G # coordinate with resource limits
-    jobrunner-mem: 7G # coordinare with resource limits
+    webapp-mem: 2G # for opsite, set this to 32
+    jobrunner-mem: 2G # for opsite, set this to 2
     scan-mem: 2G
 
 # Note that your certs secret will be strucutured like so.
@@ -66,7 +66,7 @@ items:
 
     RUN_SECRETS_DIR: /tmp/secrets
 
-    HUB_VERSION: 4.6.2
+    HUB_VERSION: 4.5.0
 
     # HOSTS THAT WON'T GO THROUGH A PROXY
     HUB_PROXY_NON_PROXY_HOSTS: "solr"
