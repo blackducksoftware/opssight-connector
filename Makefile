@@ -5,8 +5,8 @@ PREFIX="$(IMAGE_PREFIX)-"
 endif
 
 TAG="latest"
-ifdef CUSTOM_TAG
-TAG="$(CUSTOM_TAG)"
+ifdef IMAGE_TAG
+TAG="$(IMAGE_TAG)"
 endif
 
 
