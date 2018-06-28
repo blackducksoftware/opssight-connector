@@ -49,10 +49,10 @@ items:
           resources:
             requests:
               cpu: 1
-              memory: 4608M
+              memory: 7G
             limits:
               cpu: 1
-              memory: 4608M
+              memory: 7G
           env:
           - name: HUB_MAX_MEMORY
             valueFrom:
@@ -581,9 +581,11 @@ items:
             mountPath: /tmp/secrets
           resources:
             limits:
-              memory: 3G
+              cpu: 2
+              memory: 8G
             requests:
-              memory: 3G
+              cpu: 1
+              memory: 8G
           ports:
           - containerPort: 8443
             protocol: TCP
