@@ -38,14 +38,14 @@ items:
         # to start with.  Note also you can any linux base as the image.
         initContainers:
         - name: chmod
-          command: ["chown", "-R", "postgres:postgres", "/var/lib/postgresql/data" ]
+          command: ["ls", "-altrh", "/var/lib/postgresql/" ]
           image: alpine
           imagePullPolicy: Always
           resources: {}
           securityContext:
             runAsUser: 0
           volumeMounts:
-          - mountPath: /var/lib/postgresql/data/
+          - mountPath: /var/lib/postgresql/
             name: postgres-persistent-vol
         containers:
         - name: postgres
@@ -73,8 +73,14 @@ items:
               name: hub-db-config
           - configMapRef:
               name: hub-db-config-granular
+          # For some kube volume types, the container trumps the mounted storage	
+          # in /var/lib/postgresql/data. So, we instruct pg to make a fresh directory to be	
+          # safe.	
+          env:	
+          - name: PGDATA	
+            value: /var/lib/postgresql/data_blackduck/
           volumeMounts:
-          - mountPath: /var/lib/postgresql/data
+          - mountPath: /var/lib/postgresql/
             name: postgres-persistent-vol
           ports:
           - containerPort: 5432
