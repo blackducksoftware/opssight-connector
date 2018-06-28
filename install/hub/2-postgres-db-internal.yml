@@ -37,7 +37,7 @@ items:
         # It is (potentially) ok to comment it out if your volumes have the right permissions
         # to start with.  Note also you can any linux base as the image.
         initContainers:
-        - name: chmod
+        - name: pginit
           command: ["ls", "-altrh", "/var/lib/postgresql/" ]
           image: alpine
           imagePullPolicy: Always
