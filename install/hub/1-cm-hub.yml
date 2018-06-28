@@ -24,8 +24,8 @@ items:
     name: hub-config-resources
   data:
     webapp-mem: 2G # for opsite, set this to 32
-    jobrunner-mem: 2G # for opsite, set this to 2
-    scan-mem: 2G
+    jobrunner-mem: 6G # for opsite, set this to 2
+    scan-mem: 7G
 
 # Note that your certs secret will be strucutured like so.
 # Use kubectl create secret to create it.
