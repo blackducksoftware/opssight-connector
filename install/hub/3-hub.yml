@@ -49,10 +49,10 @@ items:
           resources:
             requests:
               cpu: 1
-              memory: 7G
+              memory: 8G
             limits:
               cpu: 1
-              memory: 7G
+              memory: 8G
           env:
           - name: HUB_MAX_MEMORY
             valueFrom:
@@ -582,10 +582,10 @@ items:
           resources:
             limits:
               cpu: 2
-              memory: 8G
+              memory: 7G
             requests:
               cpu: 1
-              memory: 8G
+              memory: 7G
           ports:
           - containerPort: 8443
             protocol: TCP
