@@ -51,7 +51,7 @@ items:
               cpu: 1
               memory: 8G
             limits:
-              cpu: 1
+              cpu: 2
               memory: 8G
           env:
           - name: HUB_MAX_MEMORY
