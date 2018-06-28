@@ -63,11 +63,11 @@ items:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: 3072M
-              cpu: 1
+              memory: 12072M
+              cpu: 2
             limits:
-              memory: 3072M
-              cpu: 1
+              memory: 12072M
+              cpu: 2
           envFrom:
           - configMapRef:
               name: hub-db-config
