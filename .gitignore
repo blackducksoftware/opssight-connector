@@ -7,3 +7,6 @@ perceptor-scanner/perceptor-scanner
 perceptor/perceptor
 install/kube/protoform.yaml
 install/kube/rbac.yaml
+.DS_Store
+build/*
+_output/*
