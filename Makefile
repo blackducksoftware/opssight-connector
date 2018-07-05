@@ -10,7 +10,7 @@ TAG="$(IMAGE_TAG)"
 endif
 
 
-ifneq (, $(findstring gcr.io,$(REGISTRY))) 
+ifneq (, $(findstring gcr.io,$(REGISTRY)))
 PREFIX_CMD="gcloud"
 DOCKER_OPTS="--"
 endif
@@ -20,6 +20,10 @@ BUILDDIR=build
 LOCAL_TARGET=local
 
 CURRENT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+BUILD_TIME:=$(shell date)
+
+LAST_COMMIT=$(shell git rev-parse HEAD)
 
 .PHONY: all clean test push test ${BINARY} container local
 
@@ -38,7 +42,7 @@ endif
 	mv cmd/$@/$@ ${OUTDIR}
 
 container: registry_check container_prep
-	$(foreach p,${BINARY},cd ${CURRENT_DIR}/${BUILDDIR}/$p; docker build -t $(REGISTRY)/$(PREFIX)${p} .;)
+	$(foreach p,${BINARY},cd ${CURRENT_DIR}/${BUILDDIR}/$p; docker build . -t $(REGISTRY)/$(PREFIX)${p}:$(TAG) --build-arg VERSION=$(TAG) --build-arg 'BUILDTIME=$(BUILD_TIME)' --build-arg LASTCOMMIT=$(LAST_COMMIT);)
 
 container_prep: ${OUTDIR} $(BINARY)
 	$(foreach p,${BINARY},mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p;)
