@@ -13,6 +13,8 @@ source ../common/parse-image-registry.sh "../openshift/image-registry.json"
 
 if [[ "$_arg_rhcc" == "on" ]] ; then
   oc create secret generic redhat-connect --from-file=.dockerconfigjson="$_arg_docker_config_path" --type=kubernetes.io/dockerconfigjson
+  oc secrets link default redhat-connect --for=pull
+  oc secrets link perceiver redhat-connect --for=pull
   oc secrets link protoform redhat-connect --for=pull
   oc secrets link perceptor-scanner-sa redhat-connect --for=pull
   perceptor_image=$(echo "$perceptor_image-v2")
