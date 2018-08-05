@@ -21,19 +21,21 @@ under the License.
 
 package api
 
+// ImageSpec .....
 type ImageSpec struct {
-	ImageName             string
-	PullSpec              string
+	Repository            string
+	Tag                   string
 	Sha                   string
 	HubProjectName        string
 	HubProjectVersionName string
 	HubScanName           string
 }
 
-func NewImageSpec(imageName string, pullSpec string, sha string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ImageSpec {
+// NewImageSpec .....
+func NewImageSpec(repository string, tag string, sha string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ImageSpec {
 	return &ImageSpec{
-		ImageName:             imageName,
-		PullSpec:              pullSpec,
+		Repository:            repository,
+		Tag:                   tag,
 		Sha:                   sha,
 		HubProjectName:        hubProjectName,
 		HubProjectVersionName: hubProjectVersionName,

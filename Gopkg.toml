@@ -24,22 +24,25 @@
 #   go-tests = true
 #   unused-packages = true
 
-
 [[constraint]]
-  name = "github.com/blackducksoftware/perceptor"
-  branch = "master"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/blackducksoftware/perceptor-protoform"
+  name = "github.com/blackducksoftware/perceptor-scanner"
+  version = "2.0.2"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
-  branch = "master"
+  version = "1.1.0"
+
+[[override]]
+  name = "github.com/blackducksoftware/perceptor"
+  version = "2.0.2"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/blackducksoftware/perceptor-scanner"
+  name = "github.com/blackducksoftware/perceptor-protoform"
+  version  = "3.0.0-RC1"
+
+[[override]]
+  source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
+  name = "gopkg.in/fsnotify.v1"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"

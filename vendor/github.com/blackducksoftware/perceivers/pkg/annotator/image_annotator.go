@@ -118,13 +118,13 @@ func (ia *ImageAnnotator) addAnnotationsToImages(results perceptorapi.ScanResult
 	for _, image := range results.Images {
 		var imageName string
 		getName := fmt.Sprintf("sha256:%s", image.Sha)
-		fullImageName := fmt.Sprintf("%s@%s", image.Name, getName)
+		fullImageName := fmt.Sprintf("%s@%s", image.Repository, getName)
 
-		nameStart := strings.LastIndex(image.Name, "/") + 1
+		nameStart := strings.LastIndex(image.Repository, "/") + 1
 		if nameStart >= 0 {
-			imageName = image.Name[nameStart:]
+			imageName = image.Repository[nameStart:]
 		} else {
-			imageName = image.Name
+			imageName = image.Repository
 		}
 
 		// Get the image

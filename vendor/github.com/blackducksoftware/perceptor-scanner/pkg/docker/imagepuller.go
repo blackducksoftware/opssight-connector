@@ -42,23 +42,19 @@ const (
 )
 
 type ImagePuller struct {
-	client                   *http.Client
-	dockerUser               string
-	dockerPassword           string
-	internalDockerRegistries []string
+	client     *http.Client
+	registries []RegistryAuth
 }
 
-func NewImagePuller(dockerUser string, dockerPassword string, internalDockerRegistries []string) *ImagePuller {
+func NewImagePuller(registries []RegistryAuth) *ImagePuller {
 	fd := func(proto, addr string) (conn net.Conn, err error) {
 		return net.Dial("unix", dockerSocketPath)
 	}
 	tr := &http.Transport{Dial: fd}
 	client := &http.Client{Transport: tr}
 	return &ImagePuller{
-		client:                   client,
-		dockerUser:               dockerUser,
-		dockerPassword:           dockerPassword,
-		internalDockerRegistries: internalDockerRegistries}
+		client:     client,
+		registries: registries}
 }
 
 // PullImage gives us access to a docker image by:
@@ -105,8 +101,8 @@ func (ip *ImagePuller) CreateImageInLocalDocker(image Image) error {
 		return err
 	}
 
-	if needsAuthHeader(image, ip.internalDockerRegistries) {
-		headerValue := encodeAuthHeader(ip.dockerUser, ip.dockerPassword)
+	if registryAuth := needsAuthHeader(image, ip.registries); registryAuth != nil {
+		headerValue := encodeAuthHeader(registryAuth.User, registryAuth.Password)
 		// log.Infof("X-Registry-Auth value:\n%s\n", headerValue)
 		req.Header.Add("X-Registry-Auth", headerValue)
 

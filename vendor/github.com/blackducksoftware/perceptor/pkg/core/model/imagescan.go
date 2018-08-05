@@ -23,7 +23,8 @@ package model
 
 import "github.com/blackducksoftware/perceptor/pkg/hub"
 
-type ImageScan struct {
+// Scan .....
+type Scan struct {
 	OverallStatus    hub.PolicyStatusType
 	PolicyViolations int
 	Vulnerabilities  int

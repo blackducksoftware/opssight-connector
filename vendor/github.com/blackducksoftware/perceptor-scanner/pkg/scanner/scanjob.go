@@ -21,7 +21,11 @@ under the License.
 
 package scanner
 
-import "github.com/blackducksoftware/perceptor-scanner/pkg/common"
+import (
+	"fmt"
+
+	"github.com/blackducksoftware/perceptor-scanner/pkg/common"
+)
 
 type ScanJob struct {
 	PullSpec              string
@@ -31,7 +35,8 @@ type ScanJob struct {
 	HubScanName           string
 }
 
-func NewScanJob(pullSpec string, sha string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ScanJob {
+func NewScanJob(repository string, sha string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ScanJob {
+	pullSpec := fmt.Sprintf("%s@sha256:%s", repository, sha)
 	return &ScanJob{
 		PullSpec:              pullSpec,
 		Sha:                   sha,

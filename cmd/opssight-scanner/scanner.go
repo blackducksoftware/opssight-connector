@@ -22,7 +22,6 @@ under the License.
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/blackducksoftware/perceptor-scanner/pkg/scanner"
@@ -36,5 +35,5 @@ func main() {
 	log.Info("Config path: %s", configPath)
 
 	stop := make(chan struct{})
-	scanner.RunPerceptorScanner(configPath, stop)
+	scanner.RunScanner(configPath, stop)
 }
