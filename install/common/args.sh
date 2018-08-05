@@ -13,7 +13,7 @@
 
 # ARG_OPTIONAL_SINGLE([container-registry],[c],[Base docker repo for the applicaition.],[docker.io])
 # ARG_OPTIONAL_SINGLE([image-repository],[I],[Image repository for the applicaition.],[blackducksoftware])
-# ARG_OPTIONAL_SINGLE([default-container-version],[v],[Default container version],[latest])
+# ARG_OPTIONAL_SINGLE([default-container-version],[v],[Default container version],[])
 # ARG_OPTIONAL_SINGLE([pcp-namespace],[n],[The namespace perceptor containers run in.],[blackduck-opssight])
 
 # ARG_OPTIONAL_SINGLE([hub-user],[U],[hub user],[sysadmin])
@@ -26,7 +26,9 @@
 # ARG_OPTIONAL_SINGLE([container-default-cpu],[u],[All containers default cpu],[300m])
 # ARG_OPTIONAL_SINGLE([container-default-memory],[m],[All containers default memory],[1300Mi])
 # ARG_OPTIONAL_SINGLE([container-default-log-level],[l],[All containers default log level],[info])
-# ARG_OPTIONAL_BOOLEAN([prompt],[],[prompt for values rather then expecting them all at the command line],[off])
+# ARG_OPTIONAL_SINGLE([docker-config-path],[D],[Path to the Docker config.json],[~/.docker/config.json])
+# ARG_OPTIONAL_BOOLEAN([rhcc],[],[Need to install OpsSight Connector using Red Hat Container Catalog],[off])
+# ARG_OPTIONAL_BOOLEAN([prompt],[],[Prompt for values rather then expecting them all at the command line],[off])
 
 # ARG_HELP([The general script's help msg])
 # ARGBASH_GO()
@@ -71,7 +73,7 @@ _arg_private_registry=
 _arg_private_registry_token=""
 _arg_container_registry="docker.io"
 _arg_image_repository="blackducksoftware"
-_arg_default_container_version="latest"
+_arg_default_container_version=""
 _arg_pcp_namespace="blackduck-opssight"
 _arg_hub_user="sysadmin"
 _arg_hub_password=""
@@ -90,6 +92,8 @@ _arg_container_default_memory="1300Mi"
 _arg_container_default_log_level="info"
 _arg_developer_mode="off"
 _arg_skyfire="off"
+_arg_rhcc="off"
+_arg_docker_config_path="~/.docker/config.json"
 
 # Function that prints general usage of the script.
 # This is useful if users asks for it, or if there is an argument parsing error (unexpected / spurious arguments)
@@ -97,7 +101,7 @@ _arg_skyfire="off"
 print_help ()
 {
 	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-p|--(no-)pod-perceiver] [-i|--(no-)image-perceiver] [-M|--(no-)prometheus-metrics] [--private-registry <arg>] [-t|--private-registry-token <arg>] [-c|--container-registry <arg>] [-I|--image-repository <arg>] [-v|--default-container-version <arg>] [-n|--pcp-namespace <arg>] [-U|--hub-user <arg>] [-W|--hub-password <arg>] [-H|--hub-host <arg>] [-P|--hub-port <arg>] [-T|--hub-client-timeout-perceptor-seconds <arg>] [-s|--hub-client-timeout-scanner-seconds <arg>] [-C|--hub-max-concurrent-scans <arg>] [-u|--container-default-cpu <arg>] [-m|--container-default-memory <arg>] [-l|--container-default-log-level <arg>] [-d|--developer-mode <arg>] [--(no-)prompt] [-h|--help]\n' "$0"
+	printf 'Usage: %s [-p|--(no-)pod-perceiver] [-i|--(no-)image-perceiver] [-M|--(no-)prometheus-metrics] [--private-registry <arg>] [-t|--private-registry-token <arg>] [-c|--container-registry <arg>] [-I|--image-repository <arg>] [-v|--default-container-version <arg>] [--(no-)rhcc] [-D|--docker-config-path <arg>] [-n|--pcp-namespace <arg>] [-U|--hub-user <arg>] [-W|--hub-password <arg>] [-H|--hub-host <arg>] [-P|--hub-port <arg>] [-T|--hub-client-timeout-perceptor-seconds <arg>] [-s|--hub-client-timeout-scanner-seconds <arg>] [-C|--hub-max-concurrent-scans <arg>] [-u|--container-default-cpu <arg>] [-m|--container-default-memory <arg>] [-l|--container-default-log-level <arg>] [-d|--developer-mode <arg>] [--(no-)prompt] [-h|--help]\n' "$0"
 	printf '\t%s\n' "-p,--pod-perceiver,--no-pod-perceiver: Whether the pod perceiver is enabled. (on by default)"
 	printf '\t%s\n' "-i,--image-perceiver,--no-image-perceiver: Whether the image perceiver is enabled. (off by default)"
 	printf '\t%s\n' "-M,--prometheus-metrics,--no-prometheus-metrics: Whether the prometheus metrics is enabled. (off by default)"
@@ -105,7 +109,9 @@ print_help ()
 	printf '\t%s\n' "-t,--private-registry-token: A private registry token to have access to pull images  (default: 'perceptor-scanner-sa service account token')"
 	printf '\t%s\n' "-c,--container-registry: Base docker repo for the application. (default: 'docker.io')"
 	printf '\t%s\n' "-I,--image-repository: Image repository for the application. (default: 'blackducksoftware ')"
-	printf '\t%s\n' "-v,--default-container-version: Default container version (default: 'master')"
+	printf '\t%s\n' "-v,--default-container-version: Default container version"
+	printf '\t%s\n' "--rhcc,--no-rhcc: Need to install OpsSight Connector using Red Hat Container Catalog (off by default)"
+	printf '\t%s\n' "-D,--docker-config-path: Path to the Docker config.json (default: '~/.docker/config.json')"
 	printf '\t%s\n' "-n,--pcp-namespace: The namespace opssight containers run in. (default: 'blackduck-opssight')"
 	printf '\t%s\n' "-U,--hub-user: hub user (default: 'sysadmin')"
 	printf '\t%s\n' "-W,--hub-password: hub password"
@@ -118,7 +124,7 @@ print_help ()
 	printf '\t%s\n' "-m,--container-default-memory: All container's default memory (default: '1300Mi')"
 	printf '\t%s\n' "-l,--container-default-log-level: All container's default log level (default: 'info')"
 	printf '\t%s\n' "-d,--developer-mode,--no-developer-mode: Whether the developer mode is enabled. (off by default)"
-	printf '\t%s\n' "--prompt,--no-prompt: prompt for values rather then expecting them all at the command line (off by default)"
+	printf '\t%s\n' "--prompt,--no-prompt: Prompt for values rather then expecting them all at the command line (off by default)"
 	printf '\t%s\n' "-h,--help: Prints help"
 }
 
@@ -417,6 +423,23 @@ parse_commandline ()
 				fi
 				;;
 			# See the comment of option '--pod-perceiver' to see what's going on here - principle is the same.
+			--no-rhcc|--rhcc)
+				_arg_rhcc="on"
+				test "${1:0:5}" = "--no-" && _arg_rhcc="off"
+				;;
+			-D|--docker-config-path)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_docker_config_path="$2"
+				shift
+				;;
+			# See the comment of option '--private-registry=' to see what's going on here - principle is the same.
+			--docker-config-path=*)
+				_arg_docker_config_path="${_key##--docker-config-path=}"
+				;;
+			# See the comment of option '-p' to see what's going on here - principle is the same.
+			-D*)
+				_arg_docker_config_path="${_key##-D}"
+				;;
 			--no-prompt|--prompt)
 				_arg_prompt="on"
 				test "${1:0:5}" = "--no-" && _arg_prompt="off"
