@@ -9,5 +9,5 @@ source rbac.yaml.sh
 
 kubectl create ns $NS
 kubectl create -f  /tmp/protoform-rbac.yaml -n $NS
-kubectl create sa perceptor-scanner-sa -n $NS
+kubectl create sa perceptor-scanner -n $NS
 kubectl create sa perceiver -n $NS

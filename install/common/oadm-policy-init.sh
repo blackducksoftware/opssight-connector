@@ -15,16 +15,16 @@ oc adm policy $CLUSTER cluster-admin system:serviceaccount:$NS:protoform
 oc adm policy $CLUSTER cluster-admin system:serviceaccount:$NS:perceiver
 
 # Create the serviceaccount for perceptor-scanner to talk with Docker
-oc create sa perceptor-scanner-sa -n $NS
+oc create sa perceptor-scanner -n $NS
 
 # allows launching of privileged containers for Docker machine access
-oc adm policy $SCC privileged system:serviceaccount:$NS:perceptor-scanner-sa
+oc adm policy $SCC privileged system:serviceaccount:$NS:perceptor-scanner
 
 # these allow us to pull images
-oc adm policy $CLUSTER cluster-admin system:serviceaccount:$NS:perceptor-scanner-sa
-oc policy $ROLE view system:serviceaccount::perceptor-scanner-sa
+oc adm policy $CLUSTER cluster-admin system:serviceaccount:$NS:perceptor-scanner
+oc policy $ROLE view system:serviceaccount::perceptor-scanner
 
-_arg_private_registry_token=$(oc sa get-token perceptor-scanner-sa)
+_arg_private_registry_token=$(oc sa get-token perceptor-scanner)
 
 # Get the default Docker Registry
 route_docker_registry=$(oc get route docker-registry -n default -o jsonpath='{.spec.host}')
