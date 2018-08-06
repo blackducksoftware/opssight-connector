@@ -22,7 +22,6 @@ under the License.
 package main
 
 import (
-	"fmt"
 	"os"
 
 	imagefacade "github.com/blackducksoftware/perceptor-scanner/pkg/imagefacade"

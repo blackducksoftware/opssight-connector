@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./help.1 /help.1
 
-COPY ./opssight-pod-processor ./opssight-pod-processor
+COPY ./opssight-pod-processor ./pod-perceiver
 
 LABEL name="Black Duck OpsSight Pod Processor" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Pod Processor" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./opssight-pod-processor"]
+CMD ["./pod-perceiver"]

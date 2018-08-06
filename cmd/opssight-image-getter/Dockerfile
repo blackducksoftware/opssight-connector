@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./help.1 /help.1
 
-COPY ./opssight-image-getter ./opssight-image-getter
+COPY ./opssight-image-getter ./perceptor-imagefacade
 
 LABEL name="Black Duck OpsSight Image Getter" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Image Getter" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./opssight-image-getter"]
+CMD ["./perceptor-imagefacade"]

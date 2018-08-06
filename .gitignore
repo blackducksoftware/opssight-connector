@@ -11,3 +11,4 @@ install/.DS_Store
 .DS_Store
 _output/*
 build/*
+install/openshift/protoform.yaml
