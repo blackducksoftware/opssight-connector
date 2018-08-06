@@ -16,7 +16,7 @@ if [[ "$_arg_rhcc" == "on" ]] ; then
   oc secrets link default redhat-connect --for=pull
   oc secrets link perceiver redhat-connect --for=pull
   oc secrets link protoform redhat-connect --for=pull
-  oc secrets link perceptor-scanner-sa redhat-connect --for=pull
+  oc secrets link perceptor-scanner redhat-connect --for=pull
   perceptor_image=$(echo "$perceptor_image-v2")
   perceptor_scanner_image=$(echo "$perceptor_scanner_image-v2")
   pod_perceiver_image=$(echo "$pod_perceiver_image-v2")

@@ -13,13 +13,13 @@ items:
     selector:
       matchLabels:
         app: jobrunner
-        tier: jobrunner        
+        tier: jobrunner
     template:
       metadata:
         name: jobrunner
         labels:
           app: jobrunner
-          tier: jobrunner  
+          tier: jobrunner
       spec:
         volumes:
         - name: db-passwords
@@ -35,7 +35,7 @@ items:
           volumeMounts:
           - name: db-passwords
             mountPath: /tmp/secrets
-          image: blackducksoftware/hub-jobrunner:4.7.0
+          image: blackducksoftware/hub-jobrunner:4.7.3
           name: jobrunner
           livenessProbe:
             exec:
@@ -81,7 +81,7 @@ items:
         name: webserver
         labels:
           app: webserver
-          tier: webserver  
+          tier: webserver
       spec:
         volumes:
         - name: dir-webserver
@@ -97,7 +97,7 @@ items:
         #       path: WEBSERVER_CUSTOM_CERT_FILE
         containers:
         - name: webserver
-          image: blackducksoftware/hub-nginx:4.7.0
+          image: blackducksoftware/hub-nginx:4.7.3
           envFrom:
           - configMapRef:
               name: hub-config
@@ -165,7 +165,7 @@ items:
             limits:
               cpu: 3
               memory: 12G
-          image: blackducksoftware/hub-webapp:4.7.0
+          image: blackducksoftware/hub-webapp:4.7.3
           livenessProbe:
             exec:
               command:
@@ -200,7 +200,7 @@ items:
           ports:
           - containerPort: 8443
             protocol: TCP
-        - image: blackducksoftware/hub-logstash:4.7.0
+        - image: blackducksoftware/hub-logstash:4.7.3
           livenessProbe:
             exec:
               command:
@@ -242,7 +242,7 @@ items:
           app: documentation
       spec:
         containers:
-        - image: blackducksoftware/hub-documentation:4.7.0
+        - image: blackducksoftware/hub-documentation:4.7.3
           livenessProbe:
             exec:
               command:
@@ -296,7 +296,7 @@ items:
               memory: "2G"
             limits:
               memory: "2G"
-          image: blackducksoftware/hub-solr:4.7.0
+          image: blackducksoftware/hub-solr:4.7.3
           livenessProbe:
             exec:
               command:
@@ -334,7 +334,7 @@ items:
         - emptyDir: {}
           name: dir-registration
         containers:
-        - image: blackducksoftware/hub-registration:4.7.0
+        - image: blackducksoftware/hub-registration:4.7.3
           envFrom:
           - configMapRef:
               name: hub-config
@@ -384,7 +384,7 @@ items:
           name: dir-zookeeper
         containers:
         - name: zookeeper
-          image: blackducksoftware/hub-zookeeper:4.7.0
+          image: blackducksoftware/hub-zookeeper:4.7.3
           envFrom:
           - configMapRef:
               name: hub-config
@@ -548,7 +548,7 @@ items:
               path: HUB_POSTGRES_USER_PASSWORD_FILE
         containers:
         - name: hub-scan
-          image: blackducksoftware/hub-scan:4.7.0
+          image: blackducksoftware/hub-scan:4.7.3
           livenessProbe:
             exec:
               command:
@@ -631,7 +631,7 @@ items:
             - key: blackduck_user
               path: HUB_POSTGRES_USER_PASSWORD_FILE
         containers:
-        - image: blackducksoftware/hub-authentication:4.7.0
+        - image: blackducksoftware/hub-authentication:4.7.3
           livenessProbe:
             exec:
               command:
