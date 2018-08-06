@@ -4,7 +4,7 @@ Copyright (C) 2018 Synopsys, Inc.
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
 distributed with this work for additional information
-regarding copyright ownershii. The ASF licenses this file
+regarding copyright ownership. The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -23,11 +23,14 @@ package protoform
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"log"
 	"math"
+	"path/filepath"
 	"reflect"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api"
 
@@ -42,11 +45,14 @@ import (
 	"github.com/koki/short/util/floatstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 // Installer handles deploying configured components to a cluster
 type Installer struct {
-	config                 protoformConfig
+	// Config will have all viper inputs and default values
+	Config                 protoformConfig
 	replicationControllers []*types.ReplicationController
 	pods                   []*types.Pod
 	configMaps             []*types.ConfigMap
@@ -60,12 +66,12 @@ func NewInstaller(defaults *api.ProtoformDefaults, path string) *Installer {
 	i := Installer{}
 	i.readConfig(path)
 	i.setDefaults(defaults)
-	i.prettyPrint(i.config)
+	i.prettyPrint(i.Config)
 	return &i
 }
 
 func (i *Installer) setDefaults(defaults *api.ProtoformDefaults) {
-	configFields := reflect.ValueOf(&i.config).Elem()
+	configFields := reflect.ValueOf(&i.Config).Elem()
 	defaultFields := reflect.ValueOf(defaults).Elem()
 	for cnt := 0; cnt < configFields.NumField(); cnt++ {
 		fieldName := configFields.Type().Field(cnt).Name
@@ -94,7 +100,8 @@ func (i *Installer) setDefaults(defaults *api.ProtoformDefaults) {
 // If users want to dynamically reload,
 // they can update the individual perceptor containers configmaps.
 func (i *Installer) readConfig(configPath string) {
-	log.Print("*************** [protoform] initializing  ****************")
+	log.Debug("*************** [protoform] initializing  ****************")
+	log.Infof("Config Path: %s", configPath)
 	viper.SetConfigFile(configPath)
 
 	// these need to be set before we read in the config!
@@ -102,22 +109,28 @@ func (i *Installer) readConfig(configPath string) {
 	viper.BindEnv("HubUserPassword")
 	if viper.GetString("hubuserpassword") == "" {
 		viper.Debug()
-		panic("No hub database password secret supplied.  Please inject PCP_HUBUSERPASSWORD as a secret and restart")
+		log.Panic("no hub database password secret supplied.  Please inject PCP_HUBUSERPASSWORD as a secret and restart")
 	}
 
-	i.config.HubUserPasswordEnvVar = "PCP_HUBUSERPASSWORD"
-	i.config.ViperSecret = "viper-secret"
-	log.Print(configPath)
+	i.Config.HubUserPasswordEnvVar = "PCP_HUBUSERPASSWORD"
+	i.Config.ViperSecret = "viper-secret"
+
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Print(" ^^ Didnt see a config file! Using defaults for everything")
+		log.Errorf("unable to read the config file! The input config file path is %s. Using defaults for everything", configPath)
 	}
 
 	internalRegistry := viper.GetStringSlice("InternalDockerRegistries")
 	viper.Set("InternalDockerRegistries", internalRegistry)
 
-	viper.Unmarshal(&i.config)
-	log.Print("*************** [protoform] done reading in config ****************")
+	viper.Unmarshal(&i.Config)
+
+	// Set the Log level by reading the loglevel from config
+	log.Infof("Log level : %s", i.Config.LogLevel)
+	level, err := log.ParseLevel(i.Config.LogLevel)
+	log.SetLevel(level)
+
+	log.Debug("*************** [protoform] done reading in config ****************")
 
 }
 
@@ -195,32 +208,36 @@ func (i *Installer) AddConfigMap(conf api.ConfigMapConfig) {
 
 // Run will start the installer
 func (i *Installer) Run() {
-	if !i.config.DryRun {
+	if !i.Config.DryRun {
 		// creates the in-cluster config
 		config, err := rest.InClusterConfig()
 		if err != nil {
-			panic(err.Error())
+			log.Errorf("error getting in cluster config. Fallback to native config. Error message: %s", err)
+			config, err = newKubeClientFromOutsideCluster()
+		}
+
+		if err != nil {
+			log.Panicf("error getting the default client config: %s", err.Error())
 		} else {
 			// creates the client
 			i.client, err = kubernetes.NewForConfig(config)
 			if err != nil {
-				panic(err.Error())
+				log.Panicf("error creating the kubernetes client : %s", err.Error())
 			}
 		}
 	}
 
-	i.init()
 	i.deploy()
-	log.Println("Entering pod listing loop!")
+	log.Debug("Entering pod listing loop!")
 
 	// continually print out pod statuses .  can exit any time.  maybe use this as a stub for self testing.
-	if !i.config.DryRun {
+	if !i.Config.DryRun {
 		for cnt := 0; cnt < 10; cnt++ {
-			pods, _ := i.client.Core().Pods(i.config.Namespace).List(v1meta.ListOptions{})
+			pods, _ := i.client.Core().Pods(i.Config.Namespace).List(v1meta.ListOptions{})
 			for _, pod := range pods.Items {
-				log.Printf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
+				log.Debugf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
 			}
-			log.Printf("***************")
+			log.Debug("***************")
 			time.Sleep(10 * time.Second)
 		}
 	}
@@ -228,11 +245,12 @@ func (i *Installer) Run() {
 	return
 }
 
-func (i *Installer) init() {
+// AddPerceptorResources method is to support perceptor projects TODO: Remove perceptor specific code
+func (i *Installer) AddPerceptorResources() {
 	i.addDefaultServiceAccounts()
 	isValid := i.sanityCheckServices()
 	if isValid == false {
-		panic("Please set the service accounts correctly!")
+		log.Panic("Please set the service accounts correctly!")
 	}
 
 	i.substituteDefaultImageVersion()
@@ -241,27 +259,27 @@ func (i *Installer) init() {
 }
 
 func (i *Installer) substituteDefaultImageVersion() {
-	if len(i.config.PerceptorContainerVersion) == 0 {
-		i.config.PerceptorContainerVersion = i.config.DefaultVersion
+	if len(i.Config.PerceptorContainerVersion) == 0 {
+		i.Config.PerceptorContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.ScannerContainerVersion) == 0 {
-		i.config.ScannerContainerVersion = i.config.DefaultVersion
+	if len(i.Config.ScannerContainerVersion) == 0 {
+		i.Config.ScannerContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.PerceiverContainerVersion) == 0 {
-		i.config.PerceiverContainerVersion = i.config.DefaultVersion
+	if len(i.Config.PerceiverContainerVersion) == 0 {
+		i.Config.PerceiverContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.ImageFacadeContainerVersion) == 0 {
-		i.config.ImageFacadeContainerVersion = i.config.DefaultVersion
+	if len(i.Config.ImageFacadeContainerVersion) == 0 {
+		i.Config.ImageFacadeContainerVersion = i.Config.DefaultVersion
 	}
-	if len(i.config.SkyfireContainerVersion) == 0 {
-		i.config.SkyfireContainerVersion = i.config.DefaultVersion
+	if len(i.Config.SkyfireContainerVersion) == 0 {
+		i.Config.SkyfireContainerVersion = i.Config.DefaultVersion
 	}
 }
 
 func (i *Installer) addDefaultServiceAccounts() {
 	// TODO Viperize these env vars.
-	if len(i.config.ServiceAccounts) == 0 {
-		log.Println("NO SERVICE ACCOUNTS FOUND.  USING DEFAULTS: MAKE SURE THESE EXIST!")
+	if len(i.Config.ServiceAccounts) == 0 {
+		log.Info("No service accounts exist.  Using defaults: make sure these are exist!")
 
 		svcAccounts := map[string]string{
 			// WARNING: These service accounts need to exist !
@@ -271,7 +289,7 @@ func (i *Installer) addDefaultServiceAccounts() {
 		}
 		// TODO programatically validate rather then sanity check.
 		i.prettyPrint(svcAccounts)
-		i.config.ServiceAccounts = svcAccounts
+		i.Config.ServiceAccounts = svcAccounts
 	}
 }
 
@@ -286,7 +304,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		mounts := []types.VolumeMount{}
 
 		for cfgMapName, cfgMapMount := range desc.ConfigMapMounts {
-			log.Print("Adding config mounts now.")
+			log.Debug("Adding config mounts now.")
 			if addedMounts[cfgMapName] == "" {
 				addedMounts[cfgMapName] = cfgMapName
 				TheVolumes[cfgMapName] = types.Volume{
@@ -295,7 +313,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 					},
 				}
 			} else {
-				log.Print(fmt.Sprintf("Not adding volume, already added: %v", cfgMapName))
+				log.Debugf(fmt.Sprintf("Not adding volume, already added: %v", cfgMapName))
 			}
 			mounts = append(mounts, types.VolumeMount{
 				Store:     cfgMapName,
@@ -307,7 +325,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		// keep track of emptyDirs, only once, since it can be referenced in
 		// multiple pods
 		for emptyDirName, emptyDirMount := range desc.EmptyDirMounts {
-			log.Print("Adding empty mounts now.")
+			log.Debug("Adding empty mounts now.")
 			if addedMounts[emptyDirName] == "" {
 				addedMounts[emptyDirName] = emptyDirName
 				TheVolumes[emptyDirName] = types.Volume{
@@ -316,7 +334,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 					},
 				}
 			} else {
-				log.Print(fmt.Sprintf("Not adding volume, already added: %v", emptyDirName))
+				log.Debugf(fmt.Sprintf("Not adding volume, already added: %v", emptyDirName))
 			}
 			mounts = append(mounts, types.VolumeMount{
 				Store:     emptyDirName,
@@ -350,7 +368,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		for _, env := range desc.Env {
 			new, err := types.NewEnvFromSecret(env.EnvName, env.SecretName, env.KeyFromSecret)
 			if err != nil {
-				panic(err)
+				log.Panic("error while adding the secret: %s", err.Error())
 			}
 			envVar = append(envVar, new)
 		}
@@ -380,7 +398,7 @@ func (i *Installer) createRcOrPod(descriptions []*ReplicationController) (map[st
 		// Each RC has only one pod, but can have many containers.
 		TheContainers = append(TheContainers, container)
 
-		log.Print(fmt.Sprintf("privileged = %v %v %v", desc.Name, desc.DockerSocket, *container.Privileged))
+		log.Debugf(fmt.Sprintf("privileged = %v %v %v", desc.Name, desc.DockerSocket, *container.Privileged))
 	}
 	return TheVolumes, TheContainers
 }
@@ -476,13 +494,13 @@ func (i *Installer) addPerceptorResources() {
 
 	// WARNING: THE SERVICE ACCOUNT IN THE FIRST CONTAINER IS USED FOR THE GLOBAL SVC ACCOUNT FOR ALL PODS !!!!!!!!!!!!!
 	// MAKE SURE IF YOU NEED A SVC ACCOUNT THAT ITS IN THE FIRST CONTAINER...
-	defaultMem, err := i.GenerateDefaultMemory(i.config.DefaultMem)
+	defaultMem, err := i.GenerateDefaultMemory(i.Config.DefaultMem)
 	if err != nil {
-		panic(err)
+		log.Panicf("error while setting the default memory for the container due to %s", err.Error())
 	}
-	defaultCPU, err := i.GenerateDefaultCPU(i.config.DefaultCPU)
+	defaultCPU, err := i.GenerateDefaultCPU(i.Config.DefaultCPU)
 	if err != nil {
-		panic(err)
+		log.Panicf("error while setting the default cpu for the container due to %s", err.Error())
 	}
 
 	i.AddReplicationControllerAndService([]*ReplicationController{
@@ -491,14 +509,14 @@ func (i *Installer) addPerceptorResources() {
 			ConfigMapMounts: map[string]string{"perceptor": "/etc/perceptor"},
 			Env: []envSecret{
 				{
-					EnvName:       i.config.HubUserPasswordEnvVar,
-					SecretName:    i.config.ViperSecret,
+					EnvName:       i.Config.HubUserPasswordEnvVar,
+					SecretName:    i.Config.ViperSecret,
 					KeyFromSecret: "HubUserPassword",
 				},
 			},
-			Name:   i.config.PerceptorImageName,
+			Name:   i.Config.PerceptorImageName,
 			Image:  paths["perceptor"],
-			Port:   int32(i.config.PerceptorPort),
+			Port:   int32(i.Config.PerceptorPort),
 			Cmd:    []string{"./perceptor"},
 			Arg:    []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor/perceptor.yaml", 0)},
 			CPU:    defaultCPU,
@@ -513,13 +531,13 @@ func (i *Installer) addPerceptorResources() {
 			EmptyDirMounts: map[string]string{
 				"logs": "/tmp",
 			},
-			Name:               i.config.PodPerceiverImageName,
+			Name:               i.Config.PodPerceiverImageName,
 			Image:              paths["pod-perceiver"],
-			Port:               int32(i.config.PerceiverPort),
+			Port:               int32(i.Config.PerceiverPort),
 			Cmd:                []string{"./pod-perceiver"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceiver/perceiver.yaml", 0)},
-			ServiceAccountName: i.config.ServiceAccounts["pod-perceiver"],
-			ServiceAccount:     i.config.ServiceAccounts["pod-perceiver"],
+			ServiceAccountName: i.Config.ServiceAccounts["pod-perceiver"],
+			ServiceAccount:     i.Config.ServiceAccounts["pod-perceiver"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -527,26 +545,26 @@ func (i *Installer) addPerceptorResources() {
 
 	i.AddReplicationControllerAndService([]*ReplicationController{
 		{
-			Replicas:        int32(math.Ceil(float64(i.config.ConcurrentScanLimit) / 2.0)),
+			Replicas:        int32(math.Ceil(float64(i.Config.ConcurrentScanLimit) / 2.0)),
 			ConfigMapMounts: map[string]string{"perceptor-scanner": "/etc/perceptor_scanner"},
 			Env: []envSecret{
 				{
-					EnvName:       i.config.HubUserPasswordEnvVar,
-					SecretName:    i.config.ViperSecret,
+					EnvName:       i.Config.HubUserPasswordEnvVar,
+					SecretName:    i.Config.ViperSecret,
 					KeyFromSecret: "HubUserPassword",
 				},
 			},
 			EmptyDirMounts: map[string]string{
 				"var-images": "/var/images",
 			},
-			Name:               i.config.ScannerImageName,
+			Name:               i.Config.ScannerImageName,
 			Image:              paths["perceptor-scanner"],
 			DockerSocket:       false,
-			Port:               int32(i.config.ScannerPort),
+			Port:               int32(i.Config.ScannerPort),
 			Cmd:                []string{"./perceptor-scanner"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_scanner/perceptor_scanner.yaml", 0)},
-			ServiceAccount:     i.config.ServiceAccounts["perceptor-image-facade"],
-			ServiceAccountName: i.config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccount:     i.Config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccountName: i.Config.ServiceAccounts["perceptor-image-facade"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -555,14 +573,14 @@ func (i *Installer) addPerceptorResources() {
 			EmptyDirMounts: map[string]string{
 				"var-images": "/var/images",
 			},
-			Name:               i.config.ImageFacadeImageName,
+			Name:               i.Config.ImageFacadeImageName,
 			Image:              paths["perceptor-imagefacade"],
 			DockerSocket:       true,
-			Port:               int32(i.config.ImageFacadePort),
+			Port:               int32(i.Config.ImageFacadePort),
 			Cmd:                []string{"./perceptor-imagefacade"},
 			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_imagefacade/perceptor_imagefacade.yaml", 0)},
-			ServiceAccount:     i.config.ServiceAccounts["perceptor-image-facade"],
-			ServiceAccountName: i.config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccount:     i.Config.ServiceAccounts["perceptor-image-facade"],
+			ServiceAccountName: i.Config.ServiceAccounts["perceptor-image-facade"],
 			CPU:                defaultCPU,
 			Memory:             defaultMem,
 		},
@@ -570,7 +588,7 @@ func (i *Installer) addPerceptorResources() {
 
 	// We dont create openshift perceivers if running kube... This needs to be avoided b/c the svc accounts
 	// won't exist.
-	if i.config.Openshift {
+	if i.Config.Openshift {
 		i.AddReplicationControllerAndService([]*ReplicationController{
 			{
 				Replicas:        1,
@@ -578,20 +596,20 @@ func (i *Installer) addPerceptorResources() {
 				EmptyDirMounts: map[string]string{
 					"logs": "/tmp",
 				},
-				Name:               i.config.ImagePerceiverImageName,
+				Name:               i.Config.ImagePerceiverImageName,
 				Image:              paths["image-perceiver"],
-				Port:               int32(i.config.PerceiverPort),
+				Port:               int32(i.Config.PerceiverPort),
 				Cmd:                []string{"./image-perceiver"},
 				Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceiver/perceiver.yaml", 0)},
-				ServiceAccount:     i.config.ServiceAccounts["image-perceiver"],
-				ServiceAccountName: i.config.ServiceAccounts["image-perceiver"],
+				ServiceAccount:     i.Config.ServiceAccounts["image-perceiver"],
+				ServiceAccountName: i.Config.ServiceAccounts["image-perceiver"],
 				CPU:                defaultCPU,
 				Memory:             defaultMem,
 			},
 		})
 	}
 
-	if i.config.PerceptorSkyfire {
+	if i.Config.PerceptorSkyfire {
 		i.AddReplicationControllerAndService([]*ReplicationController{
 			{
 				Replicas:        1,
@@ -601,18 +619,18 @@ func (i *Installer) addPerceptorResources() {
 				},
 				Env: []envSecret{
 					{
-						EnvName:       i.config.HubUserPasswordEnvVar,
-						SecretName:    i.config.ViperSecret,
+						EnvName:       i.Config.HubUserPasswordEnvVar,
+						SecretName:    i.Config.ViperSecret,
 						KeyFromSecret: "HubUserPassword",
 					},
 				},
-				Name:               i.config.SkyfireImageName,
+				Name:               i.Config.SkyfireImageName,
 				Image:              paths["perceptor-skyfire"],
 				Port:               3005,
 				Cmd:                []string{"./skyfire"},
 				Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/skyfire/skyfire.yaml", 0)},
-				ServiceAccount:     i.config.ServiceAccounts["image-perceiver"],
-				ServiceAccountName: i.config.ServiceAccounts["image-perceiver"],
+				ServiceAccount:     i.Config.ServiceAccounts["image-perceiver"],
+				ServiceAccountName: i.Config.ServiceAccounts["image-perceiver"],
 				CPU:                defaultCPU,
 				Memory:             defaultMem,
 			},
@@ -620,25 +638,25 @@ func (i *Installer) addPerceptorResources() {
 	}
 }
 
+// Deploy function will create the config maps, replication controllers, pods and services that have been added to the global list
 func (i *Installer) deploy() {
 	// Create all the resources.  Note that we'll panic after creating ANY
 	// resource that fails.  Thats intentional
 
 	// Create the configmaps first
-	log.Println("Creating config maps : Dry Run ")
+	log.Debug("Creating config maps : Dry Run ")
 	for _, kconfigMap := range i.configMaps {
 		wrapper := &types.ConfigMapWrapper{ConfigMap: *kconfigMap}
 		configMap, err := converters.Convert_Koki_ConfigMap_to_Kube_v1_ConfigMap(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the config map to koki format due to %s", err.Error())
 		}
-		log.Println("*********************************************")
-		log.Println("Creating config maps:", configMap)
-		if !i.config.DryRun {
-			log.Println("creating config map")
-			_, err := i.client.Core().ConfigMaps(i.config.Namespace).Create(configMap)
+		log.Debug("*********************************************")
+		log.Infof("Creating config map %s", configMap.Name)
+		if !i.Config.DryRun {
+			_, err := i.client.Core().ConfigMaps(i.Config.Namespace).Create(configMap)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the config map in kubernetes cluster due to %s", err.Error())
 			}
 		} else {
 			i.prettyPrint(configMap)
@@ -650,14 +668,17 @@ func (i *Installer) deploy() {
 		wrapper := &types.ReplicationControllerWrapper{ReplicationController: *krc}
 		rc, err := converters.Convert_Koki_ReplicationController_to_Kube_v1_ReplicationController(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the replication controller %s to koki format due to %s", krc.Name, err.Error())
 		}
-		i.prettyPrint(rc)
-		if !i.config.DryRun {
-			_, err := i.client.Core().ReplicationControllers(i.config.Namespace).Create(rc)
+
+		log.Infof("Creating replication controller %s", rc.Name)
+		if !i.Config.DryRun {
+			_, err := i.client.Core().ReplicationControllers(i.Config.Namespace).Create(rc)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the replication controller in kubernetes cluster due to %s", err.Error())
 			}
+		} else {
+			i.prettyPrint(rc)
 		}
 	}
 
@@ -666,14 +687,17 @@ func (i *Installer) deploy() {
 		wrapper := &types.PodWrapper{Pod: *kpod}
 		pod, err := converters.Convert_Koki_Pod_to_Kube_v1_Pod(wrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the pod %s to koki format due to %s", kpod.Name, err.Error())
 		}
-		i.prettyPrint(pod)
-		if !i.config.DryRun {
-			_, err := i.client.Core().Pods(i.config.Namespace).Create(pod)
+
+		log.Infof("Creating pod %s", pod.Name)
+		if !i.Config.DryRun {
+			_, err := i.client.Core().Pods(i.Config.Namespace).Create(pod)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the pod %s in kubernetes cluster due to %s", pod.Name, err.Error())
 			}
+		} else {
+			i.prettyPrint(pod)
 		}
 	}
 
@@ -682,15 +706,16 @@ func (i *Installer) deploy() {
 		sWrapper := &types.ServiceWrapper{Service: *ksvcI}
 		svcI, err := converters.Convert_Koki_Service_To_Kube_v1_Service(sWrapper)
 		if err != nil {
-			panic(err)
+			log.Panicf("error while converting the service %s to koki format due to %s", ksvcI.Name, err.Error())
 		}
-		if i.config.DryRun {
-			// service dont really need much debug...
-			// i.prettyPrint(svcI)
+
+		log.Infof("Creating service %s", svcI.Name)
+		if i.Config.DryRun {
+			i.prettyPrint(svcI)
 		} else {
-			_, err := i.client.Core().Services(i.config.Namespace).Create(svcI)
+			_, err := i.client.Core().Services(i.Config.Namespace).Create(svcI)
 			if err != nil {
-				panic(err)
+				log.Panicf("error while creating the service %s in kubernetes cluster due to %s", svcI.Name, err.Error())
 			}
 		}
 	}
@@ -705,20 +730,19 @@ func (i *Installer) sanityCheckServices() bool {
 		}
 		return false
 	}
-	for cn := range i.config.ServiceAccounts {
+	for cn := range i.Config.ServiceAccounts {
 		if !isValid(cn) {
-			log.Print("[protoform] failed at verifiying that the container name for a svc account was valid!")
-			log.Fatalln(cn)
+			log.Panic("[protoform] failed at verifiying that the container name for a svc account was valid!")
 		}
 	}
 	return true
 }
 
 func (i *Installer) createConfigMaps() {
-	for k, v := range i.config.toMap() {
+	for k, v := range i.Config.toMap() {
 		mapConfig := api.ConfigMapConfig{
 			Name:      k,
-			Namespace: i.config.Namespace,
+			Namespace: i.Config.Namespace,
 			Data:      v,
 		}
 		i.AddConfigMap(mapConfig)
@@ -726,7 +750,7 @@ func (i *Installer) createConfigMaps() {
 }
 
 func (i *Installer) generateContainerPaths() map[string]string {
-	config := i.config
+	config := i.Config
 	return map[string]string{
 		"perceptor":             fmt.Sprintf("%s/%s/%s:%s", config.Registry, config.ImagePath, config.PerceptorImageName, config.PerceptorContainerVersion),
 		"perceptor-scanner":     fmt.Sprintf("%s/%s/%s:%s", config.Registry, config.ImagePath, config.ScannerImageName, config.ScannerContainerVersion),
@@ -740,4 +764,21 @@ func (i *Installer) generateContainerPaths() map[string]string {
 func (i *Installer) prettyPrint(v interface{}) {
 	b, _ := json.MarshalIndent(v, "", "  ")
 	println(string(b))
+}
+
+func newKubeClientFromOutsideCluster() (*rest.Config, error) {
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		log.Errorf("error creating default client config: %s", err)
+		return nil, err
+	}
+	return config, err
 }

@@ -41,7 +41,7 @@ type ImageFacade struct {
 	createImagesOnly  bool
 }
 
-func NewImageFacade(dockerUser string, dockerPassword string, internalDockerRegistries []string, createImagesOnly bool) *ImageFacade {
+func NewImageFacade(dockerRegistries []pdocker.RegistryAuth, createImagesOnly bool) *ImageFacade {
 	actions := make(chan Action)
 	finishedImagePull := make(chan *finishedImagePull)
 
@@ -66,7 +66,7 @@ func NewImageFacade(dockerUser string, dockerPassword string, internalDockerRegi
 		server:            server,
 		reducer:           reducer,
 		finishedImagePull: finishedImagePull,
-		imagePuller:       pdocker.NewImagePuller(dockerUser, dockerPassword, internalDockerRegistries),
+		imagePuller:       pdocker.NewImagePuller(dockerRegistries),
 		createImagesOnly:  createImagesOnly}
 
 	go func() {

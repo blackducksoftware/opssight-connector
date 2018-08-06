@@ -24,15 +24,14 @@ package imagefacade
 import (
 	"fmt"
 
+	"github.com/blackducksoftware/perceptor-scanner/pkg/docker"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	// These are openshift specific, and allow pulling from the openshift docker registry
-	DockerUser               string
-	DockerPassword           string
-	InternalDockerRegistries []string
+	// These allow images to be pulled from registries that require authentication
+	PrivateDockerRegistries []docker.RegistryAuth
 
 	LogLevel string
 

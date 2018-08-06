@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/rhel7
+FROM centos:centos7
 
 MAINTAINER Black Duck OpsSight Team
 
@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./help.1 /help.1
 
-COPY ./opssight-scanner ./opssight-scanner
+COPY ./opssight-scanner ./perceptor-scanner
 
 LABEL name="Black Duck OpsSight Scanner" \
       vendor="Black Duck Software" \
@@ -21,4 +21,4 @@ LABEL name="Black Duck OpsSight Scanner" \
       buildtime="$BUILDTIME" \
       license="apache"
 
-CMD ["./opssight-scanner"]
+CMD ["./perceptor-scanner"]

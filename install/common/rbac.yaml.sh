@@ -22,7 +22,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: perceptor-scanner-sa
+  name: perceptor-scanner
   namespace: ${_arg_pcp_namespace}
 ---
 apiVersion: v1

@@ -24,8 +24,8 @@ items:
     name: hub-config-resources
   data:
     webapp-mem: 10G # coordinate with resource limits
-    jobrunner-mem: 7G # coordinare with resource limits
-    scan-mem: 2G
+    jobrunner-mem: 7G # coordinate with resource limits
+    scan-mem: 6G
 
 # Note that your certs secret will be strucutured like so.
 # Use kubectl create secret to create it.
@@ -66,7 +66,7 @@ items:
 
     RUN_SECRETS_DIR: /tmp/secrets
 
-    HUB_VERSION: 4.6.2
+    HUB_VERSION: 4.7.3
 
     # HOSTS THAT WON'T GO THROUGH A PROXY
     HUB_PROXY_NON_PROXY_HOSTS: "solr"

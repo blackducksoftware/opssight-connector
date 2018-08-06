@@ -22,10 +22,9 @@ under the License.
 package main
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/blackducksoftware/perceptor-scanner/cmd/perceptor-scanner/app"
+	"github.com/blackducksoftware/perceptor-scanner/pkg/scanner"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -35,13 +34,6 @@ func main() {
 	configPath := os.Args[1]
 	log.Info("Config path: %s", configPath)
 
-	// Create the scanner
-	scanner, err := app.NewPerceptorScanner(configPath)
-	if err != nil {
-		panic(fmt.Errorf("failed to create scanner: %v", err))
-	}
-
-	// Run the scanner
-	stopCh := make(chan struct{})
-	scanner.Run(stopCh)
+	stop := make(chan struct{})
+	scanner.RunScanner(configPath, stop)
 }

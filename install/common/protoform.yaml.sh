@@ -11,6 +11,12 @@ DEF_PERCEPTOR_PROTOFORM_TAG=master
 perceptor_protoform_image=${perceptor_protoform_image:-$DEF_PERCEPTOR_PROTOFORM_IMAGE}
 perceptor_protoform_tag=${perceptor_protoform_tag:-$DEF_PERCEPTOR_PROTOFORM_TAG}
 
+perceptor_protoform_tag=${_arg_default_container_version:-$perceptor_protoform_tag}
+perceptor_tag=${_arg_default_container_version:-$perceptor_tag}
+perceptor_scanner_tag=${_arg_default_container_version:-$perceptor_scanner_tag}
+pod_perceiver_tag=${_arg_default_container_version:-$pod_perceiver_tag}
+perceptor_imagefacade_tag=${_arg_default_container_version:-$perceptor_imagefacade_tag}
+
 hubUserPassword=$(printf "%s" "$_arg_hub_password" | base64)
 
 cat << EOF > protoform.yaml
@@ -20,9 +26,9 @@ metadata:
   name: protoform
 spec:
   volumes:
-  - name: viper-input
+  - name: protoform
     configMap:
-      name: viper-input
+      name: protoform
   containers:
   - name: protoform
     image: ${_arg_container_registry}/${_arg_image_repository}/${perceptor_protoform_image}:${perceptor_protoform_tag}
@@ -34,11 +40,12 @@ spec:
           key: HubUserPassword
     imagePullPolicy: Always
     command: [ ./protoform ]
+    args: ["/etc/protoform/protoform.yaml"]
     ports:
     - containerPort: 3001
       protocol: TCP
     volumeMounts:
-    - name: viper-input
+    - name: protoform
       mountPath: /etc/protoform/
   restartPolicy: Never
   serviceAccountName: protoform
@@ -59,7 +66,7 @@ items:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: viper-input
+    name: protoform
   data:
     protoform.yaml: |
       DockerPasswordOrToken: "$_arg_private_registry_token"

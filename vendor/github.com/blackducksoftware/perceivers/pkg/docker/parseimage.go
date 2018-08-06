@@ -74,3 +74,29 @@ func parseDockerPullableImageString(imageID string) (string, string, error) {
 	digest := match[2]
 	return name, digest, nil
 }
+
+// ParseImageString will take a docker image string and return the repo and tag parts
+func ParseImageString(image string) (string, string) {
+	var repo string
+	var tag string
+
+	imageOnly := image
+	imageIndex := strings.LastIndex(image, "/")
+	if imageIndex > 0 {
+		imageOnly = image[imageIndex:]
+	}
+
+	tagIndex := strings.LastIndex(imageOnly, ":")
+	if tagIndex >= 0 {
+		tag = imageOnly[tagIndex+1:]
+	}
+
+	if len(tag) > 0 {
+		imageTagIndex := strings.LastIndex(image, tag)
+		repo = image[:imageTagIndex-1]
+	} else {
+		repo = image
+	}
+
+	return repo, tag
+}

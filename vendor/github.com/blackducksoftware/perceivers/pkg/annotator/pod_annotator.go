@@ -238,7 +238,7 @@ func (pa *PodAnnotator) getPodContainerMap(pod *v1.Pod, scannedImages []percepto
 
 func (pa *PodAnnotator) findImageAnnotations(imageName string, imageSha string, imageList []perceptorapi.ScannedImage) *perceptorapi.ScannedImage {
 	for _, image := range imageList {
-		if image.Name == imageName && image.Sha == imageSha {
+		if image.Repository == imageName && image.Sha == imageSha {
 			return &image
 		}
 	}

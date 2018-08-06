@@ -23,11 +23,11 @@ package docker
 
 import "strings"
 
-func needsAuthHeader(image Image, internalDockerRegistries []string) bool {
-	for _, registry := range internalDockerRegistries {
-		if strings.HasPrefix(image.DockerPullSpec(), registry) {
-			return true
+func needsAuthHeader(image Image, registries []RegistryAuth) *RegistryAuth {
+	for _, registry := range registries {
+		if strings.HasPrefix(image.DockerPullSpec(), registry.Url) {
+			return &registry
 		}
 	}
-	return false
+	return nil
 }
