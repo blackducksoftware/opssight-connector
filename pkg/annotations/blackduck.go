@@ -23,6 +23,7 @@ package annotations
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -107,7 +108,7 @@ func CreateBlackDuckVulnerabilityAnnotation(hasVulns bool, url string, vulnCount
 		[]summaryEntry{
 			{
 				Label:         "high",
-				Data:          string(vulnCount),
+				Data:          fmt.Sprintf("%d", vulnCount),
 				SeverityIndex: 1,
 			},
 		},
@@ -127,7 +128,7 @@ func CreateBlackDuckPolicyAnnotation(hasPolicyViolations bool, url string, polic
 		[]summaryEntry{
 			{
 				Label:         "important",
-				Data:          string(policyCount),
+				Data:          fmt.Sprintf("%d", policyCount),
 				SeverityIndex: 1,
 			},
 		},
