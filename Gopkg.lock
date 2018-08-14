@@ -60,7 +60,7 @@
   version = "1.1.0"
 
 [[projects]]
-  digest = "1:2c9e5238510d441da85523d69026082ae727521e6c9ffbb30d0ee5dcae091c35"
+  digest = "1:cafabd8995d0a80597cd320a4a033f4bc10b5b73dfd2ec5994301e267db26f08"
   name = "github.com/blackducksoftware/perceptor"
   packages = [
     "pkg/api",
@@ -72,7 +72,7 @@
     "pkg/logging",
   ]
   pruneopts = "UT"
-  revision = "255a1e739b162098de273abecb3795d146f0e1eb"
+  revision = "db6e1a8d55a31c5c30aa9413c09248377bb88c91"
   version = "2.0.2"
 
 [[projects]]
@@ -84,7 +84,7 @@
   ]
   pruneopts = "UT"
   revision = "2f661ba3f7f48f4519dfcb1cb70021e767f4d18a"
-  version = "3.0.0-RC1"
+  version = "3.0.0"
 
 [[projects]]
   digest = "1:d6054ec369efec7de7fe92895cec8e099e7462eff867928b1c5dea742d77e071"
@@ -180,11 +180,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9887333bbef17574b1db5f9893ea137ac44107235d624408a3ac9e0b98fbb2cb"
+  digest = "1:0bfbe13936953a98ae3cfe8ed6670d396ad81edf069a806d2f6515d7bb6950df"
   name = "github.com/google/btree"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e89373fe6b4a7413d7acd6da1725b83ef713e6e4"
+  revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
   branch = "master"
@@ -537,27 +537,27 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:080e5f630945ad754f4b920e60b4d3095ba0237ebf88dc462eb28002932e3805"
+  digest = "1:8a020f916b23ff574845789daee6818daf8d25a4852419aae3f0b12378ba432a"
   name = "github.com/spf13/jwalterweatherman"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7c0cea34c8ece3fbeb2b27ab9b59511d360fb394"
+  revision = "14d3d4c518341bea657dd8a226f5121c0ff8c9f2"
 
 [[projects]]
-  digest = "1:9424f440bba8f7508b69414634aef3b2b3a877e522d8a4624692412805407bb7"
+  digest = "1:dab83a1bbc7ad3d7a6ba1a1cc1760f25ac38cdf7d96a5cdd55cd915a4f5ceaf9"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
+  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
+  version = "v1.0.2"
 
 [[projects]]
-  digest = "1:59e7dceb53b4a1e57eb1eb0bf9951ff0c25912df7660004a789b62b4e8cdca3b"
+  digest = "1:4fc8a61287ccfb4286e1ca5ad2ce3b0b301d746053bf44ac38cf34e40ae10372"
   name = "github.com/spf13/viper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
-  version = "v1.0.2"
+  revision = "907c19d40d9a6c9bb55f040ff4ae45271a4754b9"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
@@ -565,11 +565,11 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "80fca2ff14a3fb7db622c9a5462f8ce9ea026cba"
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
 
 [[projects]]
   branch = "master"
-  digest = "1:0194fd2c1c2eddd7f96abd832f69e6faffd9bded34d59f9d1772bfcfbe4fce3f"
+  digest = "1:88f2b7601447f11dc395e3d3a799e2019a1de0a0c1ec6f1dd4f5acdb7a0c23f3"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -583,11 +583,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "f4c29de78a2a91c00474a2e689954305c350adf9"
+  revision = "c39426892332e1bb5ec0a434a079bf82f5d30c54"
 
 [[projects]]
   branch = "master"
-  digest = "1:b67b4db0e9a4c8176489f5e6ef473863cd73ef598daebe3cfedbec504540915e"
+  digest = "1:db139063e0372079c5262d50ba98fa0e6e4bc6633b8cae9d7f855503f4882064"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -596,7 +596,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "34b17bdb430002e9db9ae7ddc8480b9fa05edc22"
+  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"
