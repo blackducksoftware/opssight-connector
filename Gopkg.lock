@@ -60,7 +60,7 @@
   version = "1.1.0"
 
 [[projects]]
-  digest = "1:cafabd8995d0a80597cd320a4a033f4bc10b5b73dfd2ec5994301e267db26f08"
+  digest = "1:fa529eccc46422e17c5b7ccc24f190dc860eb032c2073eb1b83cf9079cf5377a"
   name = "github.com/blackducksoftware/perceptor"
   packages = [
     "pkg/api",
@@ -72,7 +72,7 @@
     "pkg/logging",
   ]
   pruneopts = "UT"
-  revision = "db6e1a8d55a31c5c30aa9413c09248377bb88c91"
+  revision = "297d5d84d5aed75a899c393ca0734009ece0d0e4"
   version = "2.0.2"
 
 [[projects]]
@@ -587,7 +587,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:db139063e0372079c5262d50ba98fa0e6e4bc6633b8cae9d7f855503f4882064"
+  digest = "1:b049385244732e810305e00c7b5faec73d408a507ca19395310b08052ad91b6d"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -596,7 +596,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "4e1fef5609515ec7a2cee7b5de30ba6d9b438cbf"
+  revision = "14742f9018cd6651ec7364dc6ee08af0baaa1031"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"
