@@ -32,7 +32,7 @@ import (
 func main() {
 	log.Info("starting scanner")
 	configPath := os.Args[1]
-	log.Info("Config path: %s", configPath)
+	log.Infof("Config path: %s", configPath)
 
 	stop := make(chan struct{})
 	scanner.RunScanner(configPath, stop)
