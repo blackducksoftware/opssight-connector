@@ -72,6 +72,7 @@ _arg_container_registry="docker.io"
 _arg_image_repository="blackducksoftware"
 _arg_default_container_version=""
 _arg_pcp_namespace="blackduck-opssight"
+_arg_private_registry=""
 _arg_hub_user="sysadmin"
 _arg_hub_password=""
 # DOC : This is the default namespace since, if co-deploying with hub, it allows you to talk on internal service endpoints.
