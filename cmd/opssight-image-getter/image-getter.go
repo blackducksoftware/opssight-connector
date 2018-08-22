@@ -32,7 +32,7 @@ import (
 func main() {
 	log.Info("started image-getter")
 	configPath := os.Args[1]
-	log.Info("Config path: %s", configPath)
+	log.Infof("Config path: %s", configPath)
 
 	stopCh := make(chan struct{})
 	imagefacade.RunImageFacade(configPath, stopCh)
