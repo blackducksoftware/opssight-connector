@@ -134,7 +134,7 @@ parse_commandline ()
 		case "$_key" in
 			# The pod-perceiver argurment doesn't accept a value,
 			# we expect the --pod-perceiver or -k, so we watch for them.
-			-k|--no-pod-perceiver|--pod-perceiver)
+			-p|--no-pod-perceiver|--pod-perceiver)
 				_arg_pod_perceiver="on"
 				test "${1:0:5}" = "--no-" && _arg_pod_perceiver="off"
 				;;
@@ -142,9 +142,9 @@ parse_commandline ()
 			# so as -k doesn't accept value, other short options may be appended to it, so we watch for -k*.
 			# After stripping the leading -k from the argument, we have to make sure
 			# that the first character that follows coresponds to a short option.
-			-k*)
+			-p*)
 				_arg_pod_perceiver="on"
-				_next="${_key##-k}"
+				_next="${_key##-p}"
 				if test -n "$_next" -a "$_next" != "$_key"
 				then
 					begins_with_short_option "$_next" && shift && set -- "-k" "-${_next}" "$@" || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
