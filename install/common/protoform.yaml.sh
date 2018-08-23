@@ -1,8 +1,13 @@
 #!/bin/bash
 
 openshift="false"
-if [[ $_arg_image_perceiver == "on" ]] ; then
+if [[ "$_arg_image_perceiver" == "on" ]] ; then
   openshift="true"
+fi
+
+skyfire="false"
+if [[ "$_arg_skyfire" == "on" ]] ; then
+  skyfire="true"
 fi
 
 DEF_PERCEPTOR_PROTOFORM_IMAGE=perceptor-protoform
@@ -69,18 +74,15 @@ items:
     name: protoform
   data:
     protoform.yaml: |
-      DockerPasswordOrToken: "$_arg_private_registry_token"
       HubHost: "$_arg_hub_host"
       HubUser: "$_arg_hub_user"
       HubPort: "$_arg_hub_port"
       HubClientTimeoutPerceptorSeconds: "$_arg_hub_client_timeout_perceptor_seconds"
       HubClientTimeoutScannerSeconds: "$_arg_hub_client_timeout_scanner_seconds"
       ConcurrentScanLimit: "$_arg_hub_max_concurrent_scans"
-      # TODO, the Docker username is hardcoded, it is not required as of now.
-      DockerUsername: "admin"
       Namespace: "$_arg_pcp_namespace"
       Openshift: "$openshift"
-      InternalDockerRegistries: "${_arg_private_registry[@]}"
+      InternalRegistries: '`echo "$_arg_private_registry"`'
       DefaultCPU: "$_arg_container_default_cpu"
       DefaultMem: "$_arg_container_default_memory"
 
@@ -100,5 +102,5 @@ items:
       PerceiverContainerVersion: "$pod_perceiver_tag"
       ImageFacadeContainerVersion: "$perceptor_imagefacade_tag"
       LogLevel: "$_arg_container_default_log_level"
-      PerceptorSkyfire: "$_arg_skyfire"
+      PerceptorSkyfire: "$skyfire"
 EOF

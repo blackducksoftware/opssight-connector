@@ -26,6 +26,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"reflect"
 	"time"
@@ -102,6 +103,7 @@ func (i *Installer) setDefaults(defaults *api.ProtoformDefaults) {
 func (i *Installer) readConfig(configPath string) {
 	log.Debug("*************** [protoform] initializing  ****************")
 	log.Infof("Config Path: %s", configPath)
+
 	viper.SetConfigFile(configPath)
 
 	// these need to be set before we read in the config!
@@ -117,11 +119,18 @@ func (i *Installer) readConfig(configPath string) {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Errorf("unable to read the config file! The input config file path is %s. Using defaults for everything", configPath)
+		log.Errorf("the input config file path is %s. unable to read the config file due to %+v! Using defaults for everything", configPath, err)
 	}
 
-	internalRegistry := viper.GetStringSlice("InternalDockerRegistries")
-	viper.Set("InternalDockerRegistries", internalRegistry)
+	internalRegistry := []byte(viper.GetString("InternalRegistries"))
+	internalRegistries := make([]api.RegistryAuth, 0)
+	err = json.Unmarshal(internalRegistry, &internalRegistries)
+	if err != nil {
+		log.Errorf("unable to marshal the internal registries due to %+v", err)
+		os.Exit(1)
+	}
+	log.Infof("internalRegistries: %+v", internalRegistries)
+	viper.Set("InternalRegistries", internalRegistries)
 
 	viper.Unmarshal(&i.Config)
 
@@ -578,7 +587,7 @@ func (i *Installer) addPerceptorResources() {
 			DockerSocket:       true,
 			Port:               int32(i.Config.ImageFacadePort),
 			Cmd:                []string{"./perceptor-imagefacade"},
-			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_imagefacade/perceptor_imagefacade.yaml", 0)},
+			Arg:                []floatstr.FloatOrString{i.GenerateArg("/etc/perceptor_imagefacade/perceptor_imagefacade.json", 0)},
 			ServiceAccount:     i.Config.ServiceAccounts["perceptor-image-facade"],
 			ServiceAccountName: i.Config.ServiceAccounts["perceptor-image-facade"],
 			CPU:                defaultCPU,

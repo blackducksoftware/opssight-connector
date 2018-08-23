@@ -76,15 +76,15 @@
   version = "2.0.2"
 
 [[projects]]
-  digest = "1:4924c42e4c0531d924e98d5af7ec5ea9ce7725b9e4f63e4094b31a3d7cde581e"
+  digest = "1:0761feca95fe49d976c44a05c180b838d36a2ae51ac00f8ec837d08eaa16b1a2"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/api",
     "pkg/protoform",
   ]
   pruneopts = "UT"
-  revision = "2f661ba3f7f48f4519dfcb1cb70021e767f4d18a"
-  version = "3.0.0"
+  revision = "a1b6683d24f58279a432c2efdfe9bccd98d8642f"
+  version = "3.0.1"
 
 [[projects]]
   digest = "1:d6054ec369efec7de7fe92895cec8e099e7462eff867928b1c5dea742d77e071"
@@ -114,12 +114,12 @@
   revision = "89524893a6e4ea2b680b673490a44b607d85d334"
 
 [[projects]]
-  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "UT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -165,7 +165,7 @@
   revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
-  digest = "1:17fe264ee908afc795734e8c4e63db2accabaf57326dbf21763a7d6b86096260"
+  digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -175,8 +175,8 @@
     "ptypes/timestamp",
   ]
   pruneopts = "UT"
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -565,11 +565,11 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
 
 [[projects]]
   branch = "master"
-  digest = "1:88f2b7601447f11dc395e3d3a799e2019a1de0a0c1ec6f1dd4f5acdb7a0c23f3"
+  digest = "1:fbfe7225bfdfd91b8cb8325af6d851bfce8a8032eacae3b23def3179deae1163"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -583,11 +583,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "c39426892332e1bb5ec0a434a079bf82f5d30c54"
+  revision = "922f4815f713f213882e8ef45e0d315b164d705c"
 
 [[projects]]
   branch = "master"
-  digest = "1:b049385244732e810305e00c7b5faec73d408a507ca19395310b08052ad91b6d"
+  digest = "1:87037f775286c6edede07dd9f9254e41e1d03534efca006d31453a852fae0a67"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -596,7 +596,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "14742f9018cd6651ec7364dc6ee08af0baaa1031"
+  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

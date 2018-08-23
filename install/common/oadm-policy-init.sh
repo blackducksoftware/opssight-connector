@@ -22,6 +22,7 @@ oc adm policy $SCC privileged system:serviceaccount:$NS:perceptor-scanner
 
 # these allow us to pull images
 oc adm policy $CLUSTER cluster-admin system:serviceaccount:$NS:perceptor-scanner
+
 oc policy $ROLE view system:serviceaccount::perceptor-scanner
 
 _arg_private_registry_token=$(oc sa get-token perceptor-scanner)
@@ -30,7 +31,30 @@ _arg_private_registry_token=$(oc sa get-token perceptor-scanner)
 route_docker_registry=$(oc get route docker-registry -n default -o jsonpath='{.spec.host}')
 service_docker_registry=$(oc get svc docker-registry -n default -o jsonpath='{.spec.clusterIP}')
 service_docker_registry_port=$(oc get svc docker-registry -n default -o jsonpath='{.spec.ports[0].port}')
-_arg_private_registry+=("docker-registry.default.svc:5000" $route_docker_registry "$route_docker_registry:443" $service_docker_registry:$service_docker_registry_port)
+
+defaultRegistries=()
+if [[ ! -z "$route_docker_registry" ]]
+then
+  defaultRegistries+=("$route_docker_registry" "$route_docker_registry:443")
+fi
+
+if [[ ! -z "$service_docker_registry" ]]
+then
+  defaultRegistries+=("$service_docker_registry:$service_docker_registry_port" "docker-registry.default.svc:$service_docker_registry_port")
+fi
+
+i=0
+_arg_private_registry="["
+for dockerRegistry in "${defaultRegistries[@]}"
+do
+  if [ "$i" -eq "0" ]; then
+    _arg_private_registry="$_arg_private_registry{\"Url\": \"$dockerRegistry\", \"User\": \"admin\", \"Password\": \"$_arg_private_registry_token\"}"
+  else
+    _arg_private_registry="$_arg_private_registry,{\"Url\": \"$dockerRegistry\", \"User\": \"admin\", \"Password\": \"$_arg_private_registry_token\"}"
+  fi
+  ((i++))
+done
+_arg_private_registry="$_arg_private_registry]"
 
 # Note : This privileged SCC allows the perceivers to acto on accounts which have privileged ACLs.
 # This is necessary, for example, for annotating a privileged pod!

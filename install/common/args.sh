@@ -8,8 +8,7 @@
 # ARG_OPTIONAL_BOOLEAN([skyfire],[],[Enable Skyfire container for testing.],[off])
 #
 
-# ARG_OPTIONAL_SINGLE([private-registry],[p],[A private registry url you will need to pull images for scan.],["docker-registry.default.svc:5000"])
-# ARG_OPTIONAL_SINGLE([private-registry-token],[t],[A private registry token to have access to pull images],[perceptor-scanner-sa service account token])
+# ARG_OPTIONAL_SINGLE([private-registry],[p],[A private registry url you will need to pull images for scan.],["[{\"Url\": \"docker-registry.default.svc:5000\", \"User\": \"admin\", \"Password\": \"registry token\"}]"])
 
 # ARG_OPTIONAL_SINGLE([container-registry],[c],[Base docker repo for the applicaition.],[docker.io])
 # ARG_OPTIONAL_SINGLE([image-repository],[I],[Image repository for the applicaition.],[blackducksoftware])
@@ -69,12 +68,11 @@ begins_with_short_option()
 _arg_pod_perceiver="on"
 _arg_image_perceiver="off"
 _arg_prometheus_metrics="off"
-_arg_private_registry=
-_arg_private_registry_token=""
 _arg_container_registry="docker.io"
 _arg_image_repository="blackducksoftware"
 _arg_default_container_version=""
 _arg_pcp_namespace="blackduck-opssight"
+_arg_private_registry=""
 _arg_hub_user="sysadmin"
 _arg_hub_password=""
 # DOC : This is the default namespace since, if co-deploying with hub, it allows you to talk on internal service endpoints.
@@ -105,8 +103,7 @@ print_help ()
 	printf '\t%s\n' "-p,--pod-perceiver,--no-pod-perceiver: Whether the pod perceiver is enabled. (on by default)"
 	printf '\t%s\n' "-i,--image-perceiver,--no-image-perceiver: Whether the image perceiver is enabled. (off by default)"
 	printf '\t%s\n' "-M,--prometheus-metrics,--no-prometheus-metrics: Whether the prometheus metrics is enabled. (off by default)"
-	printf '\t%s\n' "--private-registry: A private registry url you will need to pull images for scan. (default: [\"docker-registry.default.svc:5000\"]). eg. [\"docker-registry.default.svc:5000\", \"172.1.1.0:5000\"]"
-	printf '\t%s\n' "-t,--private-registry-token: A private registry token to have access to pull images  (default: 'perceptor-scanner-sa service account token')"
+	printf '\t%s\n' "--private-registry: A private registry url you will need to pull images for scan. (default: [[{\"Url\": \"docker-registry.default.svc:5000\", \"User\": \"admin\", \"Password\": \"registry token\"}]]). eg. [{\"Url\": \"docker-registry.default.svc:5000\", \"User\": \"admin\", \"Password\": \"registry token\"}, {\"Url\": \"172.1.1.0:5000\", \"User\": \"admin\", \"Password\": \"registry token\"}]"
 	printf '\t%s\n' "-c,--container-registry: Base docker repo for the application. (default: 'docker.io')"
 	printf '\t%s\n' "-I,--image-repository: Image repository for the application. (default: 'blackducksoftware ')"
 	printf '\t%s\n' "-v,--default-container-version: Default container version"
@@ -137,7 +134,7 @@ parse_commandline ()
 		case "$_key" in
 			# The pod-perceiver argurment doesn't accept a value,
 			# we expect the --pod-perceiver or -k, so we watch for them.
-			-k|--no-pod-perceiver|--pod-perceiver)
+			-p|--no-pod-perceiver|--pod-perceiver)
 				_arg_pod_perceiver="on"
 				test "${1:0:5}" = "--no-" && _arg_pod_perceiver="off"
 				;;
@@ -145,9 +142,9 @@ parse_commandline ()
 			# so as -k doesn't accept value, other short options may be appended to it, so we watch for -k*.
 			# After stripping the leading -k from the argument, we have to make sure
 			# that the first character that follows coresponds to a short option.
-			-k*)
+			-p*)
 				_arg_pod_perceiver="on"
-				_next="${_key##-k}"
+				_next="${_key##-p}"
 				if test -n "$_next" -a "$_next" != "$_key"
 				then
 					begins_with_short_option "$_next" && shift && set -- "-k" "-${_next}" "$@" || die "The short option '$_key' can't be decomposed to ${_key:0:2} and -${_key:2}, because ${_key:0:2} doesn't accept value and '-${_key:2:1}' doesn't correspond to a short option."
@@ -197,20 +194,6 @@ parse_commandline ()
 			# to get the argument value
 			--private-registry=*)
 				_arg_private_registry="${_key##--private-registry=}"
-				;;
-			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
-			-t|--private-registry-token)
-				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
-				_arg_private_registry_token="$2"
-				shift
-				;;
-			# See the comment of option '--private-registry=' to see what's going on here - principle is the same.
-			--private-registry-token=*)
-				_arg_private_registry_token="${_key##--private-registry-token=}"
-				;;
-			# See the comment of option '-p' to see what's going on here - principle is the same.
-			-t*)
-				_arg_private_registry_token="${_key##-t}"
 				;;
 			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
 			-c|--container-registry)
