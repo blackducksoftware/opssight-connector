@@ -3,27 +3,27 @@
     {
       "name": "pod-perceiver",
       "image": "opssight-pod-processor",
-      "tag": "2.0.2"
+      "tag": "2.0.3"
     },
     {
       "name": "perceptor",
       "image": "opssight-core",
-      "tag": "2.0.2"
+      "tag": "2.0.3"
     },
     {
       "name": "perceptor-imagefacade",
       "image": "opssight-image-getter",
-      "tag": "2.0.2"
+      "tag": "2.0.3"
     },
     {
       "name": "perceptor-scanner",
       "image": "opssight-scanner",
-      "tag": "2.0.2"
+      "tag": "2.0.3"
     },
     {
       "name": "perceptor-protoform",
       "image": "opssight-deployer",
-      "tag": "2.0.2"
+      "tag": "2.0.3"
     }
   ]
 }
