@@ -45,10 +45,9 @@ func runProtoform(configPath string) {
 func createDefaults() *api.ProtoformDefaults {
 	d := protoform.NewDefaultsObj()
 	d.HubUser = "sysadmin"
-	d.HubHost = "nginx-webapp-logstash"
-	d.HubPort = 8443
-	d.InternalDockerRegistries = []string{"docker-registry.default.svc:5000", "172.1.1.0:5000"}
-	d.DefaultVersion = "2.0.0"
+	d.HubHost = "webserver"
+	d.HubPort = 443
+	d.DefaultVersion = "2.0.3"
 	d.Registry = "docker.io"
 	d.ImagePath = "blackducksoftware"
 	d.Namespace = "opssight-connector"
