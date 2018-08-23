@@ -60,6 +60,13 @@ type ConfigMapConfig struct {
 	Data      map[string]string
 }
 
+// RegistryAuth will store the Openshift Internal Registries
+type RegistryAuth struct {
+	URL      string `json:"Url"`
+	User     string
+	Password string
+}
+
 // ProtoformDefaults defines default values for Protoform.
 // These fields need to be named the same as those in
 // protoformConfig in order for defaults to be applied
@@ -78,10 +85,8 @@ type ProtoformDefaults struct {
 	HubUser                          string
 	HubUserPassword                  string
 	HubPort                          int
-	DockerUsername                   string
-	DockerPasswordOrToken            string
 	ConcurrentScanLimit              int
-	InternalDockerRegistries         []string
+	InternalRegistries               []RegistryAuth
 	DefaultVersion                   string
 	Registry                         string
 	ImagePath                        string

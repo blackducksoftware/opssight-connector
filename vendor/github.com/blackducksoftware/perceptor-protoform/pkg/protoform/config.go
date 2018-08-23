@@ -41,7 +41,7 @@ type protoformConfig struct {
 	ScannerPort                      int
 	PerceiverPort                    int
 	ImageFacadePort                  int
-	InternalDockerRegistries         []string
+	InternalRegistries               []api.RegistryAuth
 	AnnotationIntervalSeconds        int
 	DumpIntervalMinutes              int
 	HubHost                          string
@@ -73,13 +73,6 @@ type protoformConfig struct {
 	SkyfireContainerVersion     string
 
 	// AUTH CONFIGS
-	// These are given to containers through secrets or other mechanisms.
-	// Not necessarily a one-to-one text replacement.
-	// TODO Lets try to have this injected on serviceaccount
-	// at pod startup, eventually Service accounts.
-	DockerPasswordOrToken string
-	DockerUsername        string
-
 	ServiceAccounts map[string]string
 	Openshift       bool
 
@@ -144,7 +137,6 @@ func NewDefaultsObj() *api.ProtoformDefaults {
 		HubClientTimeoutScannerSeconds:   30,
 		HubHost:                 "nginx-webapp-logstash",
 		HubPort:                 8443,
-		DockerUsername:          "admin",
 		ConcurrentScanLimit:     7,
 		DefaultVersion:          "master",
 		PerceptorImageName:      "perceptor",
@@ -157,18 +149,14 @@ func NewDefaultsObj() *api.ProtoformDefaults {
 	}
 }
 
-func generateStringFromStringArr(strArr []string) string {
-	str, _ := json.Marshal(strArr)
-	return string(str)
-}
-
 func (p *protoformConfig) toMap() map[string]map[string]string {
+	internalRegistry, _ := json.Marshal(p.InternalRegistries)
 	configs := map[string]map[string]string{
 		"prometheus":            {"prometheus.yml": fmt.Sprint(`{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["`, p.PerceptorImageName, `:`, p.PerceptorPort, `","`, p.ScannerImageName, `:`, p.ScannerPort, `","`, p.ImagePerceiverImageName, `:`, p.PerceiverPort, `","`, p.PodPerceiverImageName, `:`, p.PerceiverPort, `","`, p.ImageFacadeImageName, `:`, p.ImageFacadePort, `","skyfire:`, "3005", `"]}]}]}`)},
 		"perceptor":             {"perceptor.yaml": fmt.Sprint(`{"HubHost": "`, p.HubHost, `","HubPort": "`, p.HubPort, `","HubUser": "`, p.HubUser, `","HubUserPasswordEnvVar": "`, p.HubUserPasswordEnvVar, `","HubClientTimeoutSeconds": "`, p.HubClientTimeoutPerceptorSeconds, `","ConcurrentScanLimit": "`, p.ConcurrentScanLimit, `","Port": "`, p.PerceptorPort, `","LogLevel": "`, p.LogLevel, `"}`)},
 		"perceiver":             {"perceiver.yaml": fmt.Sprint(`{"PerceptorHost": "`, p.PerceptorImageName, `","PerceptorPort": "`, p.PerceptorPort, `","AnnotationIntervalSeconds": "`, p.AnnotationIntervalSeconds, `","DumpIntervalMinutes": "`, p.DumpIntervalMinutes, `","Port": "`, p.PerceiverPort, `","LogLevel": "`, p.LogLevel, `"}`)},
 		"perceptor-scanner":     {"perceptor_scanner.yaml": fmt.Sprint(`{"HubHost": "`, p.HubHost, `","HubPort": "`, p.HubPort, `","HubUser": "`, p.HubUser, `","HubUserPasswordEnvVar": "`, p.HubUserPasswordEnvVar, `","HubClientTimeoutSeconds": "`, p.HubClientTimeoutScannerSeconds, `","Port": "`, p.ScannerPort, `","PerceptorHost": "`, p.PerceptorImageName, `","PerceptorPort": "`, p.PerceptorPort, `","ImageFacadeHost": "`, p.ImageFacadeImageName, `","ImageFacadePort": "`, p.ImageFacadePort, `","LogLevel": "`, p.LogLevel, `"}`)},
-		"perceptor-imagefacade": {"perceptor_imagefacade.yaml": fmt.Sprint(`{"DockerUser": "`, p.DockerUsername, `","DockerPassword": "`, p.DockerPasswordOrToken, `","Port": "`, p.ImageFacadePort, `","InternalDockerRegistries": `, generateStringFromStringArr(p.InternalDockerRegistries), `,"LogLevel": "`, p.LogLevel, `"}`)},
+		"perceptor-imagefacade": {"perceptor_imagefacade.json": fmt.Sprint(`{"PrivateDockerRegistries": `, string(internalRegistry), `,"Port": "`, p.ImageFacadePort, `","LogLevel": "`, p.LogLevel, `"}`)},
 	}
 
 	if p.PerceptorSkyfire {
