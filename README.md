@@ -23,12 +23,12 @@ Note that anyone attempting to use the code contained in here should expect roug
 
 Example of how to draft a new opssight release, for the developers, using 2.0.3 as an example.
 
-- Tag branches in perceptor, perceiver, ... which are changing (i.e. tag your perceptor branch you want to merge as release-2.0.3).
+- Tag branches in perceptor, perceiver, perceptor-scanner, perceptor-protoform ... which are changing (i.e. tag your perceptor branch you want to merge as release-2.0.3).
 - Clone this repo
-- Checkout the release-2.0.x branch
-- Edit the Gopkg.toml file to point to the corresponding branch your hotfixing.
+- Checkout the `release-2.0.x` opssight-connector branch
+- Edit the opssight-connector `Gopkg.toml` file to point to the branch in the corresponding repo which was just updated.
 - Run `dep ensure -update`
-- Push your changes to the 2.0.x release opssight-connector branch.
+- Push your changes to the `release-2.0.x` opssight-connector branch.
 - Now, the `build.properties` file should be something like 2.0.3-SNAPSHOT, and will automatically be updated once the downstream jenkins build is completed.
 
 ## License
