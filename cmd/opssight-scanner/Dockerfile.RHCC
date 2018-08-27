@@ -7,7 +7,7 @@ ARG BUILDTIME
 ARG VERSION
 
 # To fix the RedHat security vulnerability
-yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs
+RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical --setopt=tsflags=nodocs
 
 # Container catalog requirements
 COPY ./LICENSE /licenses/
