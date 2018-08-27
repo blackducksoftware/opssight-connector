@@ -29,6 +29,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -124,13 +125,15 @@ func (i *Installer) readConfig(configPath string) {
 
 	internalRegistry := []byte(viper.GetString("InternalRegistries"))
 	internalRegistries := make([]api.RegistryAuth, 0)
-	err = json.Unmarshal(internalRegistry, &internalRegistries)
-	if err != nil {
-		log.Errorf("unable to marshal the internal registries due to %+v", err)
-		os.Exit(1)
+	if !strings.EqualFold(viper.GetString("InternalRegistries"), "") {
+		err = json.Unmarshal(internalRegistry, &internalRegistries)
+		if err != nil {
+			log.Errorf("Internal registry is %s, unable to marshal the internal registries due to %+v", viper.GetString("InternalRegistries"), err)
+			os.Exit(1)
+		}
+		log.Infof("internalRegistries: %+v", internalRegistries)
+		viper.Set("InternalRegistries", internalRegistries)
 	}
-	log.Infof("internalRegistries: %+v", internalRegistries)
-	viper.Set("InternalRegistries", internalRegistries)
 
 	viper.Unmarshal(&i.Config)
 

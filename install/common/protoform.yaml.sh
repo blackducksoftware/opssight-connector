@@ -85,6 +85,7 @@ items:
       InternalRegistries: '`echo "$_arg_private_registry"`'
       DefaultCPU: "$_arg_container_default_cpu"
       DefaultMem: "$_arg_container_default_memory"
+      AnnotationIntervalSeconds: "$_arg_annotation_interval_seconds"
 
       # TODO: Assuming for now that we run the same version of everything
       # For the curated installers.  For developers ? You might want to

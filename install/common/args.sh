@@ -21,6 +21,7 @@
 # ARG_OPTIONAL_SINGLE([hub-port],[P],[hub port],[443])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-perceptor-seconds],[T],[hub client timeout for perceptor in seconds ],[5])
 # ARG_OPTIONAL_SINGLE([hub-client-timeout-scanner-seconds],[s],[hub client timeout for perceptor scanner in seconds ],[120])
+# ARG_OPTIONAL_SINGLE([annotation-interval-seconds],[a],[The annotation interval in seconds.],[30])
 # ARG_OPTIONAL_SINGLE([hub-max-concurrent-scans],[C],[maximum scans at a time for the hub],[7])
 # ARG_OPTIONAL_SINGLE([container-default-cpu],[u],[All containers default cpu],[300m])
 # ARG_OPTIONAL_SINGLE([container-default-memory],[m],[All containers default memory],[1300Mi])
@@ -116,6 +117,7 @@ print_help ()
 	printf '\t%s\n' "-P,--hub-port: hub port  (default: '443')"
 	printf '\t%s\n' "-T,--hub-client-timeout-perceptor-seconds: hub client timeout for opssight-core in seconds  (default: '5')"
 	printf '\t%s\n' "-s,--hub-client-timeout-scanner-seconds: hub client timeout for opssight-scanner in seconds  (default: '120')"
+	printf '\t%s\n' "-a,--annotation-interval-seconds: annotation interval in seconds  (default: '30')"
 	printf '\t%s\n' "-C,--hub-max-concurrent-scans: maximum scans at a time for the hub (default: '7')"
 	printf '\t%s\n' "-u,--container-default-cpu: All container's default cpu (default: '300m')"
 	printf '\t%s\n' "-m,--container-default-memory: All container's default memory (default: '1300Mi')"
@@ -334,6 +336,20 @@ parse_commandline ()
 			# See the comment of option '-p' to see what's going on here - principle is the same.
 			-s*)
 				_arg_hub_client_timeout_scanner_seconds="${_key##-s}"
+				;;
+			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
+			-a|--annotation-interval-seconds)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_annotation_interval_seconds="$2"
+				shift
+				;;
+			# See the comment of option '--private-registry=' to see what's going on here - principle is the same.
+			--annotation-interval-seconds=*)
+				_arg_annotation_interval_seconds="${_key##--annotation-interval-seconds=}"
+				;;
+			# See the comment of option '-p' to see what's going on here - principle is the same.
+			-a*)
+				_arg_annotation_interval_seconds="${_key##-a}"
 				;;
 			# See the comment of option '--private-registry' to see what's going on here - principle is the same.
 			-C|--hub-max-concurrent-scans)
