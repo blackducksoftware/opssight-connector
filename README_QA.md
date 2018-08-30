@@ -34,4 +34,22 @@ and then running the install.sh scripts in the install/ directory from protofrom
 
 ## Now, start testing downstream !
 
-... Rob Rati to complete this section ... 
+
+### Minishift OCP compatibility test:
+
+- Create a red hat developer account
+
+- Download the latest openshift-cdk https://developers.redhat.com/products/cdk/hello-world/ 
+
+- Then enable OCP on it: 
+`minishift config set vm-driver virtualbox ; minishift setup-cdk`
+
+```
+export MINISHIFT_USERNAME='<RED_HAT_USERNAME>'
+export MINISHIFT_PASSWORD='<RED_HAT_PASSWORD>'
+```
+
+- Clone the connector, and run `git checkout release-2.0.x`.
+
+- Run the installer: `./install.sh --hub-host 35.202.36.25 --hub-user sysadmin --hub-password blackduck --hub-port 443 --hub-max-concurrent-scans 2 -M -v 2.0.2-RC --pcp-namespace jasonia`.
+
