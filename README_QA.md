@@ -51,5 +51,11 @@ export MINISHIFT_PASSWORD='<RED_HAT_PASSWORD>'
 
 - Clone the connector, and run `git checkout release-2.0.x`.
 
+- minishift ssh, then `sudo su`... At which point you can 'oc login', into localhost.  Use credentials 'admin'/'admin'.  Then it should allow you (since your root) to do:
+
+`/var/lib/minishift/bin/oc  adm policy add-cluster-role-to-user cluster-admin developer`
+
+Which effectively makes your developer account an administrative one.
+
 - Run the installer: `./install.sh --hub-host 35.202.36.25 --hub-user sysadmin --hub-password blackduck --hub-port 443 --hub-max-concurrent-scans 2 -M -v 2.0.2-RC --pcp-namespace jasonia`.
 
