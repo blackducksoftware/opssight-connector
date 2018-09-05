@@ -49,6 +49,8 @@ export MINISHIFT_USERNAME='<RED_HAT_USERNAME>'
 export MINISHIFT_PASSWORD='<RED_HAT_PASSWORD>'
 ```
 
+- Now, you can start `minishift start --ocp-tag=3.10.14`
+
 - Clone the connector, and run `git checkout release-2.0.x`.
 
 - minishift ssh, then `sudo su`... At which point you can 'oc login', into localhost.  Use credentials 'admin'/'admin'.  Then it should allow you (since your root) to do:
