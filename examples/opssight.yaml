@@ -1,0 +1,70 @@
+apiVersion: synopsys.com/v1
+kind: OpsSight
+metadata:
+  clusterName: ""
+  name: opssight-test
+spec:
+  namespace: opssight-test
+  # CONTAINER CONFIGS
+  # These are sed replaced into the config maps for the containers.
+  perceptorPort: 3001
+  perceiverPort: 3002
+  scannerPort: 3003
+  imageFacadePort: 3004
+  skyfirePort: 3005
+  internalRegistries: []
+  annotationIntervalSeconds: 30
+  dumpIntervalMinutes: 30
+  hubUser: sysadmin
+  hubPort: 443
+  hubUserPassword: blackduck
+  hubClientTimeoutPerceptorMilliseconds: 100000
+  hubClientTimeoutScannerSeconds: 600
+  concurrentScanLimit: 2
+  totalScanLimit: 1000
+  checkForStalledScansPauseHours: 999999
+  stalledScanClientTimeoutHours: 999999
+  modelMetricsPauseSeconds: 15
+  unknownImagePauseMilliseconds: 15000
+
+  # CONTAINER PULL CONFIG
+  # These are for defining docker registry and image location and versions
+  registry: docker.io
+  imagePath: blackducksoftware
+  # Default version will override the corresponding image version
+  defaultVersion: "2.1.0"
+
+  perceptorImageName: opssight-core
+  scannerImageName: opssight-scanner
+  podPerceiverImageName: opssight-pod-processor
+  imagePerceiverImageName: opssight-image-processor
+  imageFacadeImageName: opssight-image-getter
+
+  #perceptorImageVersion: master
+  #scannerImageVersion: master
+  #perceiverImageVersion: master
+  #imageFacadeImageVersion: master
+
+  imagePerceiver: false # Enable it in OpenShift to scan images in internal registry
+  podPerceiver: true
+  metrics: true
+  requireLabel: false # Enable it if namespace filter is required and label the namespace that need to be scanned with blackduck.perceiver.scan=true
+
+  # CPU and memory configurations
+  # Should be passed like: e.g. "300m"
+  defaultCpu: 300m
+  # Should be passed like: e.g "1300Mi"
+  defaultMem: 1300Mi
+
+  # Log level
+  logLevel: debug
+
+  # Environment Variables
+  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD
+
+  # Configuration secret
+  secretName: blackduck-secret
+  useMockMode: false
+
+  # Red Hat Container Catalog support
+  rhcc: false

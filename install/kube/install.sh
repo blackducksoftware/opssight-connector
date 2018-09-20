@@ -1,22 +1,31 @@
 #!/bin/bash
+echo "args = Namespace, Reg_key, Tag"
 
-source ../common/parse-or-gather-user-input.sh "${@}"
+NS=$1
+REG_KEY=$2
+VERSION=$3
 
-kubectl create ns $_arg_pcp_namespace
+echo "Using the secret encoded in this file.  Change it before running, or press enter..."
+read x
 
-source ../common/rbac.yaml.sh
+cat << EOF > /tmp/secret
+apiVersion: v1
+data:
+  ADMIN_PASSWORD: YmxhY2tkdWNr
+  POSTGRES_PASSWORD: YmxhY2tkdWNr
+  USER_PASSWORD: YmxhY2tkdWNr
+kind: Secret
+metadata:
+  name: blackduck-secret
+type: Opaque
+EOF
 
-source ../common/parse-image-registry.sh "../kube/image-registry.json"
+kubectl create ns $NS
 
-source ../common/protoform.yaml.sh
+kubectl create -f /tmp/secret -n $NS
 
-kubectl create -f rbac.yaml -n $_arg_pcp_namespace
-kubectl create -f protoform.yaml -n $_arg_pcp_namespace
+cat ../blackduck-protoform.yaml | sed 's/${REGISTRATION_KEY}/'$REG_KEY'/g' | sed 's/${NAMESPACE}/'$NS'/g' |sed 's/${TAG}/'${VERSION}'/g' | kubectl create --namespace=$NS -f -
 
-if [[ "$_arg_prometheus_metrics" == "on" ]] ; then
-  kubectl create -f ../common/prometheus-deployment.yaml -n $_arg_pcp_namespace
-  kubectl expose service prometheus --port=9090 --name=prometheus-metrics -n $_arg_pcp_namespace
-fi
+#kubectl expose rc blackduck-protoform --port=8080 --target-port=8080 --name=blackduck-protoform-np --type=NodePort --namespace=$NS
 
-rm -rf rbac.yaml
-rm -rf protoform.yaml
+#kubectl expose rc blackduck-protoform --port=8080 --target-port=8080 --name=blackduck-protoform-lb --type=LoadBalancer --namespace=$NS

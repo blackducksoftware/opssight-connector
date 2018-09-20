@@ -22,87 +22,37 @@ under the License.
 package api
 
 import (
-	"github.com/koki/short/types"
+	"github.com/blackducksoftware/horizon/pkg/components"
 )
 
-// ReplicationControllerConfig defines the configuration for a
-// replication controller
-type ReplicationControllerConfig struct {
-	Name           string
-	Replicas       int32
-	Selector       map[string]string
-	Labels         map[string]string
-	Vols           map[string]types.Volume
-	Containers     []types.Container
-	ServiceAccount string
+// ProtoformConfig defines the configuration for protoform
+type ProtoformConfig struct {
+	// Dry run wont actually install, but will print the objects definitions out.
+	DryRun bool `json:"dryRun,omitempty"`
+
+	HubUserPassword string `json:"hubUserPassword"`
+
+	// Viper secrets
+	ViperSecret string `json:"viperSecret,omitempty"`
+
+	// Log level
+	DefaultLogLevel string `json:"defaultLogLevel,omitempty"`
+
+	Apps *ProtoformApps `json:"apps,omitempty"`
 }
 
-// PodConfig defines the configuration for a pod
-type PodConfig struct {
-	Name           string
-	Labels         map[string]string
-	Vols           map[string]types.Volume
-	Containers     []types.Container
-	ServiceAccount string
+// ProtoformApps defines the configuration for supported apps
+type ProtoformApps struct {
 }
 
-// ServiceConfig defines the configuration for a service
-type ServiceConfig struct {
-	Name     string
-	Ports    map[string]int32
-	Selector map[string]string
-}
-
-// ConfigMapConfig defines the configuration for a config map
-type ConfigMapConfig struct {
-	Name      string
-	Namespace string
-	Data      map[string]string
-}
-
-// RegistryAuth will store the Openshift Internal Registries
-type RegistryAuth struct {
-	URL      string `json:"Url"`
-	User     string
-	Password string
-}
-
-// ProtoformDefaults defines default values for Protoform.
-// These fields need to be named the same as those in
-// protoformConfig in order for defaults to be applied
-// properly.  A field that exists in ProtoformDefaults
-// but does not exist in protoformConfig will be ignored
-type ProtoformDefaults struct {
-	PerceptorPort                    int
-	PerceiverPort                    int
-	ScannerPort                      int
-	ImageFacadePort                  int
-	AnnotationIntervalSeconds        int
-	DumpIntervalMinutes              int
-	HubClientTimeoutPerceptorSeconds int
-	HubClientTimeoutScannerSeconds   int
-	HubHost                          string
-	HubUser                          string
-	HubUserPassword                  string
-	HubPort                          int
-	ConcurrentScanLimit              int
-	InternalRegistries               []RegistryAuth
-	DefaultVersion                   string
-	Registry                         string
-	ImagePath                        string
-	PerceptorImageName               string
-	ScannerImageName                 string
-	ImagePerceiverImageName          string
-	PodPerceiverImageName            string
-	ImageFacadeImageName             string
-	SkyfireImageName                 string
-	PerceptorContainerVersion        string
-	ScannerContainerVersion          string
-	PerceiverContainerVersion        string
-	ImageFacadeContainerVersion      string
-	SkyfireContainerVersion          string
-	LogLevel                         string
-	Namespace                        string
-	DefaultCPU                       string // Should be passed like: e.g. "300m"
-	DefaultMem                       string // Should be passed like: e.g "1300Mi"
+// ComponentList defines the list of components for an app
+type ComponentList struct {
+	ReplicationControllers []*components.ReplicationController
+	Services               []*components.Service
+	ConfigMaps             []*components.ConfigMap
+	ServiceAccounts        []*components.ServiceAccount
+	ClusterRoleBindings    []*components.ClusterRoleBinding
+	ClusterRoles           []*components.ClusterRole
+	Deployments            []*components.Deployment
+	Secrets                []*components.Secret
 }

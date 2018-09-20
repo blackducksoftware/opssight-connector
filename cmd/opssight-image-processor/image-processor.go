@@ -36,8 +36,8 @@ import (
 func main() {
 	log.Info("starting image-processor")
 
-        configPath := os.Args[1]
-        log.Printf("Config path: %s", configPath)
+	configPath := os.Args[1]
+	log.Printf("Config path: %s", configPath)
 
 	handler := annotations.ImageAnnotatorHandlerFuncs{
 		ImageLabelCreationFunc:      oca.CreateImageLabels,

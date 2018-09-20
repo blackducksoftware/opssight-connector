@@ -23,25 +23,43 @@ package scanner
 
 import (
 	"fmt"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
+type HubConfig struct {
+	User                 string
+	PasswordEnvVar       string
+	Port                 int
+	ClientTimeoutSeconds int
+}
+
+type ImageFacadeConfig struct {
+	Host string
+	Port int
+}
+
+func (ifc *ImageFacadeConfig) GetHost() string {
+	if ifc.Host == "" {
+		return "localhost"
+	}
+	return ifc.Host
+}
+
+type PerceptorConfig struct {
+	Host string
+	Port int
+}
+
 type Config struct {
-	HubHost                 string
-	HubUser                 string
-	HubUserPasswordEnvVar   string
-	HubPort                 int
-	HubClientTimeoutSeconds int
+	Hub         *HubConfig
+	ImageFacade *ImageFacadeConfig
+	Perceptor   *PerceptorConfig
 
 	LogLevel string
 	Port     int
-
-	ImageFacadePort int
-
-	PerceptorHost string
-	PerceptorPort int
 }
 
 func (config *Config) GetLogLevel() (log.Level, error) {
@@ -50,6 +68,29 @@ func (config *Config) GetLogLevel() (log.Level, error) {
 
 func GetConfig(configPath string) (*Config, error) {
 	var config *Config
+
+	if configPath != "" {
+		viper.SetConfigFile(configPath)
+	} else {
+		viper.SetEnvPrefix("PCP")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+		viper.BindEnv("ImageFacade_Host")
+		viper.BindEnv("ImageFacade_Port")
+
+		viper.BindEnv("Perceptor_Host")
+		viper.BindEnv("Perceptor_Port")
+
+		viper.BindEnv("Hub_User")
+		viper.BindEnv("Hub_Port")
+		viper.BindEnv("Hub_PasswordEnvVar")
+		viper.BindEnv("Hub_ClientTimeoutSeconds")
+
+		viper.BindEnv("LogLevel")
+		viper.BindEnv("Port")
+
+		viper.AutomaticEnv()
+	}
 
 	viper.SetConfigFile(configPath)
 
@@ -63,13 +104,5 @@ func GetConfig(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
 	}
 
-	// Ports must be reachable
-	if config.Port == 0 || config.PerceptorPort == 0 || config.ImageFacadePort == 0 {
-		err = fmt.Errorf("Need non zero numbers for Port (got %d), PerceptorPort (got %d), HubPort (got %d), and ImageFacadePort (got %d)",
-			config.Port,
-			config.PerceptorPort,
-			config.HubPort,
-			config.ImageFacadePort)
-	}
 	return config, err
 }

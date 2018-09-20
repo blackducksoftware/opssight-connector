@@ -30,10 +30,14 @@ import (
 )
 
 func main() {
-	log.Info("starting scanner")
-	configPath := os.Args[1]
+	var configPath string
+	log.Info("starting opssight-scanner")
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
 	log.Infof("Config path: %s", configPath)
 
+	// Run the scanner
 	stop := make(chan struct{})
 	scanner.RunScanner(configPath, stop)
 }

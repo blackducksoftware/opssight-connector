@@ -22,6 +22,8 @@ LABEL name="Black Duck OpsSight Scanner" \
       description="This container is used to scan images received from opsight-core." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME" \
-      license="apache"
+      license="apache" \
+      release="$VERSION" \
+      version="$VERSION"
 
 CMD ["./perceptor-scanner"]
