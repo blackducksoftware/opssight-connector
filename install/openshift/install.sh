@@ -1,37 +1,31 @@
 #!/bin/bash
-source ../common/parse-or-gather-user-input.sh "${@}"
+echo "args = Namespace, Reg_key, branch"
 
-_arg_image_perceiver="on"
+NS=$1
+REG_KEY=$2
+VERSION=$3
 
-oc new-project $_arg_pcp_namespace
+echo "Using the secret encoded in this file.  Change it before running, or press enter..."
+read x
 
-oc project $_arg_pcp_namespace
+cat << EOF > /tmp/secret
+apiVersion: v1
+data:
+  ADMIN_PASSWORD: YmxhY2tkdWNr
+  POSTGRES_PASSWORD: YmxhY2tkdWNr
+  USER_PASSWORD: YmxhY2tkdWNr
+kind: Secret
+metadata:
+  name: blackduck-secret
+type: Opaque
+EOF
 
-source ../common/oadm-policy-init.sh $arg_pcp_namespace
+oc new-project $NS
 
-source ../common/parse-image-registry.sh "../openshift/image-registry.json"
+oc create -f /tmp/secret -n $NS
 
-if [[ "$_arg_rhcc" == "on" ]] ; then
-  oc create secret generic redhat-connect --from-file=.dockerconfigjson="$_arg_docker_config_path" --type=kubernetes.io/dockerconfigjson
-  oc secrets link default redhat-connect --for=pull
-  oc secrets link perceiver redhat-connect --for=pull
-  oc secrets link protoform redhat-connect --for=pull
-  oc secrets link perceptor-scanner redhat-connect --for=pull
-  perceptor_image=$(echo "$perceptor_image-v2")
-  perceptor_scanner_image=$(echo "$perceptor_scanner_image-v2")
-  pod_perceiver_image=$(echo "$pod_perceiver_image-v2")
-  image_perceiver_image=$(echo "$image_perceiver_image-v2")
-  perceptor_imagefacade_image=$(echo "$perceptor_imagefacade_image-v2")
-  perceptor_protoform_image=$(echo "$perceptor_protoform_image-v2")
-fi
+cat ../blackduck-protoform.yaml | sed 's/${REGISTRATION_KEY}/'$REG_KEY'/g' | sed 's/${NAMESPACE}/'$NS'/g' |sed 's/${TAG}/'${VERSION}'/g' | oc create --namespace=$NS -f -
 
-source ../common/protoform.yaml.sh
+#oc expose rc blackduck-protoform --port=8080 --target-port=8080 --name=blackduck-protoform-np --type=NodePort --namespace=$NS
 
-oc create -f protoform.yaml
-
-if [[ $_arg_prometheus_metrics == "on" ]] ; then
-  oc create -f ../common/prometheus-deployment.yaml
-  oc expose service prometheus --port=9090 --name=prometheus-metrics
-fi
-
-rm -rf protoform.yaml
+#oc expose rc blackduck-protoform --port=8080 --target-port=8080 --name=blackduck-protoform-lb --type=LoadBalancer --namespace=$NS

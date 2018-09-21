@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	log.Info("started image-getter")
+	log.Info("starting opssight-image-getter")
 	configPath := os.Args[1]
 	log.Infof("Config path: %s", configPath)
 

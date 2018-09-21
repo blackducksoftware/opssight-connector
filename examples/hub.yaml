@@ -1,0 +1,24 @@
+apiVersion: synopsys.com/v1
+kind: Hub
+metadata:
+  clusterName: ""
+  name: pvc-test
+spec:
+  namespace: pvc-test
+  backupInterval: "24"
+  backupSupport: "Yes"
+  backupUnit: Hour(s)
+  certificate: ""
+  certificateKey: ""
+  certificateName: default
+  dbPrototype: "empty"
+  dockerRegistry: docker.io
+  dockerRepo: blackducksoftware
+  flavor: small
+  hubVersion: 4.8.1
+  instanceName: ""
+  nfsServer: <<NFS Server>>
+  pvcClaimSize: 10Gi
+  pvcStorageClass: none
+  scanType: Custom
+  hubType: worker

@@ -40,16 +40,16 @@ const (
 )
 
 type ImageFacadePuller struct {
-	ImageFacadeBaseURL string
-	ImageFacadePort    int
-	httpClient         *http.Client
+	ImageFacadeHost string
+	ImageFacadePort int
+	httpClient      *http.Client
 }
 
-func NewImageFacadePuller(imageFacadeBaseURL string, imageFacadePort int) *ImageFacadePuller {
+func NewImageFacadePuller(imageFacadeHost string, imageFacadePort int) *ImageFacadePuller {
 	return &ImageFacadePuller{
-		ImageFacadeBaseURL: imageFacadeBaseURL,
-		ImageFacadePort:    imageFacadePort,
-		httpClient:         &http.Client{Timeout: 5 * time.Second}}
+		ImageFacadeHost: imageFacadeHost,
+		ImageFacadePort: imageFacadePort,
+		httpClient:      &http.Client{Timeout: 5 * time.Second}}
 }
 
 func (ifp *ImageFacadePuller) PullImage(image *common.Image) error {
@@ -88,7 +88,7 @@ func (ifp *ImageFacadePuller) PullImage(image *common.Image) error {
 }
 
 func (ifp *ImageFacadePuller) startImagePull(image *common.Image) error {
-	url := fmt.Sprintf("%s:%d/%s", ifp.ImageFacadeBaseURL, ifp.ImageFacadePort, pullImagePath)
+	url := ifp.buildURL(pullImagePath)
 
 	requestBytes, err := json.Marshal(image)
 	if err != nil {
@@ -103,7 +103,7 @@ func (ifp *ImageFacadePuller) startImagePull(image *common.Image) error {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("image pull to %s failed with status code %d", url, resp.StatusCode)
+		err = fmt.Errorf("request to start image pull for image %s failed with status code %d", url, resp.StatusCode)
 		log.Errorf(err.Error())
 		return err
 	}
@@ -111,13 +111,13 @@ func (ifp *ImageFacadePuller) startImagePull(image *common.Image) error {
 	defer resp.Body.Close()
 	_, _ = ioutil.ReadAll(resp.Body)
 
-	log.Infof("image pull for image %s succeeded", image.PullSpec)
+	log.Infof("request to start image pull for image %s succeeded", image.PullSpec)
 
 	return nil
 }
 
 func (ifp *ImageFacadePuller) checkImage(image *common.Image) (common.ImageStatus, error) {
-	url := fmt.Sprintf("%s:%d/%s?", ifp.ImageFacadeBaseURL, ifp.ImageFacadePort, checkImagePath)
+	url := ifp.buildURL(checkImagePath)
 
 	requestBytes, err := json.Marshal(image)
 	if err != nil {
@@ -156,4 +156,8 @@ func (ifp *ImageFacadePuller) checkImage(image *common.Image) (common.ImageStatu
 	log.Debugf("image check for image %s succeeded", image.PullSpec)
 
 	return getImage.ImageStatus, nil
+}
+
+func (ifp *ImageFacadePuller) buildURL(path string) string {
+	return fmt.Sprintf("http://%s:%d/%s?", ifp.ImageFacadeHost, ifp.ImageFacadePort, path)
 }

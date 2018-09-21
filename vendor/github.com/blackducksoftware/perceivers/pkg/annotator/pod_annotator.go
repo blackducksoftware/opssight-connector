@@ -124,7 +124,7 @@ func (pa *PodAnnotator) addAnnotationsToPods(results perceptorapi.ScanResults) {
 			continue
 		}
 
-		podAnnotations := annotations.NewPodAnnotationData(pod.PolicyViolations, pod.Vulnerabilities, pod.OverallStatus, results.HubVersion, results.HubScanClientVersion)
+		podAnnotations := annotations.NewPodAnnotationData(pod.PolicyViolations, pod.Vulnerabilities, pod.OverallStatus, "", "")
 
 		// Update the pod if any label or annotation isn't correct
 		if pa.addPodAnnotations(kubePod, podAnnotations, results.Images) ||

@@ -49,6 +49,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const scanLabelEasterEgg = "blackduck.perceiver.scan=true"
+
 // PodController handles watching pods and sending them to perceptor
 type PodController struct {
 	client        kubernetes.Interface
@@ -64,19 +66,28 @@ type PodController struct {
 }
 
 // NewPodController creates a new PodController object
-func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, handler annotations.ImageAnnotatorHandler) *PodController {
+func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, requireLabel bool, handler annotations.ImageAnnotatorHandler) *PodController {
 	pc := PodController{
 		client: kubeClient,
 		queue:  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Pods"),
 		podURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.PodPath),
 		h:      handler,
 	}
+
+	mutateOpts := func(opts *metav1.ListOptions) {
+		if requireLabel {
+			opts.LabelSelector = scanLabelEasterEgg
+		}
+	}
+
 	pc.podIndexer, pc.podController = cache.NewIndexerInformer(
 		&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
+				mutateOpts(&opts)
 				return pc.client.CoreV1().Pods(metav1.NamespaceAll).List(opts)
 			},
 			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
+				mutateOpts(&opts)
 				return pc.client.CoreV1().Pods(metav1.NamespaceAll).Watch(opts)
 			},
 		},

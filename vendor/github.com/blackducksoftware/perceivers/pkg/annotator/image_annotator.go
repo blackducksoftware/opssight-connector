@@ -155,7 +155,7 @@ func (ia *ImageAnnotator) addAnnotationsToImages(results perceptorapi.ScanResult
 			continue
 		}
 
-		imageAnnotations := annotations.NewImageAnnotationData(image.PolicyViolations, image.Vulnerabilities, image.OverallStatus, image.ComponentsURL, results.HubVersion, results.HubScanClientVersion)
+		imageAnnotations := annotations.NewImageAnnotationData(image.PolicyViolations, image.Vulnerabilities, image.OverallStatus, image.ComponentsURL, "", "")
 
 		// Update the image if any label or annotation isn't correct
 		if ia.addImageAnnotations(fullImageName, osImage, imageAnnotations) ||

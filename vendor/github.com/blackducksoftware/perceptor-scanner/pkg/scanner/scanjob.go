@@ -30,16 +30,18 @@ import (
 type ScanJob struct {
 	PullSpec              string
 	Sha                   string
+	HubHost               string
 	HubProjectName        string
 	HubProjectVersionName string
 	HubScanName           string
 }
 
-func NewScanJob(repository string, sha string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ScanJob {
+func NewScanJob(repository string, sha string, hubHost string, hubProjectName string, hubProjectVersionName string, hubScanName string) *ScanJob {
 	pullSpec := fmt.Sprintf("%s@sha256:%s", repository, sha)
 	return &ScanJob{
 		PullSpec:              pullSpec,
 		Sha:                   sha,
+		HubHost:               hubHost,
 		HubProjectName:        hubProjectName,
 		HubProjectVersionName: hubProjectVersionName,
 		HubScanName:           hubScanName}

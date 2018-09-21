@@ -23,7 +23,11 @@ package core
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/blackducksoftware/perceptor/pkg/util"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -31,21 +35,54 @@ import (
 //   - getting initial config
 //   - reporting ongoing changes to config
 type ConfigManager struct {
-	ConfigPath string
+	ConfigPath      string
+	stop            <-chan struct{}
+	didReadConfig   chan *Config
+	readConfigPause time.Duration
+	readConfigTimer *util.Timer
 }
 
 // NewConfigManager ...
-func NewConfigManager(configPath string) *ConfigManager {
-	return &ConfigManager{
-		ConfigPath: configPath,
+func NewConfigManager(configPath string, stop <-chan struct{}) *ConfigManager {
+	cm := &ConfigManager{
+		ConfigPath:      configPath,
+		stop:            stop,
+		didReadConfig:   make(chan *Config),
+		readConfigPause: 15 * time.Second,
 	}
+	cm.startReadConfigTimer()
+	return cm
 }
 
 // GetConfig returns a configuration object to configure Perceptor
 func (cm *ConfigManager) GetConfig() (*Config, error) {
 	var config *Config
 
-	viper.SetConfigFile(cm.ConfigPath)
+	if cm.ConfigPath != "" {
+		viper.SetConfigFile(cm.ConfigPath)
+	} else {
+		viper.SetEnvPrefix("PCP")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+		viper.BindEnv("Timings_CheckForStalledScansPauseHours")
+		viper.BindEnv("Timings_ModelMetricsPauseSeconds")
+		viper.BindEnv("Timings_StalledScanClientTimeoutHours")
+		viper.BindEnv("Timings_UnknownImagePauseMilliseconds")
+
+		viper.BindEnv("Hub_Hosts")
+		viper.BindEnv("Hub_User")
+		viper.BindEnv("Hub_TotalScanLimit")
+		viper.BindEnv("Hub_Port")
+		viper.BindEnv("Hub_PasswordEnvVar")
+		viper.BindEnv("Hub_ConcurrentScanLimit")
+		viper.BindEnv("Hub_ClientTimeoutMilliseconds")
+
+		viper.BindEnv("LogLevel")
+		viper.BindEnv("Port")
+		viper.BindEnv("UseMockMode")
+
+		viper.AutomaticEnv()
+	}
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -60,13 +97,22 @@ func (cm *ConfigManager) GetConfig() (*Config, error) {
 	return config, nil
 }
 
-//
-// // StartWatch will call `continuation` whenever the config file changes
-// func (cm *ConfigManager) StartWatch(continuation func(*model.Config, error)) {
-// 	viper.WatchConfig()
-// 	viper.OnConfigChange(func(event fsnotify.Event) {
-// 		log.Infof("config change detected: %+v", event)
-// 		continuation(cm.GetConfig())
-// 	})
-// 	viper.WatchConfig()
-// }
+func (cm *ConfigManager) startReadConfigTimer() {
+	cm.readConfigTimer = util.NewRunningTimer("configManager-readConfig", cm.readConfigPause, cm.stop, false, func() {
+		config, err := cm.GetConfig()
+		if err != nil {
+			log.Errorf("unable to read config: %s", err.Error())
+			return
+		}
+		select {
+		case <-cm.stop:
+			return
+		case cm.didReadConfig <- config:
+		}
+	})
+}
+
+// DidReadConfig ...
+func (cm *ConfigManager) DidReadConfig() <-chan *Config {
+	return cm.didReadConfig
+}

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/blackducksoftware/perceptor/pkg/hub"
+	log "github.com/sirupsen/logrus"
 )
 
 // ImageInfo .....
@@ -36,14 +37,16 @@ type ImageInfo struct {
 	ScanResults            *hub.ScanResults
 	ImageSha               DockerImageSha
 	RepoTags               []*RepoTag
+	Priority               int
 }
 
 // NewImageInfo .....
-func NewImageInfo(sha DockerImageSha, repoTag *RepoTag) *ImageInfo {
+func NewImageInfo(sha DockerImageSha, repoTag *RepoTag, priority int) *ImageInfo {
 	imageInfo := &ImageInfo{
 		ScanResults: nil,
 		ImageSha:    sha,
 		RepoTags:    []*RepoTag{repoTag},
+		Priority:    priority,
 	}
 	imageInfo.setScanStatus(ScanStatusUnknown)
 	return imageInfo
@@ -52,6 +55,13 @@ func NewImageInfo(sha DockerImageSha, repoTag *RepoTag) *ImageInfo {
 func (imageInfo *ImageInfo) setScanStatus(newStatus ScanStatus) {
 	imageInfo.ScanStatus = newStatus
 	imageInfo.TimeOfLastStatusChange = time.Now()
+}
+
+// SetPriority ...
+func (imageInfo *ImageInfo) SetPriority(priority int) {
+	recordSetImagePriority(imageInfo.Priority, priority)
+	log.Debugf("changing priority for %s from %d to %d", imageInfo.ImageSha, imageInfo.Priority, priority)
+	imageInfo.Priority = priority
 }
 
 // SetScanResults .....
@@ -68,7 +78,7 @@ func (imageInfo *ImageInfo) TimeInCurrentScanStatus() time.Duration {
 // Image .....
 func (imageInfo *ImageInfo) Image() Image {
 	repoTag := imageInfo.FirstRepoTag()
-	return *NewImage(repoTag.Repository, repoTag.Tag, imageInfo.ImageSha)
+	return *NewImage(repoTag.Repository, repoTag.Tag, imageInfo.ImageSha, imageInfo.Priority)
 }
 
 // AddRepoTag .....

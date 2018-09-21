@@ -24,7 +24,6 @@ package core
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	model "github.com/blackducksoftware/perceptor/pkg/core/model"
 	"github.com/prometheus/client_golang/prometheus"
@@ -36,10 +35,8 @@ const (
 	policyViolationsLabel = "policy_violation_count"
 )
 
-var statusGauge *prometheus.GaugeVec
 var handledHTTPRequest *prometheus.CounterVec
-var reducerActivityCounter *prometheus.CounterVec
-var reducerMessageCounter *prometheus.CounterVec
+var statusGauge *prometheus.GaugeVec
 
 var podStatusGauge *prometheus.GaugeVec
 var podPolicyViolationsGauge *prometheus.GaugeVec
@@ -49,13 +46,18 @@ var imageStatusGauge *prometheus.GaugeVec
 var imagePolicyViolationsGauge *prometheus.GaugeVec
 var imageVulnerabilitiesGauge *prometheus.GaugeVec
 
+var eventCounter *prometheus.CounterVec
+
 // prometheus' terminology is so confusing ... a histogram isn't a histogram.  sometimes.
 var statusHistogram *prometheus.GaugeVec
+
+func recordEvent(subsystem string, name string) {
+	eventCounter.With(prometheus.Labels{"subsystem": subsystem, "name": name}).Inc()
+}
 
 func recordModelMetrics(modelMetrics *model.Metrics) {
 	keys := []model.ScanStatus{
 		model.ScanStatusUnknown,
-		model.ScanStatusInHubCheckQueue,
 		model.ScanStatusInQueue,
 		model.ScanStatusRunningScanClient,
 		model.ScanStatusRunningHubScan,
@@ -162,39 +164,7 @@ func recordHTTPError(request *http.Request, err error, statusCode int) {
 	handledHTTPRequest.With(prometheus.Labels{"path": path, "method": method, "code": statusCodeString}).Inc()
 }
 
-// reducer loop
-
-func recordReducerActivity(isActive bool, duration time.Duration) {
-	state := "idle"
-	if isActive {
-		state = "active"
-	}
-	reducerActivityCounter.With(prometheus.Labels{"state": state}).Add(duration.Seconds())
-}
-
-func recordNumberOfMessagesInQueue(messageCount int) {
-	statusGauge.With(prometheus.Labels{"name": "number_of_messages_in_reducer_queue"}).Set(float64(messageCount))
-}
-
-func recordMessageType(message string) {
-	reducerMessageCounter.With(prometheus.Labels{"message": message}).Inc()
-}
-
-// http requests issued
-
-// results from checking hub for completed projects (errors, unexpected things, etc.)
-
-// TODO
-
 func init() {
-	statusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "perceptor",
-		Subsystem: "core",
-		Name:      "status_gauge",
-		Help:      "a gauge of statuses for perceptor core's current state",
-	}, []string{"name"})
-	prometheus.MustRegister(statusGauge)
-
 	statusHistogram = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "perceptor",
 		Subsystem: "core",
@@ -211,22 +181,6 @@ func init() {
 		ConstLabels: map[string]string{},
 	}, []string{"path", "method", "code"})
 	prometheus.MustRegister(handledHTTPRequest)
-
-	reducerActivityCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "perceptor",
-		Subsystem: "core",
-		Name:      "reducer_activity",
-		Help:      "activity of the reducer -- how much time it's been idle and active, in seconds",
-	}, []string{"state"})
-	prometheus.MustRegister(reducerActivityCounter)
-
-	reducerMessageCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "perceptor",
-		Subsystem: "core",
-		Name:      "reducer_message",
-		Help:      "count of the message types processed by the reducer",
-	}, []string{"message"})
-	prometheus.MustRegister(reducerMessageCounter)
 
 	podStatusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "perceptor",
@@ -268,6 +222,14 @@ func init() {
 	}, []string{vulnerabilitiesLabel})
 	prometheus.MustRegister(imageVulnerabilitiesGauge)
 
+	statusGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "perceptor",
+		Subsystem: "core",
+		Name:      "status_gauge",
+		Help:      "a gauge of statuses for perceptor core's current state",
+	}, []string{"name"})
+	prometheus.MustRegister(statusGauge)
+
 	imagePolicyViolationsGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "perceptor",
 		Subsystem: "core",
@@ -275,4 +237,12 @@ func init() {
 		Help:      "buckets of image policy violation counts (-1 means not yet scanned)",
 	}, []string{policyViolationsLabel})
 	prometheus.MustRegister(imagePolicyViolationsGauge)
+
+	eventCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "core",
+		Name:      "event_counter",
+		Help:      "various events happening in perceptor core",
+	}, []string{"subsystem", "name"})
+	prometheus.MustRegister(eventCounter)
 }

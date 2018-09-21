@@ -32,8 +32,6 @@ import (
 
 	perceptorapi "github.com/blackducksoftware/perceptor/pkg/api"
 
-	"k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -43,15 +41,17 @@ import (
 
 // PodDumper handles sending all pods to the perceptor periodically
 type PodDumper struct {
-	coreV1     corev1.CoreV1Interface
-	allPodsURL string
+	coreV1       corev1.CoreV1Interface
+	allPodsURL   string
+	RequireLabel bool
 }
 
 // NewPodDumper creates a new PodDumper object
-func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string) *PodDumper {
+func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string, requireLabel bool) *PodDumper {
 	return &PodDumper{
-		coreV1:     core,
-		allPodsURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.AllPodsPath),
+		coreV1:       core,
+		allPodsURL:   fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.AllPodsPath),
+		RequireLabel: requireLabel,
 	}
 }
 
@@ -101,7 +101,15 @@ func (pd *PodDumper) getAllPodsAsPerceptorPods() ([]perceptorapi.Pod, error) {
 
 	// Get all pods from kubernetes
 	getPodsStart := time.Now()
-	pods, err := pd.coreV1.Pods(v1.NamespaceAll).List(metav1.ListOptions{})
+
+	listOptions := func() metav1.ListOptions {
+		lo := metav1.ListOptions{}
+		if pd.RequireLabel {
+			lo.LabelSelector = "blackduck.perceiver.scan=true"
+		}
+		return lo
+	}()
+	pods, err := pd.coreV1.Pods(metav1.NamespaceAll).List(listOptions)
 	metrics.RecordDuration("get pods", time.Now().Sub(getPodsStart))
 	if err != nil {
 		return nil, err
