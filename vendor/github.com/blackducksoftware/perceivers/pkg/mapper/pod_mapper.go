@@ -53,7 +53,8 @@ func NewPerceptorPodFromKubePod(kubePod *v1.Pod) (*perceptorapi.Pod, error) {
 				return nil, fmt.Errorf("unable to parse kubernetes imageID string %s from pod %s/%s: %v", newCont.ImageID, kubePod.Namespace, kubePod.Name, err)
 			}
 			_, tag := docker.ParseImageString(newCont.Image)
-			addedCont := perceptorapi.NewContainer(*perceptorapi.NewImage(name, tag, sha), newCont.Name)
+			priority := 1
+			addedCont := perceptorapi.NewContainer(*perceptorapi.NewImage(name, tag, sha, &priority), newCont.Name)
 			containers = append(containers, *addedCont)
 		} else {
 			metrics.RecordError("pod_mapper", "empty kubernetes imageID")
