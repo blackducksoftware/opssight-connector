@@ -33,7 +33,7 @@ items:
           args:
           - /etc/blackduck-protoform/config.json
           command:
-          - ./protoform
+          - ./blackduck-operator
         volumes:
         - configMap:
             defaultMode: 420

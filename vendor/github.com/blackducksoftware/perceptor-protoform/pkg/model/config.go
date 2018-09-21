@@ -39,7 +39,7 @@ type Config struct {
 
 // HubFederatorConfig will have the configuration related to hub federator
 type HubFederatorConfig struct {
-	HubConfig    HubConfig
+	HubConfig    *HubConfig
 	UseMockMode  bool
 	Port         int
 	Registry     string

@@ -22,6 +22,7 @@ under the License.
 package hub
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -97,13 +98,23 @@ func (c *Controller) Deploy() error {
 
 	// Perceptor configMap
 	hubFederatorConfig := components.NewConfigMap(horizonapi.ConfigMapConfig{Namespace: c.protoform.Config.Namespace, Name: "federator"})
-	hubFederatorConfig.AddData(map[string]string{"config.json": fmt.Sprint(`{"protoform": {"User": "`, c.protoform.Config.HubFederatorConfig.HubConfig.User,
-		`", "PasswordEnvVar": "`, c.protoform.Config.HubFederatorConfig.HubConfig.PasswordEnvVar,
-		`", "ClientTimeoutMilliseconds": `, c.protoform.Config.HubFederatorConfig.HubConfig.ClientTimeoutMilliseconds,
-		`, "Port": `, c.protoform.Config.HubFederatorConfig.HubConfig.Port,
-		`, "FetchAllProjectsPauseSeconds": `, c.protoform.Config.HubFederatorConfig.HubConfig.FetchAllProjectsPauseSeconds,
-		`}, "UseMockMode": `, c.protoform.Config.HubFederatorConfig.UseMockMode, `, "LogLevel": "`, c.protoform.Config.LogLevel,
-		`", "Port": `, c.protoform.Config.HubFederatorConfig.Port, `}`)})
+	data := map[string]interface{}{
+		"HubConfig": map[string]interface{}{
+			"Port":                         c.protoform.Config.HubFederatorConfig.HubConfig.Port,
+			"User":                         c.protoform.Config.HubFederatorConfig.HubConfig.User,
+			"PasswordEnvVar":               c.protoform.Config.HubFederatorConfig.HubConfig.PasswordEnvVar,
+			"ClientTimeoutMilliseconds":    c.protoform.Config.HubFederatorConfig.HubConfig.ClientTimeoutMilliseconds,
+			"FetchAllProjectsPauseSeconds": c.protoform.Config.HubFederatorConfig.HubConfig.FetchAllProjectsPauseSeconds,
+		},
+		"Port":        c.protoform.Config.HubFederatorConfig.Port,
+		"LogLevel":    c.protoform.Config.LogLevel,
+		"UseMockMode": c.protoform.Config.HubFederatorConfig.UseMockMode,
+	}
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	hubFederatorConfig.AddData(map[string]string{"config.json": string(bytes)})
 	deployer.AddConfigMap(hubFederatorConfig)
 
 	// Perceptor service
