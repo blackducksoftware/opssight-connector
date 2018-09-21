@@ -41,17 +41,17 @@ import (
 
 // PodDumper handles sending all pods to the perceptor periodically
 type PodDumper struct {
-	coreV1       corev1.CoreV1Interface
-	allPodsURL   string
-	RequireLabel bool
+	coreV1     corev1.CoreV1Interface
+	allPodsURL string
+	filter     string
 }
 
 // NewPodDumper creates a new PodDumper object
-func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string, requireLabel bool) *PodDumper {
+func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string, nsFilter string) *PodDumper {
 	return &PodDumper{
-		coreV1:       core,
-		allPodsURL:   fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.AllPodsPath),
-		RequireLabel: requireLabel,
+		coreV1:     core,
+		allPodsURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.AllPodsPath),
+		filter:     nsFilter,
 	}
 }
 
@@ -104,8 +104,8 @@ func (pd *PodDumper) getAllPodsAsPerceptorPods() ([]perceptorapi.Pod, error) {
 
 	listOptions := func() metav1.ListOptions {
 		lo := metav1.ListOptions{}
-		if pd.RequireLabel {
-			lo.LabelSelector = "blackduck.perceiver.scan=true"
+		if len(pd.filter) > 0 {
+			lo.LabelSelector = pd.filter
 		}
 		return lo
 	}()

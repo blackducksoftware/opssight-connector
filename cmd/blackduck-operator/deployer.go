@@ -59,7 +59,7 @@ func runProtoform(configPath string) {
 	})
 	deployer.AddController(alertController)
 
-	hubController, err := hub.NewController(&hub.Config{
+	hubController, err := hub.NewController(&hub.ProtoformConfig{
 		Config:        deployer.Config,
 		KubeConfig:    deployer.KubeConfig,
 		KubeClientSet: deployer.KubeClientSet,

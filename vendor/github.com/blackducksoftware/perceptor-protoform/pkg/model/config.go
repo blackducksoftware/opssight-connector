@@ -39,9 +39,13 @@ type Config struct {
 
 // HubFederatorConfig will have the configuration related to hub federator
 type HubFederatorConfig struct {
-	HubConfig   HubConfig
-	UseMockMode bool
-	Port        int
+	HubConfig    HubConfig
+	UseMockMode  bool
+	Port         int
+	Registry     string
+	ImagePath    string
+	ImageName    string
+	ImageVersion string
 }
 
 // HubConfig will have the configuration related to Hub
