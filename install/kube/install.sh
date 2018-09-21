@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "args = Namespace, Reg_key, Tag"
+echo "args = Namespace, Reg_key, version"
 
 NS=$1
 REG_KEY=$2
@@ -14,6 +14,7 @@ data:
   ADMIN_PASSWORD: YmxhY2tkdWNr
   POSTGRES_PASSWORD: YmxhY2tkdWNr
   USER_PASSWORD: YmxhY2tkdWNr
+  HUB_PASSWORD: YmxhY2tkdWNr
 kind: Secret
 metadata:
   name: blackduck-secret

@@ -49,8 +49,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const scanLabelEasterEgg = "blackduck.perceiver.scan=true"
-
 // PodController handles watching pods and sending them to perceptor
 type PodController struct {
 	client        kubernetes.Interface
@@ -66,7 +64,7 @@ type PodController struct {
 }
 
 // NewPodController creates a new PodController object
-func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, requireLabel bool, handler annotations.ImageAnnotatorHandler) *PodController {
+func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, nsFilter string, handler annotations.ImageAnnotatorHandler) *PodController {
 	pc := PodController{
 		client: kubeClient,
 		queue:  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "Pods"),
@@ -75,8 +73,8 @@ func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, requ
 	}
 
 	mutateOpts := func(opts *metav1.ListOptions) {
-		if requireLabel {
-			opts.LabelSelector = scanLabelEasterEgg
+		if len(nsFilter) > 0 {
+			opts.LabelSelector = nsFilter
 		}
 	}
 

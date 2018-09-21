@@ -77,10 +77,10 @@ func NewPodPerceiver(handler annotations.PodAnnotatorHandler, configPath string)
 
 	perceptorURL := fmt.Sprintf("http://%s:%d", config.PerceptorHost, config.PerceptorPort)
 	p := PodPerceiver{
-		podController:      controller.NewPodController(clientset, perceptorURL, config.RequireLabel, handler),
+		podController:      controller.NewPodController(clientset, perceptorURL, config.NamespaceFilter, handler),
 		podAnnotator:       annotator.NewPodAnnotator(clientset.CoreV1(), perceptorURL, handler),
 		annotationInterval: time.Second * time.Duration(config.AnnotationIntervalSeconds),
-		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL, config.RequireLabel),
+		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL, config.NamespaceFilter),
 		dumpInterval:       time.Minute * time.Duration(config.DumpIntervalMinutes),
 		metricsURL:         fmt.Sprintf(":%d", config.Port),
 	}
