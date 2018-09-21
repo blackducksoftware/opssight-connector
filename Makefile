@@ -18,7 +18,7 @@ endif
 OUTDIR=_output
 BUILDDIR=build
 LOCAL_TARGET=local
-BLACKDUCK_FEDERATOR:=blackduck-federator
+FEDERATOR:=federator
 OPSSIGHT_CORE:=opssight-core
 
 CURRENT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
@@ -45,7 +45,7 @@ endif
 
 container: registry_check container_prep
 	$(foreach p,${BINARY}, \
-		if [[ $(p) != $(BLACKDUCK_FEDERATOR) ]]; then \
+		if [[ $(p) != $(FEDERATOR) ]]; then \
 			cd ${CURRENT_DIR}/${BUILDDIR}/$p; \
 			docker build . -t $(REGISTRY)/$(PREFIX)${p}:$(TAG) --build-arg VERSION=$(TAG) --build-arg 'BUILDTIME=$(BUILD_TIME)' --build-arg LASTCOMMIT=$(LAST_COMMIT);\
 		fi; \
@@ -53,7 +53,7 @@ container: registry_check container_prep
 
 container_prep: ${OUTDIR} $(BINARY)
 	$(foreach p,${BINARY},\
-		if [[ $(p) = $(BLACKDUCK_FEDERATOR) ]]; then \
+		if [[ $(p) = $(FEDERATOR) ]]; then \
 			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 			cp ${CURRENT_DIR}/cmd/$p/* ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 		else \

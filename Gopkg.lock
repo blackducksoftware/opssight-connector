@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d6d8768734342726377afbeeafb0f7b6baf70173d0bae46e05b06e669ebaa09"
+  digest = "1:b0d698ca187fada5b213c515fb042d3e0018c5789786a82b9b644750f00788ad"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "e48aadab062dc975701d8e4f0aff43d88dcd82cb"
+  revision = "fc43aac7ee683544490a720fd77126eb4cd26736"
 
 [[projects]]
   branch = "master"

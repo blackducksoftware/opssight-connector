@@ -126,7 +126,7 @@ func (c *Controller) Deploy() error {
 	// Hub federator deployment
 	hubFederatorContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "federator", Image: fmt.Sprintf("%s/%s/%s:%s", c.protoform.Config.HubFederatorConfig.Registry, c.protoform.Config.HubFederatorConfig.ImagePath, c.protoform.Config.HubFederatorConfig.ImageName, c.protoform.Config.HubFederatorConfig.ImageVersion),
-			PullPolicy: horizonapi.PullAlways, Command: []string{fmt.Sprintf("./%s", c.protoform.Config.HubFederatorConfig.ImageVersion)}, Args: []string{"/etc/federator/config.json"}},
+			PullPolicy: horizonapi.PullAlways, Command: []string{"./federator"}, Args: []string{"/etc/federator/config.json"}},
 		EnvConfigs:   []*horizonapi.EnvConfig{{Type: horizonapi.EnvVal, NameOrPrefix: c.protoform.Config.HubFederatorConfig.HubConfig.PasswordEnvVar, KeyOrVal: hubPassword}},
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "federator", MountPath: "/etc/federator", Propagation: horizonapi.MountPropagationNone}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: fmt.Sprint(c.protoform.Config.HubFederatorConfig.Port), Protocol: horizonapi.ProtocolTCP},
