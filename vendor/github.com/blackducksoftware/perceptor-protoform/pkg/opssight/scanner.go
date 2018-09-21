@@ -118,7 +118,7 @@ func (p *SpecConfig) imageFacadeContainer() *components.Container {
 	container := components.NewContainer(horizonapi.ContainerConfig{
 		Name:       p.config.ImageFacadeImageName,
 		Image:      fmt.Sprintf("%s/%s/%s:%s", p.config.Registry, p.config.ImagePath, p.config.ImageFacadeImageName, p.config.ImageFacadeImageVersion),
-		Command:    []string{"./perceptor-imagefacade"},
+		Command:    []string{fmt.Sprintf("./%s", p.config.ImageFacadeImageName)},
 		Args:       []string{"/etc/perceptor_imagefacade/perceptor_imagefacade.json"},
 		MinCPU:     p.config.DefaultCPU,
 		MinMem:     p.config.DefaultMem,

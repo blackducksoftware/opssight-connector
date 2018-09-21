@@ -17,7 +17,6 @@ spec:
   dumpIntervalMinutes: 30
   hubUser: sysadmin
   hubPort: 443
-  hubUserPassword: blackduck
   hubClientTimeoutPerceptorMilliseconds: 100000
   hubClientTimeoutScannerSeconds: 600
   concurrentScanLimit: 2
