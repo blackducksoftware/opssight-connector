@@ -2,9 +2,9 @@ apiVersion: synopsys.com/v1
 kind: Hub
 metadata:
   clusterName: ""
-  name: pvc-test
+  name: hub-test
 spec:
-  namespace: pvc-test
+  namespace: hub-test
   backupInterval: "24"
   backupSupport: "Yes"
   backupUnit: Hour(s)
