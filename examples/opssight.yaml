@@ -56,7 +56,7 @@ spec:
   defaultMem: 1300Mi
 
   # Log level
-  logLevel: debug
+  logLevel: info
 
   # Environment Variables
   hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD
@@ -64,6 +64,3 @@ spec:
   # Configuration secret
   secretName: blackduck-secret
   useMockMode: false
-
-  # Red Hat Container Catalog support
-  rhcc: false

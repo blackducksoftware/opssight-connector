@@ -109,8 +109,10 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 
 	err = deployer.Run()
 	if err != nil {
-		return errors.Annotate(err, "unable to deploy opssight app")
+		log.Errorf("unable to deploy opssight %s due to %+v", createOpsSight.Namespace, err)
 	}
+
+	deployer.StartControllers()
 
 	// if OpenShift, add a privileged role to scanner account
 	err = ac.postDeploy(opssight, createOpsSight.Namespace)
@@ -118,7 +120,6 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 		return errors.Trace(err)
 	}
 
-	deployer.StartControllers()
 	return nil
 }
 

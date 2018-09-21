@@ -74,18 +74,21 @@ func (h *OpsSightHandler) ObjectCreated(obj interface{}) {
 
 			if err == nil {
 				opssightCreator := opssight.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.OpsSightClientset, h.OSSecurityClient, h.RouteClient)
-				if err != nil {
-					log.Errorf("unable to create the new OpsSight creater for %s due to %+v", opssightv1.Name, err)
-				}
 
 				err = opssightCreator.CreateOpsSight(&opssightv1.Spec)
-
-				opssightv1, err = util.GetOpsSight(h.OpsSightClientset, opssightv1.Name, opssightv1.Name)
-
 				if err != nil {
-					h.updateState("error", "error", err.Error(), opssightv1)
+					log.Errorf("unable to create opssight %s due to %s", opssightv1.Name, err.Error())
+				}
+
+				opssightv1, err1 := util.GetOpsSight(h.OpsSightClientset, opssightv1.Name, opssightv1.Name)
+				if err1 != nil {
+					log.Errorf("unable to get the opssight %s due to %+v", opssightv1.Name, err1)
 				} else {
-					h.updateState("running", "running", "", opssightv1)
+					if err != nil {
+						h.updateState("error", "error", err.Error(), opssightv1)
+					} else {
+						h.updateState("running", "running", "", opssightv1)
+					}
 				}
 			}
 		}
