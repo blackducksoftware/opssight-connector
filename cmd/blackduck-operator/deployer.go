@@ -139,7 +139,6 @@ func GetOpsSightDefaultValue() *opssightv1.OpsSightSpec {
 	defaultMetricsEnabled := true
 	defaultPerceptorSkyfire := false
 	defaultUseMockMode := false
-	defaultRequireLabel := false
 
 	return &opssightv1.OpsSightSpec{
 		PerceptorPort:             &defaultPerceptorPort,
@@ -173,7 +172,6 @@ func GetOpsSightDefaultValue() *opssightv1.OpsSightSpec {
 		ImagePerceiver:                        &defaultImagePerceiverEnabled,
 		Metrics:                               &defaultMetricsEnabled,
 		PerceptorSkyfire:                      &defaultPerceptorSkyfire,
-		RequireLabel:                          &defaultRequireLabel,
 		DefaultCPU:                            "300m",
 		DefaultMem:                            "1300Mi",
 		LogLevel:                              "debug",
