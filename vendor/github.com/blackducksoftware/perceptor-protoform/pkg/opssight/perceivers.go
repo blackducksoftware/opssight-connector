@@ -180,7 +180,7 @@ func (p *SpecConfig) PerceiverConfigMap() (*components.ConfigMap, error) {
 		"DumpIntervalMinutes":       *p.config.DumpIntervalMinutes,
 		"Port":                      *p.config.PerceiverPort,
 		"LogLevel":                  p.config.LogLevel,
-		"RequireLabel":              *p.config.RequireLabel,
+		"NamespaceFilter":           p.config.NamespaceFilter,
 	}
 	bytes, err := json.Marshal(data)
 	if err != nil {

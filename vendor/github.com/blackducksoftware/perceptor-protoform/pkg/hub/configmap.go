@@ -102,12 +102,16 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 	}
 
 	postgresBootstrap.AddData(map[string]string{"pgbootstrap.sh": fmt.Sprintf(`#!/bin/bash
-    if [ ! -f /data/bds/backup/%s.sql ] && [ -f /data/bds/backup/%s.sql ]; then
+		BACKUP_FILENAME="%s"
+		CLONE_FILENAME="%s"
+		echo "Backup file name: /data/bds/backup/$BACKUP_FILENAME"
+		echo "Clone file name: /data/bds/backup/$CLONE_FILENAME"
+    if [ ! -f /data/bds/backup/$BACKUP_FILENAME.sql ] && [ -f /data/bds/backup/$CLONE_FILENAME.sql ]; then
 			echo "clone data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
 					echo "Migrating the data"
-      		psql < /data/bds/backup/%s.sql
+      		psql < /data/bds/backup/$CLONE_FILENAME.sql
       		break
     		else
       		echo "unable to execute the SELECT 1"
@@ -116,12 +120,12 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
   		done
 		fi;
 
-		if [ -f /data/bds/backup/%s.sql ]; then
+		if [ -f /data/bds/backup/$BACKUP_FILENAME.sql ]; then
 			echo "backup data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
 					echo "Migrating the data"
-      		psql < /data/bds/backup/%s.sql
+      		psql < /data/bds/backup/$BACKUP_FILENAME.sql
       		break
     		else
       		echo "unable to execute the SELECT 1"
@@ -134,9 +138,19 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 			while true; do
 			  echo "Dump the data"
 				sleep %d;
-				pg_dumpall -w > /data/bds/backup/%s.sql;
+				if [ ! -f /data/bds/backup/$BACKUP_FILENAME_tmp.sql ]; then
+					pg_dumpall -w > /data/bds/backup/$BACKUP_FILENAME_tmp.sql;
+					if [ $? -eq 0 ]; then
+						mv /data/bds/backup/$BACKUP_FILENAME_tmp.sql /data/bds/backup/$BACKUP_FILENAME.sql
+						if [ $? -eq 0 ]; then
+							rm -f /data/bds/backup/$BACKUP_FILENAME_tmp.sql
+						fi
+					fi
+				else
+					echo "backup in progress... cannot start another instance of backup"
+				fi
 			done
-		fi`, createHub.Namespace, createHub.DbPrototype, createHub.DbPrototype, createHub.Namespace, createHub.Namespace, createHub.BackupSupport, backupInSeconds, createHub.Namespace)})
+		fi`, createHub.Namespace, createHub.DbPrototype, createHub.BackupSupport, backupInSeconds)})
 
 	configMaps["postgres-bootstrap"] = postgresBootstrap
 

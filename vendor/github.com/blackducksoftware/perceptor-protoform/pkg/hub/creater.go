@@ -173,7 +173,7 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	registrationPod := util.FilterPodByNamePrefix(pods, "registration")
 	log.Debugf("registration pod: %+v", registrationPod)
 	registrationKey := os.Getenv("REGISTRATION_KEY")
-	log.Debugf("registration key: %s", registrationKey)
+	// log.Debugf("registration key: %s", registrationKey)
 
 	if registrationPod != nil {
 		for {

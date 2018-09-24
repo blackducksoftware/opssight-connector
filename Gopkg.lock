@@ -55,7 +55,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bec62c62c2c3ecd1b55ebc8edc5c270d9251642975df0b30c3ab3ea0a1e5f46b"
+  digest = "1:728fc3f561aedeb9a07f86d8cf7fa80ea0fab9874d89ccac6fb54e20fa0211bb"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
     "cmd/image-perceiver/app",
@@ -71,7 +71,7 @@
     "pkg/utils",
   ]
   pruneopts = "UT"
-  revision = "779d0b51d1480d0406ecea94762d621e9a7bc32a"
+  revision = "73dec2003d70d2c86b614613b704653870ffda5b"
 
 [[projects]]
   branch = "master"
@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a74a9061d10786d841a00fcce8301cc60a3907679067243d88f911e7cf990e1d"
+  digest = "1:c97a4357bdbac3ff288078ab1a98a55fbc75870689f023b6d6eda7b219098ff5"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "c0cff884dd696907202f81b814277d12b82c7116"
+  revision = "f9297332831083b7fb092cf70129ad9f9c38429d"
 
 [[projects]]
   branch = "master"
@@ -720,7 +720,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ddcc33b0f41a00989780c993767baf1757f42fbec8a7f93dca76d3ada37127d"
+  digest = "1:7fa623d7d6d1377b573b95c0baf2a1a1e632fd81d30a9d977bfbd50e309371cb"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -729,7 +729,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
+  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

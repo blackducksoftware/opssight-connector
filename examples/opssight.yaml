@@ -2,65 +2,66 @@ apiVersion: synopsys.com/v1
 kind: OpsSight
 metadata:
   clusterName: ""
-  name: opssight-test
+  name: opssight-test # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
 spec:
-  namespace: opssight-test
-  # CONTAINER CONFIGS
-  # These are sed replaced into the config maps for the containers.
-  perceptorPort: 3001
-  perceiverPort: 3002
-  scannerPort: 3003
-  imageFacadePort: 3004
-  skyfirePort: 3005
-  internalRegistries: []
-  annotationIntervalSeconds: 30
-  dumpIntervalMinutes: 30
-  hubUser: sysadmin
-  hubPort: 443
-  hubClientTimeoutPerceptorMilliseconds: 100000
-  hubClientTimeoutScannerSeconds: 600
-  concurrentScanLimit: 2
-  totalScanLimit: 1000
-  checkForStalledScansPauseHours: 999999
-  stalledScanClientTimeoutHours: 999999
-  modelMetricsPauseSeconds: 15
-  unknownImagePauseMilliseconds: 15000
+  namespace: opssight-test # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
+  perceptorPort: 3001 # Optional, if the default port for opssight-core to be changed
+  perceiverPort: 3002 # Optional, if the default port for opssight-pod-processor or opssight-image-processor to be changed
+  scannerPort: 3003 # Optional, if the default port for opssight-scanner to be changed
+  imageFacadePort: 3004 # Optional, if the default port for opssight-image-getter to be changed
+  internalRegistries: [] # Optional, add only if the secured registries to be scanned. The format for adding the registry auth is
+  # - Url: docker-registry
+  #   User: unused
+  #   Password: $$$$$
+  annotationIntervalSeconds: 30 # Optional, if the default annotation interval in seconds to be changed
+  dumpIntervalMinutes: 30 # Optional, if the default port for opssight-image-getter to be changed
+  hubUser: sysadmin # Optional, if the default port for opssight-image-getter to be changed
+  hubPort: 443 # Optional, if the default port for opssight-image-getter to be changed
+  hubClientTimeoutPerceptorMilliseconds: 100000 # Optional, if the default port for opssight-image-getter to be changed
+  hubClientTimeoutScannerSeconds: 600 # Optional, if the default port for opssight-image-getter to be changed
+  concurrentScanLimit: 2 # Optional, if the default port for opssight-image-getter to be changed
+  totalScanLimit: 1000 # Optional, if the default port for opssight-image-getter to be changed
+  checkForStalledScansPauseHours: 999999 # Optional, if the default port for opssight-image-getter to be changed
+  stalledScanClientTimeoutHours: 999999 # Optional, if the default port for opssight-image-getter to be changed
+  modelMetricsPauseSeconds: 15 # Optional, if the default port for opssight-image-getter to be changed
+  unknownImagePauseMilliseconds: 15000 # Optional, if the default port for opssight-image-getter to be changed
 
   # CONTAINER PULL CONFIG
   # These are for defining docker registry and image location and versions
-  registry: docker.io
-  imagePath: blackducksoftware
+  registry: docker.io # Optional, if the default Docker registry need to be changed
+  imagePath: blackducksoftware # Optional, if the default Docker repository need to be changed
   # Default version will override the corresponding image version
-  defaultVersion: "2.1.0"
+  defaultVersion: "2.1.0-RC" # Required, possible values are OpsSight release versions
 
-  perceptorImageName: opssight-core
-  scannerImageName: opssight-scanner
-  podPerceiverImageName: opssight-pod-processor
-  imagePerceiverImageName: opssight-image-processor
-  imageFacadeImageName: opssight-image-getter
+  perceptorImageName: opssight-core # Optional, if the default opssight-core name to be changed
+  scannerImageName: opssight-scanner # Optional, if the default opssight-scanner name to be changed
+  podPerceiverImageName: opssight-pod-processor # Optional, if the default opssight-pod-processor name to be changed
+  imagePerceiverImageName: opssight-image-processor # Optional, if the default opssight-image-processor name to be changed
+  imageFacadeImageName: opssight-image-getter # Optional, if the default opssight-image-getter name to be changed
 
-  #perceptorImageVersion: master
-  #scannerImageVersion: master
-  #perceiverImageVersion: master
-  #imageFacadeImageVersion: master
+  #perceptorImageVersion: "2.1.0" # Optional, if the default opssight-core version to be changed
+  #scannerImageVersion: "2.1.0" # Optional, if the default opssight-scanner version to be changed
+  #perceiverImageVersion: "2.1.0" # Optional, if the default opssight-pod-processor or opssight-image-processor version to be changed
+  #imageFacadeImageVersion: "2.1.0" # Optional, if the default opssight-image-getter version to be changed
 
-  imagePerceiver: false # Enable it in OpenShift to scan images in internal registry
-  podPerceiver: true
-  metrics: true
-  requireLabel: false # Enable it if namespace filter is required and label the namespace that need to be scanned with blackduck.perceiver.scan=true
+  imagePerceiver: false # if images in OpenShift internal Docker registry to be scanned, enable it
+  podPerceiver: true  # if images running in Kubernetes/OpenShift pods to be scanned, enable it
+  metrics: true  # Optional, if prometheus metrics to be enabled to measure the metrics, enable it
+
+  #namespaceFilter: "" # Enable it if namespace filter is required and use the same label in namespaces that need to be scanned
 
   # CPU and memory configurations
   # Should be passed like: e.g. "300m"
-  defaultCpu: 300m
+  defaultCpu: 300m # Optional, if the default cpu for all OpsSight containers to be changed
   # Should be passed like: e.g "1300Mi"
-  defaultMem: 1300Mi
+  defaultMem: 1300Mi # Optional, if the default memory for all OpsSight containers to be changed
 
   # Log level
-  logLevel: info
+  logLevel: info # Optional, if the default log level to be changed
 
   # Environment Variables
-  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD
+  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD # Optional, if the default environment variable to be changed
 
   # Configuration secret
-  secretName: blackduck-secret
-  useMockMode: false
+  secretName: blackduck-secret # Optional, if the default Black Duck secret name to be changed
+  useMockMode: false # Optional, if the mock mode to be used
