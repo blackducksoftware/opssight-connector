@@ -2,23 +2,22 @@ apiVersion: synopsys.com/v1
 kind: Hub
 metadata:
   clusterName: ""
-  name: hub-test
+  name: hub-test # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
 spec:
-  namespace: hub-test
-  backupInterval: "24"
-  backupSupport: "Yes"
-  backupUnit: Hour(s)
-  certificate: ""
-  certificateKey: ""
-  certificateName: default
-  dbPrototype: "empty"
-  dockerRegistry: docker.io
-  dockerRepo: blackducksoftware
-  flavor: small
-  hubVersion: 4.8.1
-  instanceName: ""
-  nfsServer: <<NFS Server>>
-  pvcClaimSize: 10Gi
-  pvcStorageClass: none
-  scanType: Custom
-  hubType: worker
+  namespace: hub-test # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
+  backupSupport: "Yes" # Required, possible values are 'Yes', 'No'
+  backupInterval: "1" # Required only if the Backup support is 'Yes'. It should be integer value
+  backupUnit: Minute(s) # Required only if the Backup support is 'Yes'. Possible values are 'Minute(s)', 'Hour(s)', 'Day(s)', 'Week(s)'
+  certificateName: default # Required, possible values are 'default', 'manual' or other hub names
+  certificate: "" # Required if certificate name is manual
+  certificateKey: "" # Required if certificate name is manual
+  dbPrototype: "empty" # Required, possible values are empty or other hub names
+  dockerRegistry: docker.io # Required
+  dockerRepo: blackducksoftware # Required
+  hubVersion: 4.8.1 # Required
+  flavor: small # Required, possible values are 'small', 'medium', 'large' or 'opssight'
+  nfsServer: <<NFS Server>> # Required only if either 'Clone' hub is enabled or 'Backup Support' is enabled with auto provision disabled in storage classes
+  pvcClaimSize: 10Gi # Required if the Backup is enabled
+  pvcStorageClass: none # Required only if either 'Clone' hub is enabled or 'Backup Support' is enabled. possible values are 'none' if you want to disable auto provision or the name of the storage class in the cluster
+  scanType: Custom # Required, if the Backup is enabled. possible values are Artifacts, Images or Custom
+  hubType: worker # Required, possible values are 'master' or 'worker'
