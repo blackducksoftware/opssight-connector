@@ -12,11 +12,11 @@ COPY ./help.1 /help.1
 
 COPY ./blackduck-operator ./blackduck-operator
 
-LABEL name="Black Duck OpsSight Deployer" \
+LABEL name="Black Duck Operator" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \
-      summary="Black Duck OpsSight Deployer" \
-      description="This container is used to deploy the Black Duck OpsSight Connector." \
+      summary="Black Duck Operator" \
+      description="This container is used to deploy the Black Duck Operators." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME" \
       license="apache" \
