@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c97a4357bdbac3ff288078ab1a98a55fbc75870689f023b6d6eda7b219098ff5"
+  digest = "1:9eb1b3101cf35d87a51452723b7c2d95ebda74e20d6468c32857c219cdbc96da"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "f9297332831083b7fb092cf70129ad9f9c38429d"
+  revision = "c419ffb2a3bd335950c7c8a915fa1b3d67749786"
 
 [[projects]]
   branch = "master"
@@ -415,6 +415,14 @@
   revision = "6b997eb5e2cadc3ba8649b3c9958644057bf3ddf"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f44d34fda864bed6d6c71514cd40b2ee097e6e67f745d5d014113e1faa5af8b7"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
+
+[[projects]]
   digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
   name = "github.com/kr/pretty"
   packages = ["."]
@@ -634,12 +642,12 @@
   revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
-  digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
+  digest = "1:dc2d85c13ac22c22a1f3170a41a8e1b897fa05134aaf533f16df44f66a25b4a1"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
+  revision = "a67f783a3814b8729bd2dac5780b5f78f8dbd64d"
+  version = "v1.1.0"
 
 [[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"
@@ -702,7 +710,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ae4b350b690968adf9e01a7c9192c52e7579aa6149cc47562a8ada533563b88e"
+  digest = "1:b92094a6ab511838ca347c0069f6e3d57f4c17866a76677941bfbbb0accf9653"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -716,11 +724,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
+  revision = "f04abc6bdfa7a0171a8a0c9fd2ada9391044d056"
 
 [[projects]]
   branch = "master"
-  digest = "1:7fa623d7d6d1377b573b95c0baf2a1a1e632fd81d30a9d977bfbd50e309371cb"
+  digest = "1:1472427a7f3815270a4eb76fd2074043e9ae017ed1ee38a1fe6960eef1200600"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -729,7 +737,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
+  revision = "b09afc3d579e346c4a7e4705953acaf6f9e551bd"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

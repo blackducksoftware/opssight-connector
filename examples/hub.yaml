@@ -21,3 +21,16 @@ spec:
   pvcStorageClass: none # Required only if either 'Clone' hub is enabled or 'Backup Support' is enabled. possible values are 'none' if you want to disable auto provision or the name of the storage class in the cluster
   scanType: Custom # Required, if the Backup is enabled. possible values are Artifacts, Images or Custom
   hubType: worker # Required, possible values are 'master' or 'worker'
+  #environs: # Optional, if any environment variables to be added/modified in the hub-config configMap
+  #- key: "XXXXXXX"
+  #  value: "XXXXXXX"
+  # possible key's for environment variables are
+  # PUBLIC_HUB_WEBSERVER_HOST
+  # PUBLIC_HUB_WEBSERVER_PORT
+  # HUB_WEBSERVER_PORT
+  # IPV4_ONLY
+  # HUB_PROXY_NON_PROXY_HOSTS
+  # HUB_KB_HOST
+  # HUB_PROXY_HOST
+  # HUB_PROXY_PORT
+  # HUB_PROXY_SCHEME

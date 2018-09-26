@@ -193,6 +193,7 @@ func (h *HubHandler) verifyHub(hubURL string, name string) bool {
 				InsecureSkipVerify: true,
 			},
 		},
+		Timeout: 5 * time.Second,
 	}
 
 	for i := 0; i < 60; i++ {

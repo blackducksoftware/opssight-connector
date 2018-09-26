@@ -77,7 +77,7 @@ func OpenDatabaseConnection(hostName string, dbName string, user string, passwor
 	// Note that sslmode=disable is required it does not mean that the connection
 	// is unencrypted. All connections via the proxy are completely encrypted.
 	log.Debug("attempting to open database connection")
-	dsn := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=disable", hostName, dbName, user, password)
+	dsn := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=disable connect_timeout=10", hostName, dbName, user, password)
 	db, err := sql.Open(sqlType, dsn)
 	//defer db.Close()
 	log.Debug("connected to database ")

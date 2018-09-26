@@ -28,8 +28,11 @@ package plugins
 // there is a problem in the orchestration environment.
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"time"
 
@@ -185,7 +188,11 @@ func (p *PerceptorConfigMap) updateAllHubs(hubClient *hubclient.Clientset, kubeC
 		hubs := hubsList.Items
 		for _, hub := range hubs {
 			if strings.EqualFold(hub.Spec.HubType, "worker") {
-				allHubNamespaces = append(allHubNamespaces, fmt.Sprintf("webserver.%s.svc", hub.Name))
+				hubURL := fmt.Sprintf("webserver.%s.svc", hub.Name)
+				status := p.verifyHub(hubClient, hubURL, hub.Name)
+				if status {
+					allHubNamespaces = append(allHubNamespaces, hubURL)
+				}
 				log.Infof("Hub config map controller, namespace is %s", hub.Name)
 			}
 		}
@@ -209,4 +216,42 @@ func (p *PerceptorConfigMap) updateAllHubs(hubClient *hubclient.Clientset, kubeC
 	}
 
 	return nil
+}
+
+func (p *PerceptorConfigMap) verifyHub(hubClient *hubclient.Clientset, hubURL string, name string) bool {
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+		Timeout: 5 * time.Second,
+	}
+
+	for i := 0; i < 60; i++ {
+		resp, err := client.Get(fmt.Sprintf("https://%s:443/api/current-version", hubURL))
+		if err != nil {
+			log.Debugf("unable to talk with the hub %s", hubURL)
+			time.Sleep(10 * time.Second)
+			_, err := util.GetHub(hubClient, p.Config.Namespace, name)
+			if err != nil {
+				return false
+			}
+			continue
+		}
+
+		_, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Errorf("unable to read the response from hub %s due to %+v", hubURL, err)
+			return false
+		}
+		defer resp.Body.Close()
+		log.Debugf("hub response status for %s is %v", hubURL, resp.Status)
+
+		if resp.StatusCode == 200 {
+			return true
+		}
+		time.Sleep(10 * time.Second)
+	}
+	return false
 }

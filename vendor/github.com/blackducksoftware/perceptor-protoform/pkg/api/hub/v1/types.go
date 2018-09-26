@@ -45,7 +45,6 @@ type HubSpec struct {
 	DockerRepo      string     `json:"dockerRepo"`
 	HubVersion      string     `json:"hubVersion"`
 	DbPrototype     string     `json:"dbPrototype"`
-	InstanceName    string     `json:"instanceName"`
 	BackupInterval  string     `json:"backupInterval"`
 	BackupUnit      string     `json:"backupUnit"`
 	PVCStorageClass string     `json:"pvcStorageClass"`

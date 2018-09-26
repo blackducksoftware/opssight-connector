@@ -175,7 +175,7 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	registrationKey := os.Getenv("REGISTRATION_KEY")
 	// log.Debugf("registration key: %s", registrationKey)
 
-	if registrationPod != nil {
+	if registrationPod != nil && !strings.EqualFold(registrationKey, "") {
 		for {
 			// Create the exec into kubernetes pod request
 			req := util.CreateExecContainerRequest(hc.KubeClient, registrationPod)
@@ -193,7 +193,7 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 
 	// Retrieve the PVC volume name
 	pvcVolumeName := ""
-	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.PVCStorageClass, "") {
+	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.DbPrototype, "empty") {
 		pvcVolumeName, err = hc.getPVCVolumeName(createHub.Namespace)
 		if err != nil {
 			return "", "", false, err

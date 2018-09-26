@@ -95,7 +95,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-bootstrap-vol:pgbootstrap.sh", MountPath: "/usr/share/container-scripts/postgresql/pgbootstrap.sh", Propagation: horizonapi.MountPropagationNone})
 	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-init-vol:pginit.sh", MountPath: "/usr/share/container-scripts/postgresql/pginit.sh", Propagation: horizonapi.MountPropagationNone})
 
-	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.PVCStorageClass, "") {
+	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.DbPrototype, "empty") {
 		// Postgres PVC
 		postgresPVC, err := util.CreatePersistentVolumeClaim(createHub.Namespace, createHub.Namespace, createHub.PVCClaimSize, storageClass, horizonapi.ReadWriteOnce)
 		if err != nil {
