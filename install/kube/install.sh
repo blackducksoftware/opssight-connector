@@ -25,7 +25,7 @@ kubectl create ns $NS
 
 kubectl create -f /tmp/secret -n $NS
 
-cat ../blackduck-protoform.yaml | sed 's/${REGISTRATION_KEY}/'$REG_KEY'/g' | sed 's/${NAMESPACE}/'$NS'/g' |sed 's/${TAG}/'${VERSION}'/g' | kubectl create --namespace=$NS -f -
+cat ../blackduck-operator.yaml | sed 's/${REGISTRATION_KEY}/'$REG_KEY'/g' | sed 's/${NAMESPACE}/'$NS'/g' |sed 's/${TAG}/'${VERSION}'/g' | kubectl create --namespace=$NS -f -
 
 #kubectl expose rc blackduck-protoform --port=8080 --target-port=8080 --name=blackduck-protoform-np --type=NodePort --namespace=$NS
 

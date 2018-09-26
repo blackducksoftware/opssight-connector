@@ -1,25 +1,25 @@
 apiVersion: v1
 kind: List
 metadata:
-  name: blackduck-protoform
+  name: blackduck-operator
 items:
 - apiVersion: v1
   kind: ReplicationController
   metadata:
-    name: blackduck-protoform
+    name: blackduck-operator
     labels:
-      name: blackduck-protoform
+      name: blackduck-operator
   spec:
     replicas: 1
     selector:
-      name: blackduck-protoform
+      name: blackduck-operator
     template:
       metadata:
         labels:
-          name: blackduck-protoform
+          name: blackduck-operator
       spec:
         containers:
-        - name: blackduck-protoform
+        - name: blackduck-operator
           image: docker.io/blackducksoftware/blackduck-operator:${TAG}
           imagePullPolicy: Always
           ports:
@@ -28,48 +28,48 @@ items:
           - name: REGISTRATION_KEY
             value: ${REGISTRATION_KEY}
           volumeMounts:
-          - mountPath: /etc/blackduck-protoform
-            name: blackduck-protoform
+          - mountPath: /etc/blackduck-operator
+            name: blackduck-operator
           args:
-          - /etc/blackduck-protoform/config.json
+          - /etc/blackduck-operator/config.json
           command:
           - ./blackduck-operator
         volumes:
         - configMap:
             defaultMode: 420
-            name: blackduck-protoform
-          name: blackduck-protoform
-        serviceAccount: blackduck-protoform
+            name: blackduck-operator
+          name: blackduck-operator
+        serviceAccount: blackduck-operator
 - apiVersion: v1
   kind: Service
   metadata:
-    name: blackduck-protoform
+    name: blackduck-operator
   spec:
     selector:
-      name: blackduck-protoform
+      name: blackduck-operator
     ports:
       - protocol: TCP
         port: 8080
         targetPort: 8080
-        name: blackduck-protoform
+        name: blackduck-operator
 - apiVersion: v1
   kind: ConfigMap
   metadata:
-    name: blackduck-protoform
+    name: blackduck-operator
   data:
     config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "docker.io", "ImagePath": "blackducksoftware", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
 - apiVersion: v1
   kind: ServiceAccount
   metadata:
-    name: blackduck-protoform
+    name: blackduck-operator
     namespace: ${NAMESPACE}
 - kind: ClusterRoleBinding
   apiVersion: rbac.authorization.k8s.io/v1beta1
   metadata:
-    name: protoform-admin
+    name: blackduck-operator-cluster-admin
   subjects:
   - kind: ServiceAccount
-    name: blackduck-protoform
+    name: blackduck-operator
     namespace: ${NAMESPACE}
   roleRef:
     kind: ClusterRole
