@@ -88,7 +88,9 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 	log.Debugf("Create OpsSight details for %s: %+v", createOpsSight.Namespace, createOpsSight)
 
 	// get the registry auth credentials for default OpenShift internal docker registries
-	ac.addRegistryAuth(createOpsSight)
+	if !ac.config.DryRun {
+		ac.addRegistryAuth(createOpsSight)
+	}
 
 	opssight := NewSpecConfig(createOpsSight)
 
@@ -106,18 +108,19 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 
 	// Any new, pluggable maintainance stuff should go in here...
 	deployer.AddController("perceptor_configmap_controller", &plugins.PerceptorConfigMap{Config: ac.config, KubeConfig: ac.kubeConfig, OpsSightClient: ac.opssightClient, Namespace: createOpsSight.Namespace})
+	if !ac.config.DryRun {
+		err = deployer.Run()
+		if err != nil {
+			log.Errorf("unable to deploy opssight %s due to %+v", createOpsSight.Namespace, err)
+		}
 
-	err = deployer.Run()
-	if err != nil {
-		log.Errorf("unable to deploy opssight %s due to %+v", createOpsSight.Namespace, err)
-	}
+		deployer.StartControllers()
 
-	deployer.StartControllers()
-
-	// if OpenShift, add a privileged role to scanner account
-	err = ac.postDeploy(opssight, createOpsSight.Namespace)
-	if err != nil {
-		return errors.Trace(err)
+		// if OpenShift, add a privileged role to scanner account
+		err = ac.postDeploy(opssight, createOpsSight.Namespace)
+		if err != nil {
+			return errors.Trace(err)
+		}
 	}
 
 	return nil

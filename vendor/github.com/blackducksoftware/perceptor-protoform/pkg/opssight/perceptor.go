@@ -35,7 +35,7 @@ func (p *SpecConfig) PerceptorReplicationController() (*components.ReplicationCo
 	replicas := int32(1)
 	rc := components.NewReplicationController(horizonapi.ReplicationControllerConfig{
 		Replicas:  &replicas,
-		Name:      p.config.PerceptorImageName,
+		Name:      p.config.ContainerNames["perceptor"],
 		Namespace: p.config.Namespace,
 	})
 	pod, err := p.perceptorPod()
@@ -46,16 +46,15 @@ func (p *SpecConfig) PerceptorReplicationController() (*components.ReplicationCo
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	rc.AddLabelSelectors(map[string]string{"name": p.config.PerceptorImageName})
-
+	rc.AddLabelSelectors(map[string]string{"name": p.config.ContainerNames["perceptor"]})
 	return rc, nil
 }
 
 func (p *SpecConfig) perceptorPod() (*components.Pod, error) {
 	pod := components.NewPod(horizonapi.PodConfig{
-		Name: p.config.PerceptorImageName,
+		Name: p.config.ContainerNames["perceptor"],
 	})
-	pod.AddLabels(map[string]string{"name": p.config.PerceptorImageName})
+	pod.AddLabels(map[string]string{"name": p.config.ContainerNames["perceptor"]})
 	cont, err := p.perceptorContainer()
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -74,11 +73,12 @@ func (p *SpecConfig) perceptorPod() (*components.Pod, error) {
 }
 
 func (p *SpecConfig) perceptorContainer() (*components.Container, error) {
+	name := p.config.ContainerNames["perceptor"]
 	container := components.NewContainer(horizonapi.ContainerConfig{
-		Name:    p.config.PerceptorImageName,
+		Name:    name,
 		Image:   fmt.Sprintf("%s/%s/%s:%s", p.config.Registry, p.config.ImagePath, p.config.PerceptorImageName, p.config.PerceptorImageVersion),
-		Command: []string{fmt.Sprintf("./%s", p.config.PerceptorImageName)},
-		Args:    []string{"/etc/perceptor/perceptor.yaml"},
+		Command: []string{fmt.Sprintf("./%s", name)},
+		Args:    []string{fmt.Sprintf("/etc/%s/%s.yaml", name, name)},
 		MinCPU:  p.config.DefaultCPU,
 		MinMem:  p.config.DefaultMem,
 	})
@@ -87,8 +87,8 @@ func (p *SpecConfig) perceptorContainer() (*components.Container, error) {
 		Protocol:      horizonapi.ProtocolTCP,
 	})
 	err := container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "perceptor",
-		MountPath: "/etc/perceptor",
+		Name:      name,
+		MountPath: fmt.Sprintf("/etc/%s", name),
 	})
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -109,15 +109,15 @@ func (p *SpecConfig) perceptorContainer() (*components.Container, error) {
 
 func (p *SpecConfig) perceptorVolume() *components.Volume {
 	return components.NewConfigMapVolume(horizonapi.ConfigMapOrSecretVolumeConfig{
-		VolumeName:      "perceptor",
-		MapOrSecretName: "perceptor",
+		VolumeName:      p.config.ContainerNames["perceptor"],
+		MapOrSecretName: p.config.ContainerNames["perceptor"],
 	})
 }
 
 // PerceptorService creates a service for perceptor
 func (p *SpecConfig) PerceptorService() (*components.Service, error) {
 	service := components.NewService(horizonapi.ServiceConfig{
-		Name:      p.config.PerceptorImageName,
+		Name:      p.config.ContainerNames["perceptor"],
 		Namespace: p.config.Namespace,
 	})
 
@@ -130,7 +130,7 @@ func (p *SpecConfig) PerceptorService() (*components.Service, error) {
 		return nil, errors.Trace(err)
 	}
 
-	service.AddSelectors(map[string]string{"name": p.config.PerceptorImageName})
+	service.AddSelectors(map[string]string{"name": p.config.ContainerNames["perceptor"]})
 
 	return service, nil
 }
@@ -138,7 +138,7 @@ func (p *SpecConfig) PerceptorService() (*components.Service, error) {
 // PerceptorConfigMap creates a config map for perceptor
 func (p *SpecConfig) PerceptorConfigMap() (*components.ConfigMap, error) {
 	cm := components.NewConfigMap(horizonapi.ConfigMapConfig{
-		Name:      "perceptor",
+		Name:      p.config.ContainerNames["perceptor"],
 		Namespace: p.config.Namespace,
 	})
 	data := map[string]interface{}{
@@ -165,7 +165,7 @@ func (p *SpecConfig) PerceptorConfigMap() (*components.ConfigMap, error) {
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	cm.AddData(map[string]string{"perceptor.yaml": string(bytes)})
+	cm.AddData(map[string]string{fmt.Sprintf("%s.yaml", p.config.ContainerNames["perceptor"]): string(bytes)})
 
 	return cm, nil
 }

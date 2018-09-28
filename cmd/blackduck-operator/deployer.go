@@ -178,5 +178,21 @@ func GetOpsSightDefaultValue() *opssightv1.OpsSightSpec {
 		HubUserPasswordEnvVar:                 "PCP_HUBUSERPASSWORD",
 		SecretName:                            "blackduck-secret",
 		UseMockMode:                           &defaultUseMockMode,
+		ServiceAccounts: map[string]string{
+			// WARNING: These service accounts need to exist !
+			"pod-perceiver":          "opssight-processor",
+			"image-perceiver":        "opssight-processor",
+			"perceptor-image-facade": "opssight-scanner",
+			"skyfire":                "skyfire",
+		},
+		ContainerNames: map[string]string{
+			"perceiver":              "opssight-processor",
+			"pod-perceiver":          "opssight-pod-processor",
+			"image-perceiver":        "opssight-image-processor",
+			"perceptor":              "opssight-core",
+			"perceptor-image-facade": "opssight-image-getter",
+			"perceptor-scanner":      "opssight-scanner",
+			"skyfire":                "skyfire",
+		},
 	}
 }

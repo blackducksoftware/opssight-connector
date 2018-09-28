@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9eb1b3101cf35d87a51452723b7c2d95ebda74e20d6468c32857c219cdbc96da"
+  digest = "1:b9fc2c9796fee1c7743ad82d59dbe3774a4ee5b1e3db815fc4694cbd5f0a51c5"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "c419ffb2a3bd335950c7c8a915fa1b3d67749786"
+  revision = "6275c91ae6aac3922e81530671c9ffa60dead343"
 
 [[projects]]
   branch = "master"
@@ -706,11 +706,11 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+  revision = "5295e8364332db77d75fce11f1d19c053919a9c9"
 
 [[projects]]
   branch = "master"
-  digest = "1:b92094a6ab511838ca347c0069f6e3d57f4c17866a76677941bfbbb0accf9653"
+  digest = "1:509ce30757d23776114ad488d5e4967803bdd6e184a8e755c143901834c6ac14"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -724,11 +724,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "f04abc6bdfa7a0171a8a0c9fd2ada9391044d056"
+  revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
 
 [[projects]]
   branch = "master"
-  digest = "1:1472427a7f3815270a4eb76fd2074043e9ae017ed1ee38a1fe6960eef1200600"
+  digest = "1:c061b46bb94087bf5803f20b3a7cf55d814e6404f4d1f2f01585a8e539dd0d41"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -737,7 +737,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "b09afc3d579e346c4a7e4705953acaf6f9e551bd"
+  revision = "dad3d9fb7b6e83d0f9ac8f54670f6334c3a287b4"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

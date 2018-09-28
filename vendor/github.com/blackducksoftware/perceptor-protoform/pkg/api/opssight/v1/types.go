@@ -92,6 +92,7 @@ type OpsSightSpec struct {
 	SkyfireImageVersion     string `json:"skyfireImageVersion,omitempty"`
 
 	ServiceAccounts  map[string]string `json:"serviceAccounts,omitempty"`
+	ContainerNames   map[string]string `json:"names,omitempty"`
 	ImagePerceiver   *bool             `json:"imagePerceiver,omitempty"`
 	PodPerceiver     *bool             `json:"podPerceiver,omitempty"`
 	Metrics          *bool             `json:"metrics,omitempty"`

@@ -65,7 +65,11 @@ container_prep: ${OUTDIR} $(BINARY)
 	 )
 
 push: container
-	$(foreach p,${BINARY},$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:$(TAG);)
+	$(foreach p,${BINARY}, \
+		if [[ $(p) != $(FEDERATOR) ]]; then \
+			$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:$(TAG);\
+		fi; \
+	)
 
 test:
 	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.9 go test ./pkg/...
