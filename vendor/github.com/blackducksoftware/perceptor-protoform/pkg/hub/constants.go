@@ -33,6 +33,11 @@ const (
 	authenticationHubMaxMemory = "512m"
 	documentationMemoryLimit   = "512M"
 
+	registrationMinCPUUsage = "1"
+	zookeeperMinCPUUsage    = "1"
+	jonRunnerMinCPUUsage    = "1"
+	jonRunnerMaxCPUUsage    = "1"
+
 	// Ports
 	cfsslPort          = "8888"
 	webserverPort      = "8443"
@@ -52,9 +57,9 @@ const (
 
 	smallSolrMemoryLimit = "640M"
 
-	smallWebappCPULimit     = "1"
-	smallWebappMemoryLimit  = "2560M"
-	smallWebappHubMaxMemory = "2048m"
+	smallWebappCPULimit     = "2"
+	smallWebappMemoryLimit  = "5120M"
+	smallWebappHubMaxMemory = "4096m"
 
 	smallScanReplicas     = 1
 	smallScanMemoryLimit  = "2560M"
@@ -72,7 +77,7 @@ const (
 
 	mediumSolrMemoryLimit = "1024M"
 
-	mediumWebappCPULimit     = "1"
+	mediumWebappCPULimit     = "2"
 	mediumWebappMemoryLimit  = "5120M"
 	mediumWebappHubMaxMemory = "4096m"
 

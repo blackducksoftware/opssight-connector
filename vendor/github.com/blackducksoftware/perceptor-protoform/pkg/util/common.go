@@ -43,6 +43,8 @@ import (
 
 	opssight_v1 "github.com/blackducksoftware/perceptor-protoform/pkg/api/opssight/v1"
 	opssightclientset "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/client/clientset/versioned"
+	routev1 "github.com/openshift/api/route/v1"
+	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -52,6 +54,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -143,10 +146,14 @@ func CreateSecretVolume(volumeName string, secretName string, defaultMode int) (
 }
 
 // CreatePod will create the pod
-func CreatePod(name string, volumes []*components.Volume, containers []*Container, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig) *components.Pod {
+func CreatePod(name string, serviceAccount string, volumes []*components.Volume, containers []*Container, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig) *components.Pod {
 	pod := components.NewPod(horizonapi.PodConfig{
 		Name: name,
 	})
+
+	if !strings.EqualFold(serviceAccount, "") {
+		pod.GetObj().Account = serviceAccount
+	}
 
 	for _, volume := range volumes {
 		pod.AddVolume(volume)
@@ -190,8 +197,8 @@ func CreateDeployment(deploymentConfig *horizonapi.DeploymentConfig, pod *compon
 }
 
 // CreateDeploymentFromContainer will create a deployment with multiple containers inside a pod
-func CreateDeploymentFromContainer(deploymentConfig *horizonapi.DeploymentConfig, containers []*Container, volumes []*components.Volume, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig) *components.Deployment {
-	pod := CreatePod(deploymentConfig.Name, volumes, containers, initContainers, affinityConfigs)
+func CreateDeploymentFromContainer(deploymentConfig *horizonapi.DeploymentConfig, serviceAccount string, containers []*Container, volumes []*components.Volume, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig) *components.Deployment {
+	pod := CreatePod(deploymentConfig.Name, serviceAccount, volumes, containers, initContainers, affinityConfigs)
 	deployment := CreateDeployment(deploymentConfig, pod)
 	return deployment
 }
@@ -357,7 +364,7 @@ func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodLis
 	for _, podList := range pods.Items {
 		for {
 			pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
-			if strings.EqualFold(string(pod.Status.Phase), "Running") {
+			if strings.EqualFold(string(pod.Status.Phase), "Running") || strings.EqualFold(pod.Name, "") {
 				break
 			}
 			log.Infof("pod %s is in %s status... waiting 10 seconds", pod.Name, string(pod.Status.Phase))
@@ -519,4 +526,58 @@ func getBytes(n int) ([]byte, error) {
 func RandomString(n int) (string, error) {
 	b, err := getBytes(n)
 	return base64.URLEncoding.EncodeToString(b), err
+}
+
+// CreateServiceAccount creates a service account
+func CreateServiceAccount(namespace string, name string) *components.ServiceAccount {
+	serviceAccount := components.NewServiceAccount(horizonapi.ServiceAccountConfig{
+		Name:      name,
+		Namespace: namespace,
+	})
+
+	return serviceAccount
+}
+
+// CreateClusterRoleBinding creates a cluster role binding
+func CreateClusterRoleBinding(namespace string, name string, serviceAccountName string, clusterRoleAPIGroup string, clusterRoleKind string, clusterRoleName string) *components.ClusterRoleBinding {
+	clusterRoleBinding := components.NewClusterRoleBinding(horizonapi.ClusterRoleBindingConfig{
+		Name:       name,
+		APIVersion: "rbac.authorization.k8s.io/v1",
+	})
+
+	clusterRoleBinding.AddSubject(horizonapi.SubjectConfig{
+		Kind:      "ServiceAccount",
+		Name:      serviceAccountName,
+		Namespace: namespace,
+	})
+	clusterRoleBinding.AddRoleRef(horizonapi.RoleRefConfig{
+		APIGroup: clusterRoleAPIGroup,
+		Kind:     clusterRoleKind,
+		Name:     clusterRoleName,
+	})
+
+	return clusterRoleBinding
+}
+
+// DeleteClusterRoleBinding delete a cluster role binding
+func DeleteClusterRoleBinding(clientset *kubernetes.Clientset, name string) error {
+	return clientset.Rbac().ClusterRoleBindings().Delete(name, &metav1.DeleteOptions{})
+}
+
+// CreateOpenShiftRoutes creates a OpenShift routes
+func CreateOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace string, name string, routeKind string, serviceName string) (*routev1.Route, error) {
+	return routeClient.Routes(namespace).Create(&routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: routev1.RouteSpec{
+			TLS: &routev1.TLSConfig{Termination: routev1.TLSTerminationPassthrough},
+			To: routev1.RouteTargetReference{
+				Kind: routeKind,
+				Name: serviceName,
+			},
+			Port: &routev1.RoutePort{TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: fmt.Sprintf("port-%s", serviceName)}},
+		},
+	})
 }

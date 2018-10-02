@@ -61,10 +61,10 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "cfssl", Image: fmt.Sprintf("%s/%s/hub-cfssl:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.CfsslMemoryLimit, MaxMem: hubContainerFlavor.CfsslMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs:   hubConfigEnv,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-cfssl", MountPath: "/etc/cfssl", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-cfssl", MountPath: "/etc/cfssl", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: cfsslPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	cfssl := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "cfssl", Replicas: util.IntToInt32(1)},
+	cfssl := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "cfssl", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{cfsslContainerConfig}, []*components.Volume{cfsslEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("cfssl : %v\n", cfssl.GetObj())
@@ -88,15 +88,15 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	webServerSecretVol, _ := util.CreateSecretVolume("certificate", "blackduck-certificate", 0777)
 	webServerContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "webserver", Image: fmt.Sprintf("%s/%s/hub-nginx:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: "", UID: util.IntToInt64(1000)},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs: hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
-			{Name: "dir-webserver", MountPath: "/opt/blackduck/hub/webserver/security", Propagation: horizonapi.MountPropagationNone},
-			{Name: "certificate", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationNone},
+			{Name: "dir-webserver", MountPath: "/opt/blackduck/hub/webserver/security", Propagation: horizonapi.MountPropagationHostToContainer},
+			{Name: "certificate", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationHostToContainer},
 		},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webserverPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	webserver := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webserver", Replicas: util.IntToInt32(1)},
+	webserver := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webserver", Replicas: util.IntToInt32(1)}, createHub.Namespace,
 		[]*util.Container{webServerContainerConfig}, []*components.Volume{webServerEmptyDir, webServerSecretVol}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("webserver : %v\n", webserver.GetObj())
@@ -109,7 +109,7 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs: hubConfigEnv,
 		PortConfig: &horizonapi.PortConfig{ContainerPort: documentationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	documentation := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "documentation", Replicas: util.IntToInt32(1)},
+	documentation := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "documentation", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{documentationContainerConfig}, []*components.Volume{}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("documentation : %v\n", documentation.GetObj())
 	deployer.AddDeployment(documentation)
@@ -121,10 +121,10 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "solr", Image: fmt.Sprintf("%s/%s/hub-solr:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.SolrMemoryLimit, MaxMem: hubContainerFlavor.SolrMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs:   hubConfigEnv,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-solr", MountPath: "/opt/blackduck/hub/solr/cores.data", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-solr", MountPath: "/opt/blackduck/hub/solr/cores.data", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: solrPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	solr := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "solr", Replicas: util.IntToInt32(1)},
+	solr := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "solr", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{solrContainerConfig}, []*components.Volume{solrEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("solr : %v\n", solr.GetObj())
@@ -135,12 +135,12 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	registrationEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-registration")
 	registrationContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "registration", Image: fmt.Sprintf("%s/%s/hub-registration:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.RegistrationMemoryLimit, MaxMem: hubContainerFlavor.RegistrationMemoryLimit, MinCPU: "1", MaxCPU: ""},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.RegistrationMemoryLimit, MaxMem: hubContainerFlavor.RegistrationMemoryLimit, MinCPU: registrationMinCPUUsage, MaxCPU: ""},
 		EnvConfigs:   hubConfigEnv,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-registration", MountPath: "/opt/blackduck/hub/hub-registration/config", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-registration", MountPath: "/opt/blackduck/hub/hub-registration/config", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: registrationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	registration := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "registration", Replicas: util.IntToInt32(1)},
+	registration := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "registration", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{registrationContainerConfig}, []*components.Volume{registrationEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("registration : %v\n", registration.GetObj())
@@ -150,12 +150,12 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	zookeeperEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-zookeeper")
 	zookeeperContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "zookeeper", Image: fmt.Sprintf("%s/%s/hub-zookeeper:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.ZookeeperMemoryLimit, MaxMem: hubContainerFlavor.ZookeeperMemoryLimit, MinCPU: "1", MaxCPU: ""},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.ZookeeperMemoryLimit, MaxMem: hubContainerFlavor.ZookeeperMemoryLimit, MinCPU: zookeeperMinCPUUsage, MaxCPU: ""},
 		EnvConfigs:   hubConfigEnv,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-zookeeper", MountPath: "/opt/blackduck/hub/logs", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-zookeeper", MountPath: "/opt/blackduck/hub/logs", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: zookeeperPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	zookeeper := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "zookeeper", Replicas: util.IntToInt32(1)},
+	zookeeper := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "zookeeper", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{zookeeperContainerConfig}, []*components.Volume{zookeeperEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("zookeeper : %v\n", zookeeper.GetObj())
 	deployer.AddDeployment(zookeeper)
@@ -165,13 +165,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	jobRunnerEnvs = append(jobRunnerEnvs, &horizonapi.EnvConfig{Type: horizonapi.EnvFromConfigMap, NameOrPrefix: "HUB_MAX_MEMORY", KeyOrVal: "jobrunner-mem", FromName: "hub-config-resources"})
 	jobRunnerContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "jobrunner", Image: fmt.Sprintf("%s/%s/hub-jobrunner:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.JobRunnerMemoryLimit, MaxMem: hubContainerFlavor.JobRunnerMemoryLimit, MinCPU: "1", MaxCPU: "1"},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.JobRunnerMemoryLimit, MaxMem: hubContainerFlavor.JobRunnerMemoryLimit, MinCPU: jonRunnerMinCPUUsage, MaxCPU: jonRunnerMaxCPUUsage},
 		EnvConfigs:   jobRunnerEnvs,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: jobRunnerPort, Protocol: horizonapi.ProtocolTCP},
 	}
 
-	jobRunner := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "jobrunner", Replicas: hubContainerFlavor.JobRunnerReplicas},
+	jobRunner := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "jobrunner", Replicas: hubContainerFlavor.JobRunnerReplicas}, "",
 		[]*util.Container{jobRunnerContainerConfig}, []*components.Volume{dbSecretVolume, dbEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("jobRunner : %v\n", jobRunner.GetObj())
@@ -186,11 +186,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.ScanMemoryLimit, MaxMem: hubContainerFlavor.ScanMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs: scannerEnvs,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
-			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationNone},
-			{Name: "dir-scan", MountPath: "/opt/blackduck/hub/hub-scan/security", Propagation: horizonapi.MountPropagationNone}},
+			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationHostToContainer},
+			{Name: "dir-scan", MountPath: "/opt/blackduck/hub/hub-scan/security", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: scannerPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	hubScan := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-scan", Replicas: hubContainerFlavor.ScanReplicas},
+	hubScan := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-scan", Replicas: hubContainerFlavor.ScanReplicas}, "",
 		[]*util.Container{hubScanContainerConfig}, []*components.Volume{hubScanEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("hubScan : %v\n", hubScan.GetObj())
 	deployer.AddDeployment(hubScan)
@@ -205,11 +205,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.AuthenticationMemoryLimit, MaxMem: hubContainerFlavor.AuthenticationMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs: authEnvs,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
-			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationNone},
-			{Name: "dir-authentication", MountPath: "/opt/blackduck/hub/hub-authentication/security", Propagation: horizonapi.MountPropagationNone}},
+			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationHostToContainer},
+			{Name: "dir-authentication", MountPath: "/opt/blackduck/hub/hub-authentication/security", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: authenticationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	hubAuth := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-authentication", Replicas: util.IntToInt32(1)},
+	hubAuth := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-authentication", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{hubAuthContainerConfig}, []*components.Volume{hubAuthEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("hubAuth : %v\n", hubAuthc.GetObj())
@@ -226,9 +226,9 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			MaxCPU: hubContainerFlavor.WebappCPULimit},
 		EnvConfigs: webappEnvs,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
-			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationNone},
-			{Name: "dir-webapp", MountPath: "/opt/blackduck/hub/hub-webapp/security", Propagation: horizonapi.MountPropagationNone},
-			{Name: "dir-logstash", MountPath: "/opt/blackduck/hub/logs", Propagation: horizonapi.MountPropagationNone}},
+			{Name: "db-passwords", MountPath: "/tmp/secrets", Propagation: horizonapi.MountPropagationHostToContainer},
+			{Name: "dir-webapp", MountPath: "/opt/blackduck/hub/hub-webapp/security", Propagation: horizonapi.MountPropagationHostToContainer},
+			{Name: "dir-logstash", MountPath: "/opt/blackduck/hub/logs", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webappPort, Protocol: horizonapi.ProtocolTCP},
 	}
 	logstashEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-logstash")
@@ -236,12 +236,12 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "logstash", Image: fmt.Sprintf("%s/%s/hub-logstash:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.LogstashMemoryLimit, MaxMem: hubContainerFlavor.LogstashMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs:   hubConfigEnv,
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-logstash", MountPath: "/var/lib/logstash/data", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-logstash", MountPath: "/var/lib/logstash/data", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: logstashPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	webappLogstash := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webapp-logstash", Replicas: util.IntToInt32(1)}, []*util.Container{webappContainerConfig, logstashContainerConfig},
-		[]*components.Volume{webappEmptyDir, logstashEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{},
-		[]horizonapi.AffinityConfig{})
+	webappLogstash := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webapp-logstash", Replicas: util.IntToInt32(1)},
+		"", []*util.Container{webappContainerConfig, logstashContainerConfig}, []*components.Volume{webappEmptyDir, logstashEmptyDir, dbSecretVolume, dbEmptyDir},
+		[]*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("webappLogstash : %v\n", webappLogstashc.GetObj())
 	deployer.AddDeployment(webappLogstash)
 

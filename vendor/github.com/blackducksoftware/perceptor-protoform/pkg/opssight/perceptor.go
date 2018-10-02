@@ -87,8 +87,9 @@ func (p *SpecConfig) perceptorContainer() (*components.Container, error) {
 		Protocol:      horizonapi.ProtocolTCP,
 	})
 	err := container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      name,
-		MountPath: fmt.Sprintf("/etc/%s", name),
+		Name:        name,
+		MountPath:   fmt.Sprintf("/etc/%s", name),
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	if err != nil {
 		return nil, errors.Trace(err)

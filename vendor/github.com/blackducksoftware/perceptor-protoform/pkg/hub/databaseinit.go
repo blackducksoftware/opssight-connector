@@ -38,7 +38,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
 	db, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	defer db.Close()
-	log.Infof("Db: %+v, error: %+v", db, err)
+	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
 	}
@@ -47,7 +47,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	databaseName = "bds_hub"
 	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	defer db.Close()
-	log.Infof("Db: %+v, error: %+v", db, err)
+	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
 	}
@@ -56,7 +56,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	databaseName = "bds_hub_report"
 	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	defer db.Close()
-	log.Infof("Db: %+v, error: %+v", db, err)
+	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
 	}
@@ -65,7 +65,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	databaseName = "bdio"
 	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	defer db.Close()
-	log.Infof("Db: %+v, error: %+v", db, err)
+	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
 	}

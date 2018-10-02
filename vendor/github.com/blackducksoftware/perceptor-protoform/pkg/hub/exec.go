@@ -24,6 +24,7 @@ package hub
 import (
 	"bytes"
 	"io"
+	"strings"
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ func (hc *Creater) execContainer(request *rest.Request, command []string) error 
 	var stdin io.Reader
 	stdin = util.NewStringReader(command)
 
-	log.Debugf("Request URL: %+v, request: %+v", request.URL().String(), request)
+	log.Debugf("Request URL: %+v, request: %+v, command: %s", request.URL().String(), request, strings.Join(command, ""))
 
 	exec, err := remotecommand.NewSPDYExecutor(hc.KubeConfig, "POST", request.URL())
 	log.Debugf("exec: %+v, error: %+v", exec, err)

@@ -96,12 +96,14 @@ func (p *SpecConfig) scannerContainer() *components.Container {
 	})
 
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      name,
-		MountPath: fmt.Sprintf("/etc/%s", name),
+		Name:        name,
+		MountPath:   fmt.Sprintf("/etc/%s", name),
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "var-images",
-		MountPath: "/var/images",
+		Name:        "var-images",
+		MountPath:   "/var/images",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 
 	container.AddEnv(horizonapi.EnvConfig{
@@ -133,16 +135,19 @@ func (p *SpecConfig) imageFacadeContainer() *components.Container {
 	})
 
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      name,
-		MountPath: fmt.Sprintf("/etc/%s", name),
+		Name:        name,
+		MountPath:   fmt.Sprintf("/etc/%s", name),
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "var-images",
-		MountPath: "/var/images",
+		Name:        "var-images",
+		MountPath:   "/var/images",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "dir-docker-socket",
-		MountPath: "/var/run/docker.sock",
+		Name:        "dir-docker-socket",
+		MountPath:   "/var/run/docker.sock",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 
 	return container

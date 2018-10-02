@@ -107,12 +107,14 @@ func (p *SpecConfig) perceiverContainer(name string, imageName string, cmd strin
 	})
 
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      p.config.ContainerNames["perceiver"],
-		MountPath: fmt.Sprintf("/etc/%s", p.config.ContainerNames["perceiver"]),
+		Name:        p.config.ContainerNames["perceiver"],
+		MountPath:   fmt.Sprintf("/etc/%s", p.config.ContainerNames["perceiver"]),
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "logs",
-		MountPath: "/tmp",
+		Name:        "logs",
+		MountPath:   "/tmp",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 
 	return container

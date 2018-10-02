@@ -92,15 +92,17 @@ func (p *SpecConfig) perceptorSkyfireContainer() (*components.Container, error) 
 	})
 
 	err := container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "skyfire",
-		MountPath: "/etc/skyfire",
+		Name:        "skyfire",
+		MountPath:   "/etc/skyfire",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	if err != nil {
 		return nil, err
 	}
 	err = container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:      "logs",
-		MountPath: "/tmp",
+		Name:        "logs",
+		MountPath:   "/tmp",
+		Propagation: horizonapi.MountPropagationHostToContainer,
 	})
 	if err != nil {
 		return nil, err

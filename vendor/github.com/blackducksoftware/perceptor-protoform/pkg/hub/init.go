@@ -51,6 +51,14 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 		deployer.AddSecret(secret)
 	}
 
+	// Create a service account
+	serviceAccount := util.CreateServiceAccount(createHub.Namespace, createHub.Namespace)
+	deployer.AddServiceAccount(serviceAccount)
+
+	// Create a cluster role binding and associated it to a service account
+	clusterRoleBinding := util.CreateClusterRoleBinding(createHub.Namespace, createHub.Namespace, createHub.Namespace, "", "ClusterRole", "cluster-admin")
+	deployer.AddClusterRoleBinding(clusterRoleBinding)
+
 	// Create ConfigMaps
 	configMaps := hc.createHubConfig(createHub, hubContainerFlavor)
 
@@ -91,9 +99,9 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 	postgresVolumes = append(postgresVolumes, postgresEmptyDir, postgresInitConfigVol, postgresBootstrapConfigVol)
 
 	postgresVolumeMounts := []*horizonapi.VolumeMountConfig{}
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-persistent-vol", MountPath: "/var/lib/pgsql/data", Propagation: horizonapi.MountPropagationNone})
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-bootstrap-vol:pgbootstrap.sh", MountPath: "/usr/share/container-scripts/postgresql/pgbootstrap.sh", Propagation: horizonapi.MountPropagationNone})
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-init-vol:pginit.sh", MountPath: "/usr/share/container-scripts/postgresql/pginit.sh", Propagation: horizonapi.MountPropagationNone})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-persistent-vol", MountPath: "/var/lib/pgsql/data", Propagation: horizonapi.MountPropagationHostToContainer})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-bootstrap-vol:pgbootstrap.sh", MountPath: "/usr/share/container-scripts/postgresql/pgbootstrap.sh", Propagation: horizonapi.MountPropagationHostToContainer})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-init-vol:pginit.sh", MountPath: "/usr/share/container-scripts/postgresql/pginit.sh", Propagation: horizonapi.MountPropagationHostToContainer})
 
 	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.DbPrototype, "empty") {
 		// Postgres PVC
@@ -105,7 +113,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 
 		postgresBackupDir, _ := util.CreatePersistentVolumeClaimVolume("postgres-backup-vol", createHub.Namespace)
 		postgresVolumes = append(postgresVolumes, postgresBackupDir)
-		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationNone})
+		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationHostToContainer})
 	}
 
 	postgresExternalContainerConfig := &util.Container{
@@ -122,14 +130,14 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 		postgresInitContainerConfig := &util.Container{
 			ContainerConfig: &horizonapi.ContainerConfig{Name: "alpine", Image: "alpine", Command: []string{"sh", "-c", "chmod -cR 777 /data/bds/backup"}},
 			VolumeMounts: []*horizonapi.VolumeMountConfig{
-				{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationNone},
+				{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationHostToContainer},
 			},
 			PortConfig: &horizonapi.PortConfig{ContainerPort: "3001", Protocol: horizonapi.ProtocolTCP},
 		}
 		initContainers = append(initContainers, postgresInitContainerConfig)
 	}
 
-	postgres := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "postgres", Replicas: util.IntToInt32(1)},
+	postgres := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "postgres", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{postgresExternalContainerConfig}, postgresVolumes, initContainers, []horizonapi.AffinityConfig{})
 	// log.Infof("postgres : %+v\n", postgres.GetObj())
 	deployer.AddDeployment(postgres)

@@ -32,6 +32,8 @@ import (
 	hubcontroller "github.com/blackducksoftware/perceptor-protoform/pkg/hub/controller"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	"github.com/juju/errors"
+	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -139,7 +141,7 @@ func (c *Controller) Deploy() error {
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "federator", Image: fmt.Sprintf("%s/%s/%s:%s", c.protoform.Config.HubFederatorConfig.Registry, c.protoform.Config.HubFederatorConfig.ImagePath, c.protoform.Config.HubFederatorConfig.ImageName, c.protoform.Config.HubFederatorConfig.ImageVersion),
 			PullPolicy: horizonapi.PullAlways, Command: []string{"./federator"}, Args: []string{"/etc/federator/config.json"}},
 		EnvConfigs:   []*horizonapi.EnvConfig{{Type: horizonapi.EnvVal, NameOrPrefix: c.protoform.Config.HubFederatorConfig.HubConfig.PasswordEnvVar, KeyOrVal: hubPassword}},
-		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "federator", MountPath: "/etc/federator", Propagation: horizonapi.MountPropagationNone}},
+		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "federator", MountPath: "/etc/federator", Propagation: horizonapi.MountPropagationHostToContainer}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: fmt.Sprint(c.protoform.Config.HubFederatorConfig.Port), Protocol: horizonapi.ProtocolTCP},
 	}
 	hubFederatorVolume := components.NewConfigMapVolume(horizonapi.ConfigMapOrSecretVolumeConfig{
@@ -147,7 +149,7 @@ func (c *Controller) Deploy() error {
 		MapOrSecretName: "federator",
 		DefaultMode:     util.IntToInt32(420),
 	})
-	hubFederator := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: c.protoform.Config.Namespace, Name: "federator", Replicas: util.IntToInt32(1)},
+	hubFederator := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: c.protoform.Config.Namespace, Name: "federator", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{hubFederatorContainerConfig}, []*components.Volume{hubFederatorVolume}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	deployer.AddDeployment(hubFederator)
 
@@ -170,7 +172,7 @@ func (c *Controller) Deploy() error {
 
 // PostDeploy will call after deploying the CRD
 func (c *Controller) PostDeploy() {
-	hc := hub.NewCreater(c.protoform.Config, c.protoform.KubeConfig, c.protoform.KubeClientSet, c.protoform.customClientSet)
+	hc := hub.NewCreater(c.protoform.Config, c.protoform.KubeConfig, c.protoform.KubeClientSet, c.protoform.customClientSet, nil, nil)
 	webservice.SetupHTTPServer(hc, c.protoform.Config.Namespace)
 }
 
@@ -230,6 +232,16 @@ func (c *Controller) AddInformerEventHandler() {
 
 // CreateHandler will create a CRD handler
 func (c *Controller) CreateHandler() {
+	osClient, err := securityclient.NewForConfig(c.protoform.KubeConfig)
+	if err != nil {
+		osClient = nil
+	}
+
+	routeClient, err := routeclient.NewForConfig(c.protoform.KubeConfig)
+	if err != nil {
+		routeClient = nil
+	}
+
 	c.protoform.handler = &hubcontroller.HubHandler{
 		Config:           c.protoform.Config,
 		KubeConfig:       c.protoform.KubeConfig,
@@ -239,6 +251,8 @@ func (c *Controller) CreateHandler() {
 		FederatorBaseURL: fmt.Sprintf("http://federator:%d", c.protoform.Config.HubFederatorConfig.Port),
 		CmMutex:          make(chan bool, 1),
 		Defaults:         c.protoform.Defaults.(*v1.HubSpec),
+		OSSecurityClient: osClient,
+		RouteClient:      routeClient,
 	}
 }
 
