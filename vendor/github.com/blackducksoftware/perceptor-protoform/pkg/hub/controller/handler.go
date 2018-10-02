@@ -38,7 +38,6 @@ import (
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	"github.com/imdario/mergo"
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
-	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -61,7 +60,6 @@ type HubHandler struct {
 	Namespace        string
 	FederatorBaseURL string
 	CmMutex          chan bool
-	OSSecurityClient *securityclient.SecurityV1Client
 	RouteClient      *routeclient.RouteV1Client
 }
 
@@ -88,7 +86,7 @@ func (h *HubHandler) ObjectCreated(obj interface{}) {
 			hubv1, err := h.updateState("pending", "creating", "", hubv1)
 
 			if err == nil {
-				hubCreator := hub.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.HubClientset, h.OSSecurityClient, h.RouteClient)
+				hubCreator := hub.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.HubClientset, h.RouteClient)
 				ip, pvc, updateError, err := hubCreator.CreateHub(&hubv1.Spec)
 				if err != nil {
 					log.Errorf("unable to create hub for %s due to %+v", hubv1.Name, err)
@@ -110,7 +108,7 @@ func (h *HubHandler) ObjectCreated(obj interface{}) {
 func (h *HubHandler) ObjectDeleted(name string) {
 	log.Debugf("ObjectDeleted: %+v", name)
 
-	hubCreator := hub.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.HubClientset, h.OSSecurityClient, h.RouteClient)
+	hubCreator := hub.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.HubClientset, h.RouteClient)
 	hubCreator.DeleteHub(name)
 	h.callHubFederator()
 

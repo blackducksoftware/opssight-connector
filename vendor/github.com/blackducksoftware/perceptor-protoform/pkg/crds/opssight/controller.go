@@ -22,12 +22,14 @@ under the License.
 package opssight
 
 import (
+	"strings"
 	"time"
 
 	"github.com/blackducksoftware/horizon/pkg/components"
 	opssightclientset "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/client/clientset/versioned"
 	opssightinformerv1 "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/client/informers/externalversions/opssight/v1"
 	opssightcontroller "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/controller"
+	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	"github.com/juju/errors"
 
 	"k8s.io/client-go/tools/cache"
@@ -172,11 +174,23 @@ func (c *Controller) CreateHandler() {
 	osClient, err := securityclient.NewForConfig(c.config.KubeConfig)
 	if err != nil {
 		osClient = nil
+	} else {
+		_, err := util.GetOpenShiftSecurityConstraint(osClient, "privileged")
+		if err != nil && strings.Contains(err.Error(), "could not find the requested resource") && strings.Contains(err.Error(), "openshift.io") {
+			log.Debugf("Ignoring scc privileged for kubernetes cluster")
+			osClient = nil
+		}
 	}
 
 	routeClient, err := routeclient.NewForConfig(c.config.KubeConfig)
 	if err != nil {
 		routeClient = nil
+	} else {
+		_, err := util.GetOpenShiftRoutes(routeClient, "default", "docker-registry")
+		if err != nil && strings.Contains(err.Error(), "could not find the requested resource") && strings.Contains(err.Error(), "openshift.io") {
+			log.Debugf("Ignoring routes for kubernetes cluster")
+			routeClient = nil
+		}
 	}
 
 	c.config.handler = &opssightcontroller.OpsSightHandler{

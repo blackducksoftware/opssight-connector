@@ -24,6 +24,7 @@ package hub
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/blackducksoftware/horizon/pkg/components"
@@ -33,7 +34,6 @@ import (
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	"github.com/juju/errors"
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
-	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -172,7 +172,7 @@ func (c *Controller) Deploy() error {
 
 // PostDeploy will call after deploying the CRD
 func (c *Controller) PostDeploy() {
-	hc := hub.NewCreater(c.protoform.Config, c.protoform.KubeConfig, c.protoform.KubeClientSet, c.protoform.customClientSet, nil, nil)
+	hc := hub.NewCreater(c.protoform.Config, c.protoform.KubeConfig, c.protoform.KubeClientSet, c.protoform.customClientSet, nil)
 	webservice.SetupHTTPServer(hc, c.protoform.Config.Namespace)
 }
 
@@ -232,14 +232,16 @@ func (c *Controller) AddInformerEventHandler() {
 
 // CreateHandler will create a CRD handler
 func (c *Controller) CreateHandler() {
-	osClient, err := securityclient.NewForConfig(c.protoform.KubeConfig)
-	if err != nil {
-		osClient = nil
-	}
 
 	routeClient, err := routeclient.NewForConfig(c.protoform.KubeConfig)
 	if err != nil {
 		routeClient = nil
+	} else {
+		_, err := util.GetOpenShiftRoutes(routeClient, "default", "docker-registry")
+		if err != nil && strings.Contains(err.Error(), "could not find the requested resource") && strings.Contains(err.Error(), "openshift.io") {
+			log.Debugf("Ignoring routes for kubernetes cluster")
+			routeClient = nil
+		}
 	}
 
 	c.protoform.handler = &hubcontroller.HubHandler{
@@ -251,7 +253,6 @@ func (c *Controller) CreateHandler() {
 		FederatorBaseURL: fmt.Sprintf("http://federator:%d", c.protoform.Config.HubFederatorConfig.Port),
 		CmMutex:          make(chan bool, 1),
 		Defaults:         c.protoform.Defaults.(*v1.HubSpec),
-		OSSecurityClient: osClient,
 		RouteClient:      routeClient,
 	}
 }

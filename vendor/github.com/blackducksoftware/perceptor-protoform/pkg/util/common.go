@@ -44,8 +44,11 @@ import (
 	opssight_v1 "github.com/blackducksoftware/perceptor-protoform/pkg/api/opssight/v1"
 	opssightclientset "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/client/clientset/versioned"
 	routev1 "github.com/openshift/api/route/v1"
+	securityv1 "github.com/openshift/api/security/v1"
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 
@@ -314,6 +317,11 @@ func GetAllPodsForNamespace(clientset *kubernetes.Clientset, namespace string) (
 	return clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 }
 
+// GetAllDeploymentsForNamespace will get all the deployments corresponding to a namespace
+func GetAllDeploymentsForNamespace(clientset *kubernetes.Clientset, namespace string) (*appsv1.DeploymentList, error) {
+	return clientset.AppsV1().Deployments(namespace).List(metav1.ListOptions{})
+}
+
 // CreatePersistentVolume will create the persistent volume
 func CreatePersistentVolume(clientset *kubernetes.Clientset, name string, storageClass string, claimSize string, nfsPath string, nfsServer string) (*corev1.PersistentVolume, error) {
 	pvQuantity, _ := resource.ParseQuantity(claimSize)
@@ -564,6 +572,16 @@ func DeleteClusterRoleBinding(clientset *kubernetes.Clientset, name string) erro
 	return clientset.Rbac().ClusterRoleBindings().Delete(name, &metav1.DeleteOptions{})
 }
 
+// DeleteClusterRole delete a cluster role binding
+func DeleteClusterRole(clientset *kubernetes.Clientset, name string) error {
+	return clientset.Rbac().ClusterRoles().Delete(name, &metav1.DeleteOptions{})
+}
+
+// GetOpenShiftRoutes get a OpenShift routes
+func GetOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace string, name string) (*routev1.Route, error) {
+	return routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
+}
+
 // CreateOpenShiftRoutes creates a OpenShift routes
 func CreateOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace string, name string, routeKind string, serviceName string) (*routev1.Route, error) {
 	return routeClient.Routes(namespace).Create(&routev1.Route{
@@ -580,4 +598,9 @@ func CreateOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace str
 			Port: &routev1.RoutePort{TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: fmt.Sprintf("port-%s", serviceName)}},
 		},
 	})
+}
+
+// GetOpenShiftSecurityConstraint get a OpenShift security constraints
+func GetOpenShiftSecurityConstraint(osSecurityClient *securityclient.SecurityV1Client, name string) (*securityv1.SecurityContextConstraints, error) {
+	return osSecurityClient.SecurityContextConstraints().Get(name, metav1.GetOptions{})
 }

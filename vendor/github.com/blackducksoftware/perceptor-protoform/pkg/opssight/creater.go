@@ -36,7 +36,6 @@ import (
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -58,34 +57,76 @@ func NewCreater(config *model.Config, kubeConfig *rest.Config, kubeClient *kuber
 
 // DeleteOpsSight will delete the Black Duck OpsSight
 func (ac *Creater) DeleteOpsSight(namespace string) error {
-	log.Debugf("Delete OpsSight details for %s", namespace)
+	log.Debugf("delete OpsSight details for %s", namespace)
 	// Verify that the namespace exists
 	_, err := util.GetNamespace(ac.kubeClient, namespace)
 	if err != nil {
-		return errors.Annotatef(err, "Unable to find namespace %s", namespace)
+		return errors.Annotatef(err, "unable to find namespace %s", namespace)
+	}
+
+	deployments, err := util.GetAllDeploymentsForNamespace(ac.kubeClient, namespace)
+	if err != nil {
+		return errors.Annotatef(err, "unable to find deployments in %s", namespace)
+	}
+
+	var downstream bool
+	for _, deployment := range deployments.Items {
+		if strings.Contains(deployment.Name, "opssight") {
+			downstream = true
+		}
 	}
 	// Delete the namespace
 	err = util.DeleteNamespace(ac.kubeClient, namespace)
 	if err != nil {
-		return errors.Annotatef(err, "Unable to delete namespace %s", namespace)
+		return errors.Annotatef(err, "unable to delete namespace %s", namespace)
 	}
 
 	for {
 		// Verify whether the namespace was deleted
 		ns, err := util.GetNamespace(ac.kubeClient, namespace)
-		log.Infof("Namespace: %v, status: %v", namespace, ns.Status)
+		log.Infof("namespace: %v, status: %v", namespace, ns.Status)
 		time.Sleep(10 * time.Second)
 		if err != nil {
-			log.Infof("Deleted the namespace %+v", namespace)
+			log.Infof("deleted the namespace %+v", namespace)
 			break
 		}
 	}
+
+	// Delete a Cluster Role
+	clusterRoles := []string{}
+	if downstream {
+		clusterRoles = []string{"opssight-pod-processor", "opssight-image-processor"}
+	} else {
+		clusterRoles = []string{"pod-perceiver", "image-perceiver"}
+	}
+
+	for _, clusterRole := range clusterRoles {
+		err := util.DeleteClusterRole(ac.kubeClient, clusterRole)
+		if err != nil {
+			log.Errorf("unable to delete the cluster role for %+v", clusterRole)
+		}
+	}
+
+	// Delete a Cluster Role Binding
+	clusterRoleBindings := []string{}
+	if downstream {
+		clusterRoleBindings = []string{"opssight-pod-processor", "opssight-image-processor", "opssight-scanner"}
+	} else {
+		clusterRoleBindings = []string{"pod-perceiver", "image-perceiver", "perceptor-scanner"}
+	}
+	for _, clusterRoleBinding := range clusterRoleBindings {
+		err := util.DeleteClusterRoleBinding(ac.kubeClient, clusterRoleBinding)
+		if err != nil {
+			log.Errorf("unable to delete the cluster role binding for %+v", clusterRoleBinding)
+		}
+	}
+
 	return nil
 }
 
 // CreateOpsSight will create the Black Duck OpsSight
 func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
-	log.Debugf("Create OpsSight details for %s: %+v", createOpsSight.Namespace, createOpsSight)
+	log.Debugf("create OpsSight details for %s: %+v", createOpsSight.Namespace, createOpsSight)
 
 	// get the registry auth credentials for default OpenShift internal docker registries
 	if !ac.config.DryRun {
@@ -128,9 +169,9 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 
 func (ac *Creater) addRegistryAuth(opsSightSpec *v1.OpsSightSpec) {
 	// if OpenShift, get the registry auth informations
-	if ac.osSecurityClient != nil {
-		var internalRegistries []string
-		route, err := ac.routeClient.Routes("default").Get("docker-registry", metav1.GetOptions{})
+	var internalRegistries []string
+	if ac.routeClient != nil {
+		route, err := util.GetOpenShiftRoutes(ac.routeClient, "default", "docker-registry")
 		if err != nil {
 			log.Errorf("unable to get docker-registry router in default namespace due to %+v", err)
 		} else {
@@ -138,7 +179,7 @@ func (ac *Creater) addRegistryAuth(opsSightSpec *v1.OpsSightSpec) {
 			internalRegistries = append(internalRegistries, fmt.Sprintf("%s:443", route.Spec.Host))
 		}
 
-		registrySvc, err := ac.kubeClient.CoreV1().Services("default").Get("docker-registry", metav1.GetOptions{})
+		registrySvc, err := util.GetService(ac.kubeClient, "default", "docker-registry")
 		if err != nil {
 			log.Errorf("unable to get docker-registry service in default namespace due to %+v", err)
 		} else {
@@ -163,9 +204,9 @@ func (ac *Creater) addRegistryAuth(opsSightSpec *v1.OpsSightSpec) {
 }
 
 func (ac *Creater) postDeploy(opssight *SpecConfig, namespace string) error {
+	// Need to add the perceptor-scanner service account to the privelged scc
 	if ac.osSecurityClient != nil {
-		// Need to add the perceptor-scanner service account to the privelged scc
-		scc, err := ac.osSecurityClient.SecurityContextConstraints().Get("privileged", metav1.GetOptions{})
+		scc, err := util.GetOpenShiftSecurityConstraint(ac.osSecurityClient, "privileged")
 		if err != nil {
 			return fmt.Errorf("failed to get scc privileged: %v", err)
 		}
