@@ -33,14 +33,14 @@ import (
 )
 
 // InitDatabase will init the database
-func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword string, postgresPassword string) {
+func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword string, postgresPassword string) error {
 	databaseName := "postgres"
 	hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
 	db, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	defer db.Close()
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
-		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
+		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
 	execPostGresDBStatements(db, adminPassword, userPassword)
 
@@ -49,7 +49,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	defer db.Close()
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
-		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
+		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
 	execBdsHubDBStatements(db)
 
@@ -58,7 +58,7 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	defer db.Close()
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
-		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
+		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
 	execBdsHubReportDBStatements(db)
 
@@ -67,9 +67,10 @@ func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword stri
 	defer db.Close()
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
-		log.Errorf("Unable to open database connection for %s database in the host %s due to %+v\n", databaseName, hostName, err)
+		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
 	execBdioDBStatements(db)
+	return nil
 }
 
 // OpenDatabaseConnection will open the database connection
@@ -80,7 +81,9 @@ func OpenDatabaseConnection(hostName string, dbName string, user string, passwor
 	dsn := fmt.Sprintf("host=%s dbname=%s user=%s password=%s sslmode=disable connect_timeout=10", hostName, dbName, user, password)
 	db, err := sql.Open(sqlType, dsn)
 	//defer db.Close()
-	log.Debug("connected to database ")
+	if err == nil {
+		log.Debug("connected to database ")
+	}
 	return db, err
 }
 

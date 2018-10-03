@@ -172,7 +172,11 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	util.ValidatePodsAreRunning(hc.KubeClient, pods)
 
 	if strings.EqualFold(createHub.DbPrototype, "empty") {
-		InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
+		err := InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
+		if err != nil {
+			log.Errorf("%v: error: %+v", createHub.Namespace, err)
+			return "", "", true, fmt.Errorf("%v: error: %+v", createHub.Namespace, err)
+		}
 	}
 
 	// Create all hub deployments
@@ -248,21 +252,39 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	log.Infof("hub Ip address: %s", ipAddress)
 
 	go func() {
-		checks := 0
+		var checks int32
 		for {
-			log.Infof("%v: Waiting five minutes before running repair check.", createHub.Namespace)
-			time.Sleep(5 * time.Minute) // periodically b/c i dont know how to make this into a controller.
+			log.Infof("%v: Waiting 3 minutes before running repair check.", createHub.Namespace)
+			time.Sleep(time.Duration(3) * time.Minute) // i.e. hacky.  TODO make configurable.
 			log.Infof("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
 			// name == namespace (before the namespace is set, it might be empty, but name wont be)
 			hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
 			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, hc.Config.Namespace)
 
+			dbNeedsInitBecause := ""
+
+			log.Debugf("%v : Checking connection now...", createHub.Namespace)
 			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
-			if err != nil {
-				log.Warnf("[%v] Database connection check result: %+v.  Reinitializing it just to be safe. This is a UX improvment for dealing with postgres restarts on ephemeral instances.", createHub.Namespace, err)
-				InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
-			} else {
+			defer func() {
 				db.Close()
+			}()
+			log.Debugf("%v : Done checking [ error status == %v ] ...", createHub.Namespace, err)
+			if err != nil {
+				dbNeedsInitBecause = "couldnt connect !"
+			} else {
+				_, err := db.Query("SELECT * FROM USER")
+				if err != nil {
+					dbNeedsInitBecause = "couldnt select!"
+				}
+			}
+			if dbNeedsInitBecause != "" {
+				log.Warnf("%v: database needs init because (%v), ::: %v ", createHub.Namespace, dbNeedsInitBecause, err)
+				err := InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
+				if err != nil {
+					log.Errorf("%v: error: %+v", createHub.Namespace, err)
+				}
+			} else {
+				log.Debugf("%v Database connection and USER table query  succeeded, not fixing ", createHub.Namespace)
 			}
 			checks++
 		}
