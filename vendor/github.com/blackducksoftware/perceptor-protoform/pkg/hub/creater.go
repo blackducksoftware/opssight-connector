@@ -98,8 +98,9 @@ func (hc *Creater) DeleteHub(namespace string) {
 
 // GetDefaultPasswords returns admin,user,postgres passwords for db maintainance tasks.  Should only be used during
 // initialization, or for 'babysitting' ephemeral hub instances (which might have postgres restarts)
-func GetDefaultPasswords(kubeClient *kubernetes.Clientset, ns string) (adminPassword string, userPassword string, postgresPassword string, err error) {
-	blackduckSecret, err := util.GetSecret(kubeClient, ns, "blackduck-secret")
+// MAKE SURE YOU SEND THE NAMESPACE OF THE SECRET SOURCE (operator), NOT OF THE new hub  THAT YOUR TRYING TO CREATE !
+func GetDefaultPasswords(kubeClient *kubernetes.Clientset, nsOfSecretHolder string) (adminPassword string, userPassword string, postgresPassword string, err error) {
+	blackduckSecret, err := util.GetSecret(kubeClient, nsOfSecretHolder, "blackduck-secret")
 	if err != nil {
 		log.Infof("warning: You need to first create a 'blackduck-secret' in this namespace with ADMIN_PASSWORD, USER_PASSWORD, POSTGRES_PASSWORD")
 		return "", "", "", err
@@ -140,9 +141,9 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	var adminPassword, userPassword, postgresPassword string
 
 	for dbInitTry := 0; dbInitTry < math.MaxInt32; dbInitTry++ {
-		adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, createHub.Namespace)
+		// get the secret from the default operator namespace, then copy it into the hub namespace.
+		adminPassword, userPassword, postgresPassword, err = GetDefaultPasswords(hc.KubeClient, hc.Config.Namespace)
 		if err == nil {
-			InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
 			break
 		} else {
 			log.Infof("wasn't able to init database, sleeping 5 seconds.  try = %v", dbInitTry)
@@ -254,7 +255,7 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 			log.Infof("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
 			// name == namespace (before the namespace is set, it might be empty, but name wont be)
 			hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
-			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, createHub.Namespace)
+			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, hc.Config.Namespace)
 
 			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
 			if err != nil {

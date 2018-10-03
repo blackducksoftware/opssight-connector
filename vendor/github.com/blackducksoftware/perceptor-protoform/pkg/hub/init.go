@@ -99,9 +99,9 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 	postgresVolumes = append(postgresVolumes, postgresEmptyDir, postgresInitConfigVol, postgresBootstrapConfigVol)
 
 	postgresVolumeMounts := []*horizonapi.VolumeMountConfig{}
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-persistent-vol", MountPath: "/var/lib/pgsql/data", Propagation: horizonapi.MountPropagationHostToContainer})
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-bootstrap-vol:pgbootstrap.sh", MountPath: "/usr/share/container-scripts/postgresql/pgbootstrap.sh", Propagation: horizonapi.MountPropagationHostToContainer})
-	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-init-vol:pginit.sh", MountPath: "/usr/share/container-scripts/postgresql/pginit.sh", Propagation: horizonapi.MountPropagationHostToContainer})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-persistent-vol", MountPath: "/var/lib/pgsql/data"})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-bootstrap-vol:pgbootstrap.sh", MountPath: "/usr/share/container-scripts/postgresql/pgbootstrap.sh"})
+	postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-init-vol:pginit.sh", MountPath: "/usr/share/container-scripts/postgresql/pginit.sh"})
 
 	if strings.EqualFold(createHub.BackupSupport, "Yes") || !strings.EqualFold(createHub.DbPrototype, "empty") {
 		// Postgres PVC
@@ -113,7 +113,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 
 		postgresBackupDir, _ := util.CreatePersistentVolumeClaimVolume("postgres-backup-vol", createHub.Namespace)
 		postgresVolumes = append(postgresVolumes, postgresBackupDir)
-		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationHostToContainer})
+		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: "/data/bds/backup"})
 	}
 
 	postgresExternalContainerConfig := &util.Container{
@@ -130,7 +130,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 		postgresInitContainerConfig := &util.Container{
 			ContainerConfig: &horizonapi.ContainerConfig{Name: "alpine", Image: "alpine", Command: []string{"sh", "-c", "chmod -cR 777 /data/bds/backup"}},
 			VolumeMounts: []*horizonapi.VolumeMountConfig{
-				{Name: "postgres-backup-vol", MountPath: "/data/bds/backup", Propagation: horizonapi.MountPropagationHostToContainer},
+				{Name: "postgres-backup-vol", MountPath: "/data/bds/backup"},
 			},
 			PortConfig: &horizonapi.PortConfig{ContainerPort: "3001", Protocol: horizonapi.ProtocolTCP},
 		}

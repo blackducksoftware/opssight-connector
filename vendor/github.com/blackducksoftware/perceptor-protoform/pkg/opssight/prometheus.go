@@ -81,14 +81,12 @@ func (p *SpecConfig) perceptorMetricsContainer() *components.Container {
 	})
 
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:        "data",
-		MountPath:   "/data",
-		Propagation: horizonapi.MountPropagationHostToContainer,
+		Name:      "data",
+		MountPath: "/data",
 	})
 	container.AddVolumeMount(horizonapi.VolumeMountConfig{
-		Name:        "prometheus",
-		MountPath:   "/etc/prometheus",
-		Propagation: horizonapi.MountPropagationHostToContainer,
+		Name:      "prometheus",
+		MountPath: "/etc/prometheus",
 	})
 
 	return container
