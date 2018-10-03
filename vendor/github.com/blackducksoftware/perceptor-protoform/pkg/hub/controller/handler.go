@@ -102,6 +102,9 @@ func (h *HubHandler) ObjectCreated(obj interface{}) {
 			}
 		}
 	}
+
+	log.Infof("Done w/ install, starting post-install nanny monitors...")
+
 }
 
 // ObjectDeleted will be called for delete hub events

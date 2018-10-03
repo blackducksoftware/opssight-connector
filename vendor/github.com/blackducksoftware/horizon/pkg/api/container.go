@@ -75,7 +75,7 @@ const (
 // VolumeMountConfig defines the configuration for a volume mount
 type VolumeMountConfig struct {
 	MountPath   string
-	Propagation MountPropagationType
+	Propagation *MountPropagationType
 	Name        string
 	SubPath     string
 	ReadOnly    *bool

@@ -140,15 +140,19 @@ func (c *Container) AddVolumeMount(config api.VolumeMountConfig) error {
 		Store:     store,
 	}
 
-	switch config.Propagation {
-	case api.MountPropagationHostToContainer:
-		vm.Propagation = types.MountPropagationHostToContainer
-	case api.MountPropagationBidirectional:
-		vm.Propagation = types.MountPropagationBidirectional
-	case api.MountPropagationNone:
-		vm.Propagation = types.MountPropagationNone
-	default:
-		vm.Propagation = types.MountPropagationNone
+	if config.Propagation != nil {
+		var propagation types.MountPropagation
+		switch *config.Propagation {
+		case api.MountPropagationHostToContainer:
+			propagation = types.MountPropagationHostToContainer
+			vm.Propagation = &propagation
+		case api.MountPropagationBidirectional:
+			propagation = types.MountPropagationBidirectional
+			vm.Propagation = &propagation
+		case api.MountPropagationNone:
+			propagation = types.MountPropagationNone
+			vm.Propagation = &propagation
+		}
 	}
 
 	c.obj.VolumeMounts = append(c.obj.VolumeMounts, vm)

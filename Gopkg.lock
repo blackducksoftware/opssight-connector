@@ -30,7 +30,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ffb750e60943b075542911dae35e38f9bdb406085a25a0f31e2ae3371b3c0353"
+  digest = "1:a2c80532e691d42b57a9a5ff54e6d3ef4a744cbb803a14f04569e60b2d25acf6"
   name = "github.com/blackducksoftware/horizon"
   packages = [
     "pkg/api",
@@ -40,7 +40,7 @@
     "pkg/util/error",
   ]
   pruneopts = "UT"
-  revision = "f3914d8d11fce7d08f05f4ef79c4fa89247c06a0"
+  revision = "7a126694af8a95f73c07a97d0ad4b98eed02acaf"
 
 [[projects]]
   branch = "master"
@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ee6fc353de04911d37a7d9d1a08219b63f860c3f1b8f5e0b6cadb7ce90e50635"
+  digest = "1:6f5c465cf7160cb9ba514095a6352b8af8f6462cc3f0f0a0a5ddf7391c99ce82"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "d2a051ed8872cae794930d3eefd531278c19f083"
+  revision = "2e655486128c136779d41147592b1108f34d4a81"
 
 [[projects]]
   branch = "master"
@@ -390,7 +390,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ede7a0b8eec00012366439d6df32c5451040d7df3c6d73930935271e35b89642"
+  digest = "1:27148ffe770950bb0344a5856d07c62aa2663197f4b20af4de9b3ea2d95eefb3"
   name = "github.com/koki/short"
   packages = [
     "converter/converters",
@@ -404,7 +404,7 @@
     "yaml",
   ]
   pruneopts = "UT"
-  revision = "7ed738736bf098e8f261bc058a498576e9c6fac6"
+  revision = "f2c42248d4f7ff37be4b82ed8a15ca3477a54e7a"
 
 [[projects]]
   branch = "master"
@@ -677,12 +677,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:dab83a1bbc7ad3d7a6ba1a1cc1760f25ac38cdf7d96a5cdd55cd915a4f5ceaf9"
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
   name = "github.com/spf13/pflag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9a97c102cda95a86cec2345a6f09f55a939babf5"
-  version = "v1.0.2"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
+  version = "v1.0.3"
 
 [[projects]]
   digest = "1:214775c11fd26da94a100111a62daa25339198a4f9c57cb4aab352da889f5b93"
@@ -710,7 +710,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:509ce30757d23776114ad488d5e4967803bdd6e184a8e755c143901834c6ac14"
+  digest = "1:79eeb81df0131bdf163bfed850d36658edc9101679cf0882accf5281f7bb3cc8"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -724,11 +724,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "4dfa2610cdf3b287375bbba5b8f2a14d3b01d8de"
+  revision = "f5e5bdd778241bfefa8627f7124c39cd6ad8d74f"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3d33be1a6a410e197cd6aff9322a7313667514e8087f3e3eed6e620a08127bc"
+  digest = "1:677bb7d40659faba9cb5a1a19c6f6a4c6ead0bf3bcb5f657c43d5c2367e768e3"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -737,7 +737,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "e4b3c5e9061176387e7cea65e4dc5853801f3fb7"
+  revision = "af653ce8b74f808d092db8ca9741fbb63d2a469d"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

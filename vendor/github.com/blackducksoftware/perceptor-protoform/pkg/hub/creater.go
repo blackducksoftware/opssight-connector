@@ -23,6 +23,7 @@ package hub
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -95,6 +96,22 @@ func (hc *Creater) DeleteHub(namespace string) {
 	}
 }
 
+// GetDefaultPasswords returns admin,user,postgres passwords for db maintainance tasks.  Should only be used during
+// initialization, or for 'babysitting' ephemeral hub instances (which might have postgres restarts)
+func GetDefaultPasswords(kubeClient *kubernetes.Clientset, ns string) (adminPassword string, userPassword string, postgresPassword string, err error) {
+	blackduckSecret, err := util.GetSecret(kubeClient, ns, "blackduck-secret")
+	if err != nil {
+		log.Infof("warning: You need to first create a 'blackduck-secret' in this namespace with ADMIN_PASSWORD, USER_PASSWORD, POSTGRES_PASSWORD")
+		return "", "", "", err
+	}
+	adminPassword = string(blackduckSecret.Data["ADMIN_PASSWORD"])
+	userPassword = string(blackduckSecret.Data["USER_PASSWORD"])
+	postgresPassword = string(blackduckSecret.Data["POSTGRES_PASSWORD"])
+
+	// default named return
+	return adminPassword, userPassword, postgresPassword, err
+}
+
 // CreateHub will create the Black Duck Hub
 func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error) {
 	log.Debugf("Create Hub details for %s: %+v", createHub.Namespace, createHub)
@@ -121,17 +138,16 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	}
 
 	var adminPassword, userPassword, postgresPassword string
-	for {
-		blackduckSecret, err := util.GetSecret(hc.KubeClient, hc.Config.Namespace, "blackduck-secret")
-		if err != nil {
-			log.Infof("Aborting: You need to first create a 'blackduck-secret' in this namespace with ADMIN_PASSWORD,USER_PASSWORD,POSTGRES_PASSWORD and retry")
-		} else {
-			adminPassword = string(blackduckSecret.Data["ADMIN_PASSWORD"])
-			userPassword = string(blackduckSecret.Data["USER_PASSWORD"])
-			postgresPassword = string(blackduckSecret.Data["POSTGRES_PASSWORD"])
+
+	for dbInitTry := 0; dbInitTry < math.MaxInt32; dbInitTry++ {
+		adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, createHub.Namespace)
+		if err == nil {
+			InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
 			break
+		} else {
+			log.Infof("wasn't able to init database, sleeping 5 seconds.  try = %v", dbInitTry)
+			time.Sleep(5 * time.Second)
 		}
-		time.Sleep(5 * time.Second)
 	}
 
 	log.Debugf("Before init: %+v", &createHub)
@@ -153,7 +169,7 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	}
 	// Validate all pods are in running state
 	util.ValidatePodsAreRunning(hc.KubeClient, pods)
-	// Initialize the hub database
+
 	if strings.EqualFold(createHub.DbPrototype, "empty") {
 		InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
 	}
@@ -229,6 +245,28 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 		}
 	}
 	log.Infof("hub Ip address: %s", ipAddress)
+
+	go func() {
+		checks := 0
+		for {
+			log.Infof("%v: Waiting five minutes before running repair check.", createHub.Namespace)
+			time.Sleep(5 * time.Minute) // periodically b/c i dont know how to make this into a controller.
+			log.Infof("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
+			// name == namespace (before the namespace is set, it might be empty, but name wont be)
+			hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
+			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, createHub.Namespace)
+
+			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
+			if err != nil {
+				log.Warnf("[%v] Database connection check result: %+v.  Reinitializing it just to be safe. This is a UX improvment for dealing with postgres restarts on ephemeral instances.", createHub.Namespace, err)
+				InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
+			} else {
+				db.Close()
+			}
+			checks++
+		}
+	}()
+
 	return ipAddress, pvcVolumeName, false, nil
 }
 
