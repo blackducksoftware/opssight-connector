@@ -91,7 +91,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d1ac8a153ae7ceb83835ea7082a8e17429f6ee9b5de299d3c4c1f9dd5c75934f"
+  digest = "1:22c4d0bf1f8f3148be0dd030ff791cbfd328dec83ef86d304c8f58304a163de1"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "87a988c808b47862394dfa9a4969dd01f4cff308"
+  revision = "a7c8a5c21fd15610d052431c74ecec40187480e9"
 
 [[projects]]
   branch = "master"
@@ -630,7 +630,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ef1dd9945e58ee9b635273d28c0ef3fa3742a7dedc038ebe207fd63e6ce000ef"
+  digest = "1:dc6a768da2b7282fc62f87421c0587660d65fe0e31c41ab86259c21d9baeae47"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -639,7 +639,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
+  revision = "6bfc2c70c4ee6da6946888bb96dec33f825df32b"
 
 [[projects]]
   digest = "1:dc2d85c13ac22c22a1f3170a41a8e1b897fa05134aaf533f16df44f66a25b4a1"
@@ -728,7 +728,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:677bb7d40659faba9cb5a1a19c6f6a4c6ead0bf3bcb5f657c43d5c2367e768e3"
+  digest = "1:a43b711ed2dc637591d38701fd7889b60aa7cbdc0e5b0e382500b5d5424e22ef"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -737,7 +737,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "af653ce8b74f808d092db8ca9741fbb63d2a469d"
+  revision = "8469e314837c2e2471561de5c47bbf8bfd0d9099"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"
