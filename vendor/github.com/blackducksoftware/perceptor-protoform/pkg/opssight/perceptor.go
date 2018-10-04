@@ -178,7 +178,5 @@ func (p *SpecConfig) PerceptorSecret() *components.Secret {
 		Type:      horizonapi.SecretTypeOpaque,
 	}
 	secret := components.NewSecret(secretConfig)
-	secret.AddData(map[string][]byte{"HubUserPassword": []byte(p.config.HubUserPassword)})
-
 	return secret
 }

@@ -23,6 +23,7 @@ package opssight
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -64,15 +65,16 @@ func (ac *Creater) DeleteOpsSight(namespace string) error {
 		return errors.Annotatef(err, "unable to find namespace %s", namespace)
 	}
 
-	deployments, err := util.GetAllDeploymentsForNamespace(ac.kubeClient, namespace)
+	rcs, err := util.GetAllReplicationControllersForNamespace(ac.kubeClient, namespace)
 	if err != nil {
 		return errors.Annotatef(err, "unable to find deployments in %s", namespace)
 	}
 
 	var downstream bool
-	for _, deployment := range deployments.Items {
-		if strings.Contains(deployment.Name, "opssight") {
+	for _, rc := range rcs.Items {
+		if strings.Contains(rc.Name, "opssight") {
 			downstream = true
+			break
 		}
 	}
 	// Delete the namespace
@@ -139,6 +141,30 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 	if err != nil {
 		return errors.Annotatef(err, "unable to get opssight components for %s", createOpsSight.Namespace)
 	}
+
+	// setting up hub password in perceptor secret
+	if !ac.config.DryRun {
+		var hubPassword string
+		var err error
+		for dbInitTry := 0; dbInitTry < math.MaxInt32; dbInitTry++ {
+			// get the secret from the default operator namespace, then copy it into the hub namespace.
+			hubPassword, err = GetDefaultPasswords(ac.kubeClient, ac.config.Namespace)
+			if err == nil {
+				break
+			} else {
+				log.Infof("wasn't able to get hub password, sleeping 5 seconds.  try = %v", dbInitTry)
+				time.Sleep(5 * time.Second)
+			}
+		}
+
+		for _, secret := range components.Secrets {
+			if strings.EqualFold(secret.GetName(), createOpsSight.SecretName) {
+				secret.AddData(map[string][]byte{"HubUserPassword": []byte(hubPassword)})
+				break
+			}
+		}
+	}
+
 	deployer, err := util.NewDeployer(ac.kubeConfig)
 	if err != nil {
 		return errors.Annotatef(err, "unable to get deployer object for %s", createOpsSight.Namespace)
@@ -165,6 +191,21 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 	}
 
 	return nil
+}
+
+// GetDefaultPasswords returns admin,user,postgres passwords for db maintainance tasks.  Should only be used during
+// initialization, or for 'babysitting' ephemeral hub instances (which might have postgres restarts)
+// MAKE SURE YOU SEND THE NAMESPACE OF THE SECRET SOURCE (operator), NOT OF THE new hub  THAT YOUR TRYING TO CREATE !
+func GetDefaultPasswords(kubeClient *kubernetes.Clientset, nsOfSecretHolder string) (hubPassword string, err error) {
+	blackduckSecret, err := util.GetSecret(kubeClient, nsOfSecretHolder, "blackduck-secret")
+	if err != nil {
+		log.Infof("warning: You need to first create a 'blackduck-secret' in this namespace with HUB_PASSWORD")
+		return "", err
+	}
+	hubPassword = string(blackduckSecret.Data["HUB_PASSWORD"])
+
+	// default named return
+	return hubPassword, err
 }
 
 func (ac *Creater) addRegistryAuth(opsSightSpec *v1.OpsSightSpec) {
