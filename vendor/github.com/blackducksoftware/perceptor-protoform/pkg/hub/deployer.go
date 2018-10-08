@@ -64,11 +64,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-cfssl", MountPath: "/etc/cfssl"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: cfsslPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	cfssl := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "cfssl", Replicas: util.IntToInt32(1)}, "",
+	cfssl := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "cfssl", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{cfsslContainerConfig}, []*components.Volume{cfsslEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("cfssl : %v\n", cfssl.GetObj())
-	deployer.AddDeployment(cfssl)
+	deployer.AddReplicationController(cfssl)
 
 	// webserver
 	// webServerGCEPersistentDiskVol := CreateGCEPersistentDiskVolume("dir-webserver", fmt.Sprintf("%s-%s", "webserver-disk", createHub.Namespace), "ext4")
@@ -96,11 +96,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webserverPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	webserver := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webserver", Replicas: util.IntToInt32(1)}, createHub.Namespace,
+	webserver := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webserver", Replicas: util.IntToInt32(1)}, createHub.Namespace,
 		[]*util.Container{webServerContainerConfig}, []*components.Volume{webServerEmptyDir, webServerSecretVol}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("webserver : %v\n", webserver.GetObj())
-	deployer.AddDeployment(webserver)
+	deployer.AddReplicationController(webserver)
 
 	// documentation
 	documentationContainerConfig := &util.Container{
@@ -109,10 +109,10 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs: hubConfigEnv,
 		PortConfig: &horizonapi.PortConfig{ContainerPort: documentationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	documentation := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "documentation", Replicas: util.IntToInt32(1)}, "",
+	documentation := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "documentation", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{documentationContainerConfig}, []*components.Volume{}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("documentation : %v\n", documentation.GetObj())
-	deployer.AddDeployment(documentation)
+	deployer.AddReplicationController(documentation)
 
 	// solr
 	// solrGCEPersistentDiskVol := CreateGCEPersistentDiskVolume("dir-solr", fmt.Sprintf("%s-%s", "solr-disk", createHub.Namespace), "ext4")
@@ -124,11 +124,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-solr", MountPath: "/opt/blackduck/hub/solr/cores.data"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: solrPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	solr := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "solr", Replicas: util.IntToInt32(1)}, "",
+	solr := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "solr", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{solrContainerConfig}, []*components.Volume{solrEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("solr : %v\n", solr.GetObj())
-	deployer.AddDeployment(solr)
+	deployer.AddReplicationController(solr)
 
 	// registration
 	// registrationGCEPersistentDiskVol := CreateGCEPersistentDiskVolume("dir-registration", fmt.Sprintf("%s-%s", "registration-disk", createHub.Namespace), "ext4")
@@ -140,11 +140,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-registration", MountPath: "/opt/blackduck/hub/hub-registration/config"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: registrationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	registration := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "registration", Replicas: util.IntToInt32(1)}, "",
+	registration := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "registration", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{registrationContainerConfig}, []*components.Volume{registrationEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("registration : %v\n", registration.GetObj())
-	deployer.AddDeployment(registration)
+	deployer.AddReplicationController(registration)
 
 	// zookeeper
 	zookeeperEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-zookeeper")
@@ -155,10 +155,10 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-zookeeper", MountPath: "/opt/blackduck/hub/logs"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: zookeeperPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	zookeeper := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "zookeeper", Replicas: util.IntToInt32(1)}, "",
+	zookeeper := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "zookeeper", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{zookeeperContainerConfig}, []*components.Volume{zookeeperEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("zookeeper : %v\n", zookeeper.GetObj())
-	deployer.AddDeployment(zookeeper)
+	deployer.AddReplicationController(zookeeper)
 
 	// jobRunner
 	jobRunnerEnvs := allConfigEnv
@@ -171,11 +171,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: jobRunnerPort, Protocol: horizonapi.ProtocolTCP},
 	}
 
-	jobRunner := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "jobrunner", Replicas: hubContainerFlavor.JobRunnerReplicas}, "",
+	jobRunner := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "jobrunner", Replicas: hubContainerFlavor.JobRunnerReplicas}, "",
 		[]*util.Container{jobRunnerContainerConfig}, []*components.Volume{dbSecretVolume, dbEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("jobRunner : %v\n", jobRunner.GetObj())
-	deployer.AddDeployment(jobRunner)
+	deployer.AddReplicationController(jobRunner)
 
 	// hub-scan
 	scannerEnvs := allConfigEnv
@@ -190,10 +190,10 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "dir-scan", MountPath: "/opt/blackduck/hub/hub-scan/security"}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: scannerPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	hubScan := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-scan", Replicas: hubContainerFlavor.ScanReplicas}, "",
+	hubScan := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "hub-scan", Replicas: hubContainerFlavor.ScanReplicas}, "",
 		[]*util.Container{hubScanContainerConfig}, []*components.Volume{hubScanEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("hubScan : %v\n", hubScan.GetObj())
-	deployer.AddDeployment(hubScan)
+	deployer.AddReplicationController(hubScan)
 
 	// hub-authentication
 	authEnvs := allConfigEnv
@@ -209,11 +209,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "dir-authentication", MountPath: "/opt/blackduck/hub/hub-authentication/security"}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: authenticationPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	hubAuth := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "hub-authentication", Replicas: util.IntToInt32(1)}, "",
+	hubAuth := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "hub-authentication", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{hubAuthContainerConfig}, []*components.Volume{hubAuthEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{},
 		[]horizonapi.AffinityConfig{})
 	// log.Infof("hubAuth : %v\n", hubAuthc.GetObj())
-	deployer.AddDeployment(hubAuth)
+	deployer.AddReplicationController(hubAuth)
 
 	// webapp-logstash
 	webappEnvs := allConfigEnv
@@ -239,11 +239,11 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-logstash", MountPath: "/var/lib/logstash/data"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: logstashPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	webappLogstash := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "webapp-logstash", Replicas: util.IntToInt32(1)},
+	webappLogstash := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webapp-logstash", Replicas: util.IntToInt32(1)},
 		"", []*util.Container{webappContainerConfig, logstashContainerConfig}, []*components.Volume{webappEmptyDir, logstashEmptyDir, dbSecretVolume, dbEmptyDir},
 		[]*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("webappLogstash : %v\n", webappLogstashc.GetObj())
-	deployer.AddDeployment(webappLogstash)
+	deployer.AddReplicationController(webappLogstash)
 
 	deployer.AddService(util.CreateService("cfssl", "cfssl", createHub.Namespace, cfsslPort, cfsslPort, horizonapi.ClusterIPServiceTypeDefault))
 	deployer.AddService(util.CreateService("zookeeper", "zookeeper", createHub.Namespace, zookeeperPort, zookeeperPort, horizonapi.ClusterIPServiceTypeDefault))

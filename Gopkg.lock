@@ -54,7 +54,6 @@
   revision = "940138f994024143ee604ff0821f08ed2b597f9c"
 
 [[projects]]
-  branch = "master"
   digest = "1:728fc3f561aedeb9a07f86d8cf7fa80ea0fab9874d89ccac6fb54e20fa0211bb"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
@@ -71,10 +70,10 @@
     "pkg/utils",
   ]
   pruneopts = "UT"
-  revision = "73dec2003d70d2c86b614613b704653870ffda5b"
+  revision = "5f9a95322fba536b536852971ccdce19f7f1ace0"
+  version = "1.2.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:60718bb0f843a354334a81a8f2b8fdfa833e4e8897b15ea1d5d6a44c1c50ec24"
   name = "github.com/blackducksoftware/perceptor"
   packages = [
@@ -88,10 +87,10 @@
   ]
   pruneopts = "UT"
   revision = "d1e2787f9c051609eb54c1f638a0b92bc5a3941b"
+  version = "v2.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:22c4d0bf1f8f3148be0dd030ff791cbfd328dec83ef86d304c8f58304a163de1"
+  digest = "1:259b7c58f343530c6f3231469824bd29d14551adcf18e8fb6ced35347b1a4c82"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,10 +135,10 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "a7c8a5c21fd15610d052431c74ecec40187480e9"
+  revision = "cd38c897da1886bb2c00a7feafa0b0af6af73ad7"
+  version = "3.1.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:e90d14995b8f6f50def3278905d9d51598fbe379ca1c96db414ae804f1279fed"
   name = "github.com/blackducksoftware/perceptor-scanner"
   packages = [
@@ -150,10 +149,11 @@
     "pkg/scanner",
   ]
   pruneopts = "UT"
-  revision = "38f9f66413a1d908ab003e9746415d1952f06b82"
+  revision = "c4f8b4232a8bf946b7494ccd3bcacbea5dd79a21"
+  version = "v2.1.0"
 
 [[projects]]
-  branch = "master"
+  branch = "rc-2.0.2"
   digest = "1:69db0fd16edd73d1aa6668ae767f0d458e9bedb3db9a0908e5d80cbee4617797"
   name = "github.com/blackducksoftware/perceptor-skyfire"
   packages = [
@@ -163,7 +163,7 @@
     "pkg/report",
   ]
   pruneopts = "UT"
-  revision = "1a669d8d41342378899b1d89a6fb0d162ade2baf"
+  revision = "89524893a6e4ea2b680b673490a44b607d85d334"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -415,12 +415,12 @@
   revision = "6b997eb5e2cadc3ba8649b3c9958644057bf3ddf"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f44d34fda864bed6d6c71514cd40b2ee097e6e67f745d5d014113e1faa5af8b7"
+  digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b729f2633dfe35f4d1d8a32385f6685610ce1cb5"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
@@ -474,12 +474,12 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:e32dfc6abff6a3633ef4d9a1022fd707c8ef26f1e1e8f855dc58dc415ce7c8f3"
+  digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "UT"
-  revision = "fe40af7a9c397fa3ddba203c38a5042c5d0475ad"
-  version = "v1.1.1"
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
+  version = "v1.1.2"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -630,7 +630,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dc6a768da2b7282fc62f87421c0587660d65fe0e31c41ab86259c21d9baeae47"
+  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -639,7 +639,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "6bfc2c70c4ee6da6946888bb96dec33f825df32b"
+  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
 
 [[projects]]
   digest = "1:dc2d85c13ac22c22a1f3170a41a8e1b897fa05134aaf533f16df44f66a25b4a1"
@@ -724,11 +724,11 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "f5e5bdd778241bfefa8627f7124c39cd6ad8d74f"
+  revision = "146acd28ed5894421fb5aac80ca93bc1b1f46f87"
 
 [[projects]]
   branch = "master"
-  digest = "1:a43b711ed2dc637591d38701fd7889b60aa7cbdc0e5b0e382500b5d5424e22ef"
+  digest = "1:6e3a113411bba5d0ae2e2de34177f303ff0a312a5960effb0225033ff2aea06f"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -737,7 +737,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "8469e314837c2e2471561de5c47bbf8bfd0d9099"
+  revision = "4497e2df6f9e69048a54498c7affbbec3294ad47"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

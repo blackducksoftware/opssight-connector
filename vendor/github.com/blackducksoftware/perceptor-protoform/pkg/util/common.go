@@ -206,6 +206,24 @@ func CreateDeploymentFromContainer(deploymentConfig *horizonapi.DeploymentConfig
 	return deployment
 }
 
+// CreateReplicationController will create a replication controller
+func CreateReplicationController(replicationControllerConfig *horizonapi.ReplicationControllerConfig, pod *components.Pod) *components.ReplicationController {
+	rc := components.NewReplicationController(*replicationControllerConfig)
+	rc.AddLabelSelectors(map[string]string{
+		"app":  replicationControllerConfig.Name,
+		"tier": replicationControllerConfig.Name,
+	})
+	rc.AddPod(pod)
+	return rc
+}
+
+// CreateReplicationControllerFromContainer will create a replication controller with multiple containers inside a pod
+func CreateReplicationControllerFromContainer(replicationControllerConfig *horizonapi.ReplicationControllerConfig, serviceAccount string, containers []*Container, volumes []*components.Volume, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig) *components.ReplicationController {
+	pod := CreatePod(replicationControllerConfig.Name, serviceAccount, volumes, containers, initContainers, affinityConfigs)
+	rc := CreateReplicationController(replicationControllerConfig, pod)
+	return rc
+}
+
 // CreateService will create the service
 func CreateService(name string, label string, namespace string, port string, target string, serviceType horizonapi.ClusterIPServiceType) *components.Service {
 	svcConfig := horizonapi.ServiceConfig{
