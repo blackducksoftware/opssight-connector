@@ -137,10 +137,10 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 		initContainers = append(initContainers, postgresInitContainerConfig)
 	}
 
-	postgres := util.CreateDeploymentFromContainer(&horizonapi.DeploymentConfig{Namespace: createHub.Namespace, Name: "postgres", Replicas: util.IntToInt32(1)}, "",
+	postgres := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "postgres", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{postgresExternalContainerConfig}, postgresVolumes, initContainers, []horizonapi.AffinityConfig{})
 	// log.Infof("postgres : %+v\n", postgres.GetObj())
-	deployer.AddDeployment(postgres)
+	deployer.AddReplicationController(postgres)
 	deployer.AddService(util.CreateService("postgres", "postgres", createHub.Namespace, postgresPort, postgresPort, horizonapi.ClusterIPServiceTypeDefault))
 	// deployer.AddService(util.CreateService("postgres-exposed", "postgres", createHub.Spec.Namespace, postgresPort, postgresPort, horizonapi.ClusterIPServiceTypeLoadBalancer))
 	return nil
