@@ -4,6 +4,8 @@ The Black Duck OpsSight Connector provides software composition analysis of open
 
 Pre-existing images and pods are automatically discovered, scanned and monitored. When a new image or pod is discovered, the OpsSight Connector kicks off a scan engine container to perform the scan and upload the results to your Black Duck instance.
 
+For more information, click the ["Wiki" tab](https://github.com/blackducksoftware/opssight-connector/wiki).
+
 ## Getting involved 
 
 We expect most upstream contributions to come to the blackducksoftware perceptor/perceiver/perceptor-scan/perceptor-protoform projects.
@@ -12,7 +14,7 @@ This project is under active development. We welcome all contributions, most of 
 
 ## Release Status
 
-See the releases tab for the latest OpsSight releases. If you identify an issue, please raise it, or better yet propose a solution.
+See the releases tab for the latest OpsSight releases. Alternatively, check out the [Release Notes](https://github.com/blackducksoftware/opssight-connector/wiki/Release-Notes).
 
 ## Developer notes
 
