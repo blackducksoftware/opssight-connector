@@ -47,7 +47,8 @@ spec:
   imagePerceiver: false # Enable if using OpenShift (not needed in Kubernetes); default false
   podPerceiver: true  # Enable if there are Pods that need to be scanned; default true
   metrics: true  # Enable for prometheus metrics; default true
-
+  
+  # Should be passed like: e.g "blackduck.perceiver.scan=true"
   #namespaceFilter: "" # Enable if namespace filter is required; use the same labels in the namespaces that need to be scanned
 
   # CPU and memory configurations
