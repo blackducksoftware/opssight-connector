@@ -58,6 +58,7 @@ type HubSpec struct {
 	HubType         string     `json:"hubType"`
 	State           string     `json:"state"`
 	Environs        []Environs `json:"environs"`
+	ImagePrefix     string     `json:"imagePrefix"`
 }
 
 // Environs will hold the list of Environment variables
