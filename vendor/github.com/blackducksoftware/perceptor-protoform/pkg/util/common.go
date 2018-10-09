@@ -390,37 +390,51 @@ func CreatePersistentVolumeClaim(name string, namespace string, pvcClaimSize str
 }
 
 // ValidatePodsAreRunningInNamespace will validate whether the pods are running in a given namespace
-func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string) {
+func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string) error {
 	pods, err := GetAllPodsForNamespace(clientset, namespace)
 	if err != nil {
-		log.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
+		return fmt.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
 	}
-	// Check whether all pods are running
-	for _, podList := range pods.Items {
-		for {
-			pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
-			if strings.EqualFold(string(pod.Status.Phase), "Running") || strings.EqualFold(pod.Name, "") {
-				break
-			}
-			log.Infof("pod %s is in %s status... waiting 10 seconds", pod.Name, string(pod.Status.Phase))
-			time.Sleep(10 * time.Second)
-		}
+
+	allPodExist := ValidatePodsAreRunning(clientset, pods)
+	if !allPodExist {
+		ValidatePodsAreRunningInNamespace(clientset, namespace)
 	}
+	return nil
 }
 
 // ValidatePodsAreRunning will validate whether the pods are running
-func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodList) {
+func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodList) bool {
 	// Check whether all pods are running
 	for _, podList := range pods.Items {
 		for {
 			pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
-			if strings.EqualFold(string(pod.Status.Phase), "Running") || strings.EqualFold(pod.Name, "") {
+			if strings.EqualFold(pod.Name, "") {
+				log.Infof("pod %s is restarted in %s..... checking all pod status again...", podList.Name, podList.Namespace)
+				return false
+			}
+			if strings.EqualFold(string(pod.Status.Phase), "Running") {
 				break
 			}
 			log.Infof("pod %s is in %s status... waiting 10 seconds", pod.Name, string(pod.Status.Phase))
 			time.Sleep(10 * time.Second)
 		}
 	}
+	return true
+}
+
+// FilterPodByNamePrefixInNamespace will filter the pod based on pod name prefix from a list a pods in a given namespace
+func FilterPodByNamePrefixInNamespace(clientset *kubernetes.Clientset, namespace string, prefix string) (*corev1.Pod, error) {
+	pods, err := GetAllPodsForNamespace(clientset, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
+	}
+
+	pod := FilterPodByNamePrefix(pods, prefix)
+	if pod != nil {
+		return pod, nil
+	}
+	return nil, fmt.Errorf("unable to find the pod with prefix %s", prefix)
 }
 
 // FilterPodByNamePrefix will filter the pod based on pod name prefix from a list a pods

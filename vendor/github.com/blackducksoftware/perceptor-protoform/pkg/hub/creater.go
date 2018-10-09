@@ -166,13 +166,12 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 		log.Errorf("deployments failed because %+v", err)
 	}
 	// time.Sleep(20 * time.Second)
-	// Get all pods corresponding to the hub namespace
-	pods, err := util.GetAllPodsForNamespace(hc.KubeClient, createHub.Namespace)
-	if err != nil {
-		return "", "", true, fmt.Errorf("unable to list the pods in namespace %s due to %+v", createHub.Namespace, err)
-	}
+
 	// Validate all pods are in running state
-	util.ValidatePodsAreRunning(hc.KubeClient, pods)
+	err = util.ValidatePodsAreRunningInNamespace(hc.KubeClient, createHub.Namespace)
+	if err != nil {
+		return "", "", true, err
+	}
 
 	if strings.EqualFold(createHub.DbPrototype, "empty") {
 		err := InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
@@ -198,17 +197,19 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 		return "", "", true, fmt.Errorf("unable to deploy the hub in %s due to %+v", createHub.Namespace, err)
 	}
 	time.Sleep(10 * time.Second)
-	// Get all pods corresponding to the hub namespace
-	pods, err = util.GetAllPodsForNamespace(hc.KubeClient, createHub.Namespace)
-	if err != nil {
-		return "", "", true, fmt.Errorf("unable to list the pods in namespace %s due to %+v", createHub.Namespace, err)
-	}
+
 	// Validate all pods are in running state
-	util.ValidatePodsAreRunning(hc.KubeClient, pods)
+	err = util.ValidatePodsAreRunningInNamespace(hc.KubeClient, createHub.Namespace)
+	if err != nil {
+		return "", "", true, err
+	}
 
 	// Filter the registration pod to auto register the hub using the registration key from the environment variable
-	registrationPod := util.FilterPodByNamePrefix(pods, "registration")
+	registrationPod, err := util.FilterPodByNamePrefixInNamespace(hc.KubeClient, createHub.Namespace, "registration")
 	log.Debugf("registration pod: %+v", registrationPod)
+	if err != nil {
+		return "", "", true, err
+	}
 	registrationKey := os.Getenv("REGISTRATION_KEY")
 	// log.Debugf("registration key: %s", registrationKey)
 
