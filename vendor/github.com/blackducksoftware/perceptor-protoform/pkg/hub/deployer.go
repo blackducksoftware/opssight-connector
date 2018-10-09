@@ -23,6 +23,7 @@ package hub
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
@@ -84,11 +85,12 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		}
 		time.Sleep(10 * time.Second)
 	}
+
 	webServerEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-webserver")
 	webServerSecretVol, _ := util.CreateSecretVolume("certificate", "blackduck-certificate", 0777)
 	webServerContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "webserver", Image: fmt.Sprintf("%s/%s/hub-nginx:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.HubVersion),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: ""},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: "", UID: util.IntToInt64(1000)},
 		EnvConfigs: hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
 			{Name: "dir-webserver", MountPath: "/opt/blackduck/hub/webserver/security"},
@@ -96,9 +98,9 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webserverPort, Protocol: horizonapi.ProtocolTCP},
 	}
-	webserver := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webserver", Replicas: util.IntToInt32(1)}, createHub.Namespace,
-		[]*util.Container{webServerContainerConfig}, []*components.Volume{webServerEmptyDir, webServerSecretVol}, []*util.Container{},
-		[]horizonapi.AffinityConfig{})
+	webserver := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webserver",
+		Replicas: util.IntToInt32(1)}, createHub.Namespace, []*util.Container{webServerContainerConfig}, []*components.Volume{webServerEmptyDir, webServerSecretVol},
+		[]*util.Container{}, []horizonapi.AffinityConfig{})
 	// log.Infof("webserver : %v\n", webserver.GetObj())
 	deployer.AddReplicationController(webserver)
 
@@ -257,4 +259,37 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	deployer.AddService(util.CreateService("scan", "hub-scan", createHub.Namespace, scannerPort, scannerPort, horizonapi.ClusterIPServiceTypeDefault))
 	deployer.AddService(util.CreateService("authentication", "hub-authentication", createHub.Namespace, authenticationPort, authenticationPort, horizonapi.ClusterIPServiceTypeDefault))
 	deployer.AddService(util.CreateService("registration", "registration", createHub.Namespace, registrationPort, registrationPort, horizonapi.ClusterIPServiceTypeDefault))
+}
+
+// addAnyUIDToServiceAccount adds the capability to run as 1000 for nginx or other special IDs.  For example, the binaryscanner
+// needs to run as root and we plan to add that into protoform in 2.1 / 3.0.
+func (hc *Creater) addAnyUIDToServiceAccount(createHub *v1.HubSpec) error {
+	if hc.osSecurityClient != nil {
+		log.Debugf("Adding anyuid securitycontextconstraint to the service account %s", createHub.Namespace)
+		scc, err := util.GetOpenShiftSecurityConstraint(hc.osSecurityClient, "anyuid")
+		if err != nil {
+			return fmt.Errorf("failed to get scc anyuid: %v", err)
+		}
+
+		serviceAccount := createHub.Namespace
+
+		// Only add the service account if it isn't already in the list of users for the privileged scc
+		exists := false
+		for _, user := range scc.Users {
+			if strings.Compare(user, serviceAccount) == 0 {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			scc.Users = append(scc.Users, serviceAccount)
+
+			_, err = hc.osSecurityClient.SecurityContextConstraints().Update(scc)
+			if err != nil {
+				return fmt.Errorf("failed to update scc anyuid: %v", err)
+			}
+		}
+	}
+	return nil
 }

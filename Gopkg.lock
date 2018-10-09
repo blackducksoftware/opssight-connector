@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:259b7c58f343530c6f3231469824bd29d14551adcf18e8fb6ced35347b1a4c82"
+  digest = "1:1fe156fec369f6f031c096284ab3977f97e67c61ce685a69c670b5d3ecd58947"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -135,7 +135,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "cd38c897da1886bb2c00a7feafa0b0af6af73ad7"
+  revision = "ccee51ec2561a6a036fc87c11beaa9d6fa34269c"
   version = "3.1.0"
 
 [[projects]]
@@ -642,12 +642,12 @@
   revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
 
 [[projects]]
-  digest = "1:dc2d85c13ac22c22a1f3170a41a8e1b897fa05134aaf533f16df44f66a25b4a1"
+  digest = "1:3f53e9e4dfbb664cd62940c9c4b65a2171c66acd0b7621a1a6b8e78513525a52"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a67f783a3814b8729bd2dac5780b5f78f8dbd64d"
-  version = "v1.1.0"
+  revision = "ad15b42461921f1fb3529b058c6786c6a45d5162"
+  version = "v1.1.1"
 
 [[projects]]
   digest = "1:6a4a11ba764a56d2758899ec6f3848d24698d48442ebce85ee7a3f63284526cd"

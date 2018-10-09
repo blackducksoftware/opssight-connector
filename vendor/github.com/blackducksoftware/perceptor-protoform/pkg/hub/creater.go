@@ -36,6 +36,7 @@ import (
 	"github.com/blackducksoftware/perceptor-protoform/pkg/model"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -45,16 +46,18 @@ import (
 
 // Creater will store the configuration to create the Hub
 type Creater struct {
-	Config      *model.Config
-	KubeConfig  *rest.Config
-	KubeClient  *kubernetes.Clientset
-	HubClient   *hubclientset.Clientset
-	routeClient *routeclient.RouteV1Client
+	Config           *model.Config
+	KubeConfig       *rest.Config
+	KubeClient       *kubernetes.Clientset
+	HubClient        *hubclientset.Clientset
+	osSecurityClient *securityclient.SecurityV1Client
+	routeClient      *routeclient.RouteV1Client
 }
 
 // NewCreater will instantiate the Creater
-func NewCreater(config *model.Config, kubeConfig *rest.Config, kubeClient *kubernetes.Clientset, hubClient *hubclientset.Clientset, routeClient *routeclient.RouteV1Client) *Creater {
-	return &Creater{Config: config, KubeConfig: kubeConfig, KubeClient: kubeClient, HubClient: hubClient, routeClient: routeClient}
+func NewCreater(config *model.Config, kubeConfig *rest.Config, kubeClient *kubernetes.Clientset, hubClient *hubclientset.Clientset,
+	osSecurityClient *securityclient.SecurityV1Client, routeClient *routeclient.RouteV1Client) *Creater {
+	return &Creater{Config: config, KubeConfig: kubeConfig, KubeClient: kubeClient, HubClient: hubClient, osSecurityClient: osSecurityClient, routeClient: routeClient}
 }
 
 // DeleteHub will delete the Black Duck Hub
@@ -179,6 +182,11 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 		}
 	}
 
+	err = hc.addAnyUIDToServiceAccount(createHub)
+	if err != nil {
+		log.Error(err)
+	}
+
 	// Create all hub deployments
 	deployer, _ = horizon.NewDeployer(hc.KubeConfig)
 	hc.createDeployer(deployer, createHub, hubContainerFlavor, allConfigEnv)
@@ -254,9 +262,9 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	go func() {
 		var checks int32
 		for {
-			log.Infof("%v: Waiting 3 minutes before running repair check.", createHub.Namespace)
+			log.Debugf("%v: Waiting 3 minutes before running repair check.", createHub.Namespace)
 			time.Sleep(time.Duration(3) * time.Minute) // i.e. hacky.  TODO make configurable.
-			log.Infof("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
+			log.Debugf("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
 			// name == namespace (before the namespace is set, it might be empty, but name wont be)
 			hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
 			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, hc.Config.Namespace)
@@ -265,9 +273,6 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 
 			log.Debugf("%v : Checking connection now...", createHub.Namespace)
 			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
-			defer func() {
-				db.Close()
-			}()
 			log.Debugf("%v : Done checking [ error status == %v ] ...", createHub.Namespace, err)
 			if err != nil {
 				dbNeedsInitBecause = "couldnt connect !"
@@ -277,6 +282,8 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 					dbNeedsInitBecause = "couldnt select!"
 				}
 			}
+			db.Close()
+
 			if dbNeedsInitBecause != "" {
 				log.Warnf("%v: database needs init because (%v), ::: %v ", createHub.Namespace, dbNeedsInitBecause, err)
 				err := InitDatabase(createHub, adminPassword, userPassword, postgresPassword)

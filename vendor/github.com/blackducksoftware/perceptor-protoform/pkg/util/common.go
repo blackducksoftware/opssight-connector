@@ -389,6 +389,25 @@ func CreatePersistentVolumeClaim(name string, namespace string, pvcClaimSize str
 	return postgresPVC, nil
 }
 
+// ValidatePodsAreRunningInNamespace will validate whether the pods are running in a given namespace
+func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string) {
+	pods, err := GetAllPodsForNamespace(clientset, namespace)
+	if err != nil {
+		log.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
+	}
+	// Check whether all pods are running
+	for _, podList := range pods.Items {
+		for {
+			pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
+			if strings.EqualFold(string(pod.Status.Phase), "Running") || strings.EqualFold(pod.Name, "") {
+				break
+			}
+			log.Infof("pod %s is in %s status... waiting 10 seconds", pod.Name, string(pod.Status.Phase))
+			time.Sleep(10 * time.Second)
+		}
+	}
+}
+
 // ValidatePodsAreRunning will validate whether the pods are running
 func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodList) {
 	// Check whether all pods are running
