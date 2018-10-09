@@ -113,6 +113,7 @@ func GetHubDefaultValue() *hubv1.HubSpec {
 		CertificateName: "default",
 		HubType:         "worker",
 		Environs:        []hubv1.Environs{},
+		ImagePrefix:     "hub",
 	}
 }
 
