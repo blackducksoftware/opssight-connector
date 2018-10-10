@@ -279,16 +279,16 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 
 			log.Debugf("%v : Checking connection now...", createHub.Namespace)
 			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
+			defer db.Close()
 			log.Debugf("%v : Done checking [ error status == %v ] ...", createHub.Namespace, err)
 			if err != nil {
 				dbNeedsInitBecause = "couldnt connect !"
 			} else {
-				_, err := db.Query("SELECT * FROM USER")
+				_, err := db.Exec("SELECT * FROM USER")
 				if err != nil {
 					dbNeedsInitBecause = "couldnt select!"
 				}
 			}
-			db.Close()
 
 			if dbNeedsInitBecause != "" {
 				log.Warnf("%v: database needs init because (%v), ::: %v ", createHub.Namespace, dbNeedsInitBecause, err)

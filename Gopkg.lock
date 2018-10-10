@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:1ffc8893a1d3f15a4728c02f27b2a7ce5ba7adbfab3611e4c60df0b0715e53d1"
+  digest = "1:a0b933b663958aed802488180579cf618917dc34af9a5cb6f13a8d76265d86dd"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -135,7 +135,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "eeb5815c58b9f4d3a8461473b7530dcef78b6cc9"
+  revision = "1d57bb887cc248509002a4b5d7da0f4576dbbb30"
   version = "3.1.0"
 
 [[projects]]
@@ -706,7 +706,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "e3636079e1a4c1f337f212cc5cd2aca108f6c900"
+  revision = "7c1a557ab941a71c619514f229f0b27ccb0c27cf"
 
 [[projects]]
   branch = "master"

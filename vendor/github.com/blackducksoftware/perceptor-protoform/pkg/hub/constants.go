@@ -28,7 +28,7 @@ const (
 	cfsslMemoryLimit           = "1G"
 	logstashMemoryLimit        = "1G"
 	registrationMemoryLimit    = "640M"
-	zookeeperMemoryLimit       = "384M"
+	zookeeperMemoryLimit       = "640M"
 	authenticationMemoryLimit  = "1024M"
 	authenticationHubMaxMemory = "512m"
 	documentationMemoryLimit   = "512M"
@@ -53,21 +53,21 @@ const (
 	postgresPort       = "5432"
 
 	// Small Flavor
-	smallWebServerMemoryLimit = "640M"
+	smallWebServerMemoryLimit = "1024M"
 
-	smallSolrMemoryLimit = "640M"
+	smallSolrMemoryLimit = "1024M"
 
 	smallWebappCPULimit     = "2"
 	smallWebappMemoryLimit  = "5120M"
 	smallWebappHubMaxMemory = "4096m"
 
 	smallScanReplicas     = 1
-	smallScanMemoryLimit  = "2560M"
-	smallScanHubMaxMemory = "2048m"
+	smallScanMemoryLimit  = "5120M"
+	smallScanHubMaxMemory = "4096m"
 
 	smallJobRunnerReplicas     = 1
-	smallJobRunnerMemoryLimit  = "4608M"
-	smallJobRunnerHubMaxMemory = "4096m"
+	smallJobRunnerMemoryLimit  = "7168M"
+	smallJobRunnerHubMaxMemory = "6144m"
 
 	smallPostgresCPULimit    = "1"
 	smallPostgresMemoryLimit = "4096M"
