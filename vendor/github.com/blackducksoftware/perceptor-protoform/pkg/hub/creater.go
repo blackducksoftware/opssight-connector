@@ -265,44 +265,6 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	}
 	log.Infof("hub Ip address: %s", ipAddress)
 
-	go func() {
-		var checks int32
-		for {
-			log.Debugf("%v: Waiting 3 minutes before running repair check.", createHub.Namespace)
-			time.Sleep(time.Duration(3) * time.Minute) // i.e. hacky.  TODO make configurable.
-			log.Debugf("%v: running postgres schema repair check # %v...", createHub.Namespace, checks)
-			// name == namespace (before the namespace is set, it might be empty, but name wont be)
-			hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
-			adminPassword, userPassword, postgresPassword, err := GetDefaultPasswords(hc.KubeClient, hc.Config.Namespace)
-
-			dbNeedsInitBecause := ""
-
-			log.Debugf("%v : Checking connection now...", createHub.Namespace)
-			db, err := OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
-			defer db.Close()
-			log.Debugf("%v : Done checking [ error status == %v ] ...", createHub.Namespace, err)
-			if err != nil {
-				dbNeedsInitBecause = "couldnt connect !"
-			} else {
-				_, err := db.Exec("SELECT * FROM USER")
-				if err != nil {
-					dbNeedsInitBecause = "couldnt select!"
-				}
-			}
-
-			if dbNeedsInitBecause != "" {
-				log.Warnf("%v: database needs init because (%v), ::: %v ", createHub.Namespace, dbNeedsInitBecause, err)
-				err := InitDatabase(createHub, adminPassword, userPassword, postgresPassword)
-				if err != nil {
-					log.Errorf("%v: error: %+v", createHub.Namespace, err)
-				}
-			} else {
-				log.Debugf("%v Database connection and USER table query  succeeded, not fixing ", createHub.Namespace)
-			}
-			checks++
-		}
-	}()
-
 	return ipAddress, pvcVolumeName, false, nil
 }
 

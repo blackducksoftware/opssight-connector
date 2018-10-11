@@ -45,6 +45,7 @@ import (
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api/hub/v1"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/hub"
+	"github.com/blackducksoftware/perceptor-protoform/pkg/hub/plugins"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/hub/webservice"
 
 	log "github.com/sirupsen/logrus"
@@ -167,6 +168,16 @@ func (c *Controller) Deploy() error {
 	}
 
 	time.Sleep(5 * time.Second)
+
+	// init postgres database updater
+	initDatabaseUpdater := plugins.InitDatabaseUpdater{
+		Config:     c.protoform.Config,
+		KubeClient: c.protoform.KubeClientSet,
+		HubClient:  c.protoform.customClientSet,
+		Hubs:       make(map[string]chan struct{}),
+	}
+	// call the run method to verify all hubs postgres and initialize the database if it restarts
+	go initDatabaseUpdater.Run(c.protoform.StopCh)
 
 	return err
 }

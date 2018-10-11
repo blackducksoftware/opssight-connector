@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:a0b933b663958aed802488180579cf618917dc34af9a5cb6f13a8d76265d86dd"
+  digest = "1:4c01c185431cf042e808601ff4fcdbfacb4613fe154a36e70682ea629723ce17"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -120,6 +120,7 @@
     "pkg/hub/client/informers/externalversions/internalinterfaces",
     "pkg/hub/client/listers/hub/v1",
     "pkg/hub/controller",
+    "pkg/hub/plugins",
     "pkg/hub/webservice",
     "pkg/model",
     "pkg/opssight",
@@ -135,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "1d57bb887cc248509002a4b5d7da0f4576dbbb30"
+  revision = "43dff884ace5a283098b5ed72f8e90954d3e7459"
   version = "3.1.0"
 
 [[projects]]
@@ -724,7 +725,7 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "146acd28ed5894421fb5aac80ca93bc1b1f46f87"
+  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
 
 [[projects]]
   branch = "master"
