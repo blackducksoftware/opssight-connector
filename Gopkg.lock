@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:4c01c185431cf042e808601ff4fcdbfacb4613fe154a36e70682ea629723ce17"
+  digest = "1:bbd53f8d4bd84c5bf7c36af5af8c840a61acb86785ace56371e1fc2f34cce0a6"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "43dff884ace5a283098b5ed72f8e90954d3e7459"
+  revision = "99645446d7610a54234eedf183d442c01ba84a20"
   version = "3.1.0"
 
 [[projects]]
@@ -729,7 +729,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6e3a113411bba5d0ae2e2de34177f303ff0a312a5960effb0225033ff2aea06f"
+  digest = "1:a6acf0921d19dfa06dff31950757e86c924abc9acd98b83ac0942a26ab9691f3"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -738,7 +738,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "4497e2df6f9e69048a54498c7affbbec3294ad47"
+  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

@@ -60,7 +60,7 @@ func (h *AlertHandler) ObjectCreated(obj interface{}) {
 		newSpec := alertv1.Spec
 		alertDefaultSpec := h.Defaults
 		err := mergo.Merge(&newSpec, alertDefaultSpec)
-		log.Debugf("merged alert details for %s: %+v", newSpec)
+		log.Debugf("merged alert details %+v", newSpec)
 		if err != nil {
 			log.Errorf("unable to merge the alert structs for %s due to %+v", alertv1.Name, err)
 			//Set spec/state  and status/state to started

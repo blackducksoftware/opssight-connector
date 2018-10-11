@@ -59,14 +59,16 @@ type OpsSightHandler struct {
 
 // ObjectCreated will be called for create opssight events
 func (h *OpsSightHandler) ObjectCreated(obj interface{}) {
+	recordEvent("objectCreated")
 	log.Debugf("objectCreated: %+v", obj)
 	opssightv1 := obj.(*opssight_v1.OpsSight)
 	if strings.EqualFold(opssightv1.Spec.State, "") {
 		newSpec := opssightv1.Spec
 		defaultSpec := h.Defaults
 		err := mergo.Merge(&newSpec, defaultSpec)
-		log.Debugf("merged opssight details for %s: %+v", newSpec)
+		log.Debugf("merged opssight details %+v", newSpec)
 		if err != nil {
+			recordError("unable to merge objects")
 			h.updateState("error", "error", err.Error(), opssightv1)
 		} else {
 			opssightv1.Spec = newSpec
@@ -77,11 +79,13 @@ func (h *OpsSightHandler) ObjectCreated(obj interface{}) {
 
 				err = opssightCreator.CreateOpsSight(&opssightv1.Spec)
 				if err != nil {
+					recordError("unable to create opssight")
 					log.Errorf("unable to create opssight %s due to %s", opssightv1.Name, err.Error())
 				}
 
 				opssightv1, err1 := util.GetOpsSight(h.OpsSightClientset, opssightv1.Name, opssightv1.Name)
 				if err1 != nil {
+					recordError("unable to get opssight")
 					log.Errorf("unable to get the opssight %s due to %+v", opssightv1.Name, err1)
 				} else {
 					if err != nil {
@@ -97,16 +101,19 @@ func (h *OpsSightHandler) ObjectCreated(obj interface{}) {
 
 // ObjectDeleted will be called for delete opssight events
 func (h *OpsSightHandler) ObjectDeleted(name string) {
+	recordEvent("objectDeleted")
 	log.Debugf("objectDeleted: %+v", name)
 	opssightCreator := opssight.NewCreater(h.Config, h.KubeConfig, h.Clientset, h.OpsSightClientset, h.OSSecurityClient, h.RouteClient)
 	err := opssightCreator.DeleteOpsSight(name)
 	if err != nil {
 		log.Errorf("unable to delete opssight: %v", err)
+		recordError("unable to delete opssight")
 	}
 }
 
 // ObjectUpdated will be called for update opssight events
 func (h *OpsSightHandler) ObjectUpdated(objOld, objNew interface{}) {
+	recordEvent("objectUpdated")
 	log.Debugf("objectUpdated: %+v", objNew)
 }
 
@@ -117,6 +124,7 @@ func (h *OpsSightHandler) updateState(specState string, statusState string, erro
 	opssight, err := h.updateOpsSightObject(opssight)
 	if err != nil {
 		log.Errorf("couldn't update the state of opssight object: %s", err.Error())
+		recordError("couldn't update the state of opssight object")
 	}
 	return opssight, err
 }

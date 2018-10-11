@@ -31,7 +31,6 @@ import (
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api/opssight/v1"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/model"
 	opssightclientset "github.com/blackducksoftware/perceptor-protoform/pkg/opssight/client/clientset/versioned"
-	"github.com/blackducksoftware/perceptor-protoform/pkg/opssight/plugins"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	"github.com/juju/errors"
 	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
@@ -173,16 +172,12 @@ func (ac *Creater) CreateOpsSight(createOpsSight *v1.OpsSightSpec) error {
 	// should be added in PreDeploy().
 	deployer.PreDeploy(components, createOpsSight.Namespace)
 
-	// Any new, pluggable maintainance stuff should go in here...
-	deployer.AddController("perceptor_configmap_controller", &plugins.PerceptorConfigMap{Config: ac.config, KubeConfig: ac.kubeConfig, OpsSightClient: ac.opssightClient, Namespace: createOpsSight.Namespace})
 	if !ac.config.DryRun {
 		err = deployer.Run()
 		if err != nil {
 			log.Errorf("unable to deploy opssight %s due to %+v", createOpsSight.Namespace, err)
 		}
-
 		deployer.StartControllers()
-
 		// if OpenShift, add a privileged role to scanner account
 		err = ac.postDeploy(opssight, createOpsSight.Namespace)
 		if err != nil {

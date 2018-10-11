@@ -23,10 +23,13 @@ package webservice
 
 import (
 	"fmt"
+	"net/http"
+	"os"
 
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api/hub/v1"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/hub"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
+	"github.com/prometheus/client_golang/prometheus"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -37,6 +40,19 @@ import (
 
 // SetupHTTPServer will used to create all the http api
 func SetupHTTPServer(hc *hub.Creater, namespace string) {
+	// prometheus metrics
+	prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
+	prometheus.Unregister(prometheus.NewGoCollector())
+
+	http.Handle("/metrics", prometheus.Handler())
+
+	addr := fmt.Sprintf(":%d", 8072)
+	log.Infof("about to start serving /metrics on %s", addr)
+	go func() {
+		http.ListenAndServe(addr, nil)
+	}()
+
+	// all other http traffic
 	go func() {
 		// data, err := ioutil.ReadFile("/public/index.html")
 		// Set the router as the default one shipped with Gin

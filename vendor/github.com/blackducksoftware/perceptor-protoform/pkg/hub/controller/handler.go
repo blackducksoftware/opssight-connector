@@ -78,7 +78,7 @@ func (h *HubHandler) ObjectCreated(obj interface{}) {
 		newSpec := hubv1.Spec
 		hubDefaultSpec := h.Defaults
 		err := mergo.Merge(&newSpec, hubDefaultSpec)
-		log.Debugf("merged hub details for %s: %+v", newSpec)
+		log.Debugf("merged hub details %+v", newSpec)
 		if err != nil {
 			log.Errorf("unable to merge the hub structs for %s due to %+v", hubv1.Name, err)
 			h.updateState("error", "error", fmt.Sprintf("%+v", err), hubv1)

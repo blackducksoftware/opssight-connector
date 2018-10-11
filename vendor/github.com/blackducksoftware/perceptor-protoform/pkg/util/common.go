@@ -532,6 +532,11 @@ func GetOpsSight(opssightClientset *opssightclientset.Clientset, namespace strin
 	return opssightClientset.SynopsysV1().OpsSights(namespace).Get(name, metav1.GetOptions{})
 }
 
+// GetOpsSights gets all opssights
+func GetOpsSights(clientSet *opssightclientset.Clientset) (*opssight_v1.OpsSightList, error) {
+	return clientSet.SynopsysV1().OpsSights(metav1.NamespaceAll).List(metav1.ListOptions{})
+}
+
 // ListHubs will list all hubs in the cluster
 func ListHubs(hubClientset *hubclientset.Clientset, namespace string) (*hub_v1.HubList, error) {
 	return hubClientset.SynopsysV1().Hubs(namespace).List(metav1.ListOptions{})

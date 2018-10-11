@@ -270,8 +270,8 @@ func (p *SpecConfig) ImageFacadeConfigMap() (*components.ConfigMap, error) {
 	})
 	data := map[string]interface{}{
 		"PrivateDockerRegistries": p.config.InternalRegistries,
-		"Port":     *p.config.ImageFacadePort,
-		"LogLevel": p.config.LogLevel,
+		"Port":                    *p.config.ImageFacadePort,
+		"LogLevel":                p.config.LogLevel,
 	}
 	bytes, err := json.Marshal(data)
 	if err != nil {
