@@ -109,6 +109,13 @@ func (in *HubSpec) DeepCopyInto(out *HubSpec) {
 		*out = make([]Environs, len(*in))
 		copy(*out, *in)
 	}
+	if in.ImageTagMap != nil {
+		in, out := &in.ImageTagMap, &out.ImageTagMap
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 
