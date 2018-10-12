@@ -665,3 +665,37 @@ func CreateOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace str
 func GetOpenShiftSecurityConstraint(osSecurityClient *securityclient.SecurityV1Client, name string) (*securityv1.SecurityContextConstraints, error) {
 	return osSecurityClient.SecurityContextConstraints().Get(name, metav1.GetOptions{})
 }
+
+// UpdateOpenShiftSecurityConstraint updates a OpenShift security constraints
+func UpdateOpenShiftSecurityConstraint(osSecurityClient *securityclient.SecurityV1Client, serviceAccounts []string, name string) error {
+	scc, err := GetOpenShiftSecurityConstraint(osSecurityClient, name)
+	if err != nil {
+		return fmt.Errorf("failed to get scc %s: %v", name, err)
+	}
+
+	newUsers := []string{}
+	// Only add the service account if it isn't already in the list of users for the privileged scc
+	for _, sa := range serviceAccounts {
+		exist := false
+		for _, user := range scc.Users {
+			if strings.Compare(user, sa) == 0 {
+				exist = true
+				break
+			}
+		}
+
+		if !exist {
+			newUsers = append(newUsers, sa)
+		}
+	}
+
+	if len(newUsers) > 0 {
+		scc.Users = append(scc.Users, newUsers...)
+
+		_, err = osSecurityClient.SecurityContextConstraints().Update(scc)
+		if err != nil {
+			return fmt.Errorf("failed to update scc %s: %v", name, err)
+		}
+	}
+	return err
+}

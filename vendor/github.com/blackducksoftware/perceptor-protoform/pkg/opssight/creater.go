@@ -242,32 +242,11 @@ func (ac *Creater) addRegistryAuth(opsSightSpec *v1.OpsSightSpec) {
 func (ac *Creater) postDeploy(opssight *SpecConfig, namespace string) error {
 	// Need to add the perceptor-scanner service account to the privelged scc
 	if ac.osSecurityClient != nil {
-		scc, err := util.GetOpenShiftSecurityConstraint(ac.osSecurityClient, "privileged")
-		if err != nil {
-			return fmt.Errorf("failed to get scc privileged: %v", err)
-		}
-
-		var scannerAccount string
-		s := opssight.ScannerServiceAccount()
-		scannerAccount = fmt.Sprintf("system:serviceaccount:%s:%s", namespace, s.GetName())
-
-		// Only add the service account if it isn't already in the list of users for the privileged scc
-		exists := false
-		for _, u := range scc.Users {
-			if strings.Compare(u, scannerAccount) == 0 {
-				exists = true
-				break
-			}
-		}
-
-		if !exists {
-			scc.Users = append(scc.Users, scannerAccount)
-
-			_, err = ac.osSecurityClient.SecurityContextConstraints().Update(scc)
-			if err != nil {
-				return fmt.Errorf("failed to update scc privileged: %v", err)
-			}
-		}
+		scannerServiceAccount := opssight.ScannerServiceAccount()
+		perceiverServiceAccount := opssight.PodPerceiverServiceAccount()
+		serviceAccounts := []string{fmt.Sprintf("system:serviceaccount:%s:%s", namespace, scannerServiceAccount.GetName()),
+			fmt.Sprintf("system:serviceaccount:%s:%s", namespace, perceiverServiceAccount.GetName())}
+		return util.UpdateOpenShiftSecurityConstraint(ac.osSecurityClient, serviceAccounts, "privileged")
 	}
 
 	return nil
