@@ -36,40 +36,40 @@ import (
 func InitDatabase(createHub *v1.HubSpec, adminPassword string, userPassword string, postgresPassword string) error {
 	databaseName := "postgres"
 	hostName := fmt.Sprintf("postgres.%s.svc.cluster.local", createHub.Namespace)
-	db, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
-	defer db.Close()
+	postgresDB, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
-	execPostGresDBStatements(db, adminPassword, userPassword)
+	execPostGresDBStatements(postgresDB, adminPassword, userPassword)
+	postgresDB.Close()
 
 	databaseName = "bds_hub"
-	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
-	defer db.Close()
+	bdsHubDB, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
-	execBdsHubDBStatements(db)
+	execBdsHubDBStatements(bdsHubDB)
+	bdsHubDB.Close()
 
 	databaseName = "bds_hub_report"
-	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
-	defer db.Close()
+	bdsHubReportDB, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
-	execBdsHubReportDBStatements(db)
+	execBdsHubReportDBStatements(bdsHubReportDB)
+	bdsHubReportDB.Close()
 
 	databaseName = "bdio"
-	db, err = OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
-	defer db.Close()
+	bdioDB, err := OpenDatabaseConnection(hostName, databaseName, "postgres", postgresPassword, "postgres")
 	// log.Infof("Db: %+v, error: %+v", db, err)
 	if err != nil {
 		return fmt.Errorf("unable to open database connection for %s database in the host %s due to %+v", databaseName, hostName, err)
 	}
-	execBdioDBStatements(db)
+	execBdioDBStatements(bdioDB)
+	bdioDB.Close()
 	return nil
 }
 

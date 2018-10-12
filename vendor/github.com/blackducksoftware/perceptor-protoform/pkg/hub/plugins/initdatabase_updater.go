@@ -142,7 +142,6 @@ func (i *InitDatabaseUpdater) startInitDatabaseUpdater(hubSpec *hubv1.HubSpec) c
 
 				log.Debugf("%v : Checking connection now...", hubSpec.Namespace)
 				db, err := hub.OpenDatabaseConnection(hostName, "bds_hub", "postgres", postgresPassword, "postgres")
-				defer db.Close()
 				log.Debugf("%v : Done checking [ error status == %v ] ...", hubSpec.Namespace, err)
 				if err != nil {
 					dbNeedsInitBecause = "couldnt connect !"
@@ -152,6 +151,7 @@ func (i *InitDatabaseUpdater) startInitDatabaseUpdater(hubSpec *hubv1.HubSpec) c
 						dbNeedsInitBecause = "couldnt select!"
 					}
 				}
+				db.Close()
 
 				if dbNeedsInitBecause != "" {
 					log.Warnf("%v: database needs init because (%v), ::: %v ", hubSpec.Namespace, dbNeedsInitBecause, err)
