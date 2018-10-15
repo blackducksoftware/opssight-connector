@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:1976ad3c0cfbb6cbb8ca6698c1399bff8fd9f7952cb326902525a96e0e9757c9"
+  digest = "1:a0a380d96e6e14f3f9939374a77f8e8976e23d6a8678b0fb1e8b99096a961fcb"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "028ed5f70aa86716e5dcb8705868c8119d8543fb"
+  revision = "dc0af1d5d24f7a4e3d279bcc26fd937441cf01a3"
   version = "3.1.0"
 
 [[projects]]
@@ -618,7 +618,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2e87c336c7d1830b28d0a4eba428c6e0d66aa6ddcc8fddd994eb80f1f6dd6a62"
+  digest = "1:e3973ae1b5635deac72030756a9f6682a7cb39ec441abbb243b377e5f73bc26c"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -627,7 +627,7 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+  revision = "bcb74de08d37a417cb6789eec1d6c810040f0470"
 
 [[projects]]
   branch = "master"
@@ -707,7 +707,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "a92615f3c49003920a58dedcf32cf55022cefb8d"
+  revision = "0c41d7ab0a0ee717d4590a44bcb987dfd9e183eb"
 
 [[projects]]
   branch = "master"
