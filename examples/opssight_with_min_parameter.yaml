@@ -30,7 +30,7 @@ spec:
   metrics: true  # Enable for prometheus metrics; default true
   
   # Should be passed like: e.g "blackduck-operator"
-  #namespaceFilter: "" # Add the namespace that to be scanner. By default, all namespaces
+  #namespaceFilter: "" # Add the name of the specifc namespace to be scanned. By default it will scan all namespaces
 
   # CPU and memory configurations
   # Should be passed like: e.g. "300m"
