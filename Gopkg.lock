@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:a0a380d96e6e14f3f9939374a77f8e8976e23d6a8678b0fb1e8b99096a961fcb"
+  digest = "1:7fb7bc1c00d0ec53154f39b33b0160cd75618935e8370fb8359c905c84829cf5"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "dc0af1d5d24f7a4e3d279bcc26fd937441cf01a3"
+  revision = "28657f84d1e689e914e39f537cde6244f4812ecc"
   version = "3.1.0"
 
 [[projects]]

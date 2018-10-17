@@ -218,7 +218,7 @@ func (p *SpecConfig) ImageFacadeService() *components.Service {
 		Name:      p.config.ContainerNames["perceptor-image-facade"],
 		Namespace: p.config.Namespace,
 	})
-	service.AddSelectors(map[string]string{"name": p.config.ContainerNames["perceptor-image-facade"]})
+	service.AddSelectors(map[string]string{"name": p.config.ContainerNames["perceptor-scanner"]})
 
 	service.AddPort(horizonapi.ServicePortConfig{
 		Port:       int32(*p.config.ImageFacadePort),
