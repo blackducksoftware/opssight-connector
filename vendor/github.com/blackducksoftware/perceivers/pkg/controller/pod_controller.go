@@ -72,21 +72,16 @@ func NewPodController(kubeClient kubernetes.Interface, perceptorURL string, nsFi
 		h:      handler,
 	}
 
-	mutateOpts := func(opts *metav1.ListOptions) {
-		if len(nsFilter) > 0 {
-			opts.LabelSelector = nsFilter
-		}
+	if nsFilter == "" {
+		nsFilter = metav1.NamespaceAll
 	}
-
 	pc.podIndexer, pc.podController = cache.NewIndexerInformer(
 		&cache.ListWatch{
 			ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
-				mutateOpts(&opts)
-				return pc.client.CoreV1().Pods(metav1.NamespaceAll).List(opts)
+				return pc.client.CoreV1().Pods(nsFilter).List(opts)
 			},
 			WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
-				mutateOpts(&opts)
-				return pc.client.CoreV1().Pods(metav1.NamespaceAll).Watch(opts)
+				return pc.client.CoreV1().Pods(nsFilter).Watch(opts)
 			},
 		},
 		&v1.Pod{},

@@ -54,7 +54,7 @@
   revision = "940138f994024143ee604ff0821f08ed2b597f9c"
 
 [[projects]]
-  digest = "1:728fc3f561aedeb9a07f86d8cf7fa80ea0fab9874d89ccac6fb54e20fa0211bb"
+  digest = "1:9b8d2ed6bb65be576def62a2076f93c846a30d213db06486b1521a6c31b8cd60"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
     "cmd/image-perceiver/app",
@@ -70,8 +70,8 @@
     "pkg/utils",
   ]
   pruneopts = "UT"
-  revision = "5f9a95322fba536b536852971ccdce19f7f1ace0"
-  version = "1.2.0"
+  revision = "62d73ec3c1b722d13ae15d08e786aafe71696aa1"
+  version = "1.2.1"
 
 [[projects]]
   digest = "1:60718bb0f843a354334a81a8f2b8fdfa833e4e8897b15ea1d5d6a44c1c50ec24"

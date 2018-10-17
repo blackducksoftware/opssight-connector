@@ -108,7 +108,7 @@ func GetHubDefaultValue() *hubv1.HubSpec {
 		Flavor:          "small",
 		DockerRegistry:  "docker.io",
 		DockerRepo:      "blackducksoftware",
-		HubVersion:      "4.8.2",
+		HubVersion:      "5.0.0",
 		DbPrototype:     "empty",
 		CertificateName: "default",
 		HubType:         "worker",
