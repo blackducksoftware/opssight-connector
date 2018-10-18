@@ -104,53 +104,54 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 	postgresBootstrap.AddData(map[string]string{"pgbootstrap.sh": fmt.Sprintf(`#!/bin/bash
 		BACKUP_FILENAME="%s"
 		CLONE_FILENAME="%s"
-		echo "Backup file name: /data/bds/backup/$BACKUP_FILENAME"
-		echo "Clone file name: /data/bds/backup/$CLONE_FILENAME"
-		if [ ! -f /data/bds/backup/$BACKUP_FILENAME.sql ] && [ -f /data/bds/backup/$CLONE_FILENAME.sql ]; then
+		NFS_PATH="%s"
+		echo "Backup file name: $NFS_PATH/$BACKUP_FILENAME"
+		echo "Clone file name: $NFS_PATH/$CLONE_FILENAME"
+		if [ ! -f $NFS_PATH/$BACKUP_FILENAME.sql ] && [ -f $NFS_PATH/$CLONE_FILENAME.sql ]; then
 			echo "clone data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
 					echo "Migrating the data"
-      				psql < /data/bds/backup/$CLONE_FILENAME.sql
-      				break
-    			else
-      				echo "unable to execute the SELECT 1, sleeping 10 seconds... before trying to init db again."
-      				sleep 10
-    			fi
-  			done
+					psql < $NFS_PATH/$CLONE_FILENAME.sql
+					break
+				else
+					echo "unable to execute the SELECT 1, sleeping 10 seconds... before trying to init db again."
+					sleep 10
+				fi
+			done
 		fi
 
-		if [ -f /data/bds/backup/$BACKUP_FILENAME.sql ]; then
+		if [ -f $NFS_PATH/$BACKUP_FILENAME.sql ]; then
 			echo "backup data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
 					echo "Migrating the data from backup !"
-      				psql < /data/bds/backup/$BACKUP_FILENAME.sql
-      				break
-    			else
-      				echo "unable to execute the SELECT 1, sleeping 10 seconds... before trying migration again"
-      				sleep 10
-    			fi
-  			done
+					psql < $NFS_PATH/$BACKUP_FILENAME.sql
+					break
+				else
+					echo "unable to execute the SELECT 1, sleeping 10 seconds... before trying migration again"
+					sleep 10
+				fi
+			done
 		fi
 
 		if [ "%s" == "Yes" ]; then
 			while true; do
-			  echo "Doing periodic data dump..."
+				echo "Doing periodic data dump..."
 				sleep %d
-				if [ ! -f /data/bds/backup/$BACKUP_FILENAME_tmp.sql ]; then
-					pg_dumpall -w > /data/bds/backup/$BACKUP_FILENAME_tmp.sql
+				if [ ! -f $NFS_PATH/$BACKUP_FILENAME_tmp.sql ]; then
+					pg_dumpall -w > $NFS_PATH/$BACKUP_FILENAME_tmp.sql
 					if [ $? -eq 0 ]; then
-						mv /data/bds/backup/$BACKUP_FILENAME_tmp.sql /data/bds/backup/$BACKUP_FILENAME.sql
+						mv $NFS_PATH/$BACKUP_FILENAME_tmp.sql $NFS_PATH/$BACKUP_FILENAME.sql
 						if [ $? -eq 0 ]; then
-							rm -f /data/bds/backup/$BACKUP_FILENAME_tmp.sql
+							rm -f $NFS_PATH/$BACKUP_FILENAME_tmp.sql
 						fi
 					fi
 				else
 					echo "backup in progress... cannot start another instance of backup"
 				fi
 			done
-		fi`, createHub.Namespace, createHub.DbPrototype, createHub.BackupSupport, backupInSeconds)})
+		fi`, createHub.Namespace, createHub.DbPrototype, hc.Config.NFSPath, createHub.BackupSupport, backupInSeconds)})
 
 	configMaps["postgres-bootstrap"] = postgresBootstrap
 

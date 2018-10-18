@@ -72,8 +72,9 @@ func (i *InitDatabaseUpdater) Run(ch <-chan struct{}) {
 			DeleteFunc: func(obj interface{}) {
 				log.Debugf("init database hub deleted event ! %v ", obj)
 				hub := obj.(*hubv1.Hub)
-				stopCh := i.Hubs[hub.Name]
-				close(stopCh)
+				if stopCh, ok := i.Hubs[hub.Name]; ok {
+					close(stopCh)
+				}
 			},
 		},
 	)

@@ -57,7 +57,7 @@ items:
   metadata:
     name: blackduck-operator
   data:
-    config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "PostgresRestartInMins": 10, "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "docker.io", "ImagePath": "blackducksoftware", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
+    config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "PostgresRestartInMins": 10, "NFSPath" : "/kubenfs", "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "docker.io", "ImagePath": "blackducksoftware", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
 - apiVersion: v1
   kind: ServiceAccount
   metadata:

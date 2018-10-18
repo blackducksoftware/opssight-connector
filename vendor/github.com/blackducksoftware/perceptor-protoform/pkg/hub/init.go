@@ -28,10 +28,8 @@ import (
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	horizon "github.com/blackducksoftware/horizon/pkg/deployer"
-
 	"github.com/blackducksoftware/perceptor-protoform/pkg/api/hub/v1"
 	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -79,7 +77,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 			return fmt.Errorf("unable to create the PV %s due to missing NFS server path", createHub.Namespace)
 		}
 
-		_, err = util.CreatePersistentVolume(hc.KubeClient, createHub.Namespace, storageClass, createHub.PVCClaimSize, "/data/bds/backup", createHub.NFSServer)
+		_, err = util.CreatePersistentVolume(hc.KubeClient, createHub.Namespace, storageClass, createHub.PVCClaimSize, hc.Config.NFSPath, createHub.NFSServer)
 
 		if err != nil {
 			return fmt.Errorf("unable to create the PV %s due to %+v", createHub.Namespace, err)
@@ -113,7 +111,7 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 
 		postgresBackupDir, _ := util.CreatePersistentVolumeClaimVolume("postgres-backup-vol", createHub.Namespace)
 		postgresVolumes = append(postgresVolumes, postgresBackupDir)
-		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: "/data/bds/backup"})
+		postgresVolumeMounts = append(postgresVolumeMounts, &horizonapi.VolumeMountConfig{Name: "postgres-backup-vol", MountPath: hc.Config.NFSPath})
 	}
 
 	postgresExternalContainerConfig := &util.Container{
@@ -128,9 +126,9 @@ func (hc *Creater) init(deployer *horizon.Deployer, createHub *v1.HubSpec, hubCo
 	// If the PV storage is other than NFS or if the backup is enabled and PV storage is other than NFS, add the init container
 	if !strings.EqualFold(createHub.PVCStorageClass, "") && !strings.EqualFold(createHub.PVCStorageClass, "none") {
 		postgresInitContainerConfig := &util.Container{
-			ContainerConfig: &horizonapi.ContainerConfig{Name: "alpine", Image: "alpine", Command: []string{"sh", "-c", "chmod -cR 777 /data/bds/backup"}},
+			ContainerConfig: &horizonapi.ContainerConfig{Name: "alpine", Image: "alpine", Command: []string{"sh", "-c", fmt.Sprintf("chmod -cR 777 %s", hc.Config.NFSPath)}},
 			VolumeMounts: []*horizonapi.VolumeMountConfig{
-				{Name: "postgres-backup-vol", MountPath: "/data/bds/backup"},
+				{Name: "postgres-backup-vol", MountPath: hc.Config.NFSPath},
 			},
 			PortConfig: &horizonapi.PortConfig{ContainerPort: "3001", Protocol: horizonapi.ProtocolTCP},
 		}

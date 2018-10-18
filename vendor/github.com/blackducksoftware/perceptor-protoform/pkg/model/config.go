@@ -35,6 +35,7 @@ type Config struct {
 	Namespace             string
 	Threadiness           int
 	PostgresRestartInMins int
+	NFSPath               string
 	HubFederatorConfig    HubFederatorConfig
 }
 

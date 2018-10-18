@@ -44,14 +44,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:07f953311dc7c5b851004cbeccc61c9963540c484754001395cadcc1d33719b9"
+  digest = "1:a09ab5a4f5a410efea876fee6cba097906d80d15227c3d8bf7c349c55649fdde"
   name = "github.com/blackducksoftware/hub-client-go"
   packages = [
     "hubapi",
     "hubclient",
   ]
   pruneopts = "UT"
-  revision = "940138f994024143ee604ff0821f08ed2b597f9c"
+  revision = "f1fdde519aec5ce540e9a42440fcce9bd641644a"
 
 [[projects]]
   digest = "1:9b8d2ed6bb65be576def62a2076f93c846a30d213db06486b1521a6c31b8cd60"
@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:7fb7bc1c00d0ec53154f39b33b0160cd75618935e8370fb8359c905c84829cf5"
+  digest = "1:af411f97dcc9b1ad475dce45433ad276bcfe4fa45ea07b8f6e17e34bd82f954a"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "28657f84d1e689e914e39f537cde6244f4812ecc"
+  revision = "5ddcd697aea4b0793c23260233195ff6ac832f3b"
   version = "3.1.0"
 
 [[projects]]
@@ -711,7 +711,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:79eeb81df0131bdf163bfed850d36658edc9101679cf0882accf5281f7bb3cc8"
+  digest = "1:657ad2f193a447fb117a01581be57baff9fa847985d34b0338d16441e77aae1c"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -725,7 +725,7 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "49bb7cea24b1df9410e1712aa6433dae904ff66a"
+  revision = "04a2e542c03f1d053ab3e4d6e5abcd4b66e2be8e"
 
 [[projects]]
   branch = "master"
