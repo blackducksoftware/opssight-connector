@@ -52,6 +52,10 @@ items:
         port: 8080
         targetPort: 8080
         name: blackduck-operator
+      - protocol: TCP
+        port: 8072
+        targetPort: 8072
+        name: blackduck-operator-metrics
 - apiVersion: v1
   kind: ConfigMap
   metadata:
