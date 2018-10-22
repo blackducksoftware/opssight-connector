@@ -44,14 +44,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a09ab5a4f5a410efea876fee6cba097906d80d15227c3d8bf7c349c55649fdde"
+  digest = "1:dd11b2ca3c4e288c3498b5cffa63435a8bde637d527d42dc82f3178a747c09ff"
   name = "github.com/blackducksoftware/hub-client-go"
   packages = [
     "hubapi",
     "hubclient",
   ]
   pruneopts = "UT"
-  revision = "f1fdde519aec5ce540e9a42440fcce9bd641644a"
+  revision = "3e826e664962f91dc692dd66c3809f7604890bd9"
 
 [[projects]]
   digest = "1:9b8d2ed6bb65be576def62a2076f93c846a30d213db06486b1521a6c31b8cd60"
@@ -90,7 +90,7 @@
   version = "v2.1.0"
 
 [[projects]]
-  digest = "1:af411f97dcc9b1ad475dce45433ad276bcfe4fa45ea07b8f6e17e34bd82f954a"
+  digest = "1:ee152bcbe5b366f92b690750df14dd4c1ae666249edab937e3bb96cf10266460"
   name = "github.com/blackducksoftware/perceptor-protoform"
   packages = [
     "pkg/alert",
@@ -136,7 +136,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "5ddcd697aea4b0793c23260233195ff6ac832f3b"
+  revision = "4f433f1518598b5aa2676412a474a57ab9b7f0a6"
   version = "3.1.0"
 
 [[projects]]
@@ -618,7 +618,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e3973ae1b5635deac72030756a9f6682a7cb39ec441abbb243b377e5f73bc26c"
+  digest = "1:12ab9f684bd965ccf3db033bbe6abcb96fda64a13a097f3ef6e81c36e9b16f0d"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -627,7 +627,7 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "bcb74de08d37a417cb6789eec1d6c810040f0470"
+  revision = "7e9e6cabbd393fc208072eedef99188d0ce788b6"
 
 [[projects]]
   branch = "master"
@@ -729,7 +729,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a6acf0921d19dfa06dff31950757e86c924abc9acd98b83ac0942a26ab9691f3"
+  digest = "1:f3a530b7369035cb8c7afe9d947cada2e4680fc7ce117080ac77725699f124a9"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -738,7 +738,7 @@
     "windows/svc/eventlog",
   ]
   pruneopts = "UT"
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
+  revision = "8a28ead16f52c8aaeffbf79239b251dfdf6c4f96"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"

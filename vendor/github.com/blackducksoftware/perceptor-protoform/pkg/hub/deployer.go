@@ -73,6 +73,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-cfssl", MountPath: "/etc/cfssl"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: cfsslPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "http://localhost:8888/api/v1/cfssl/scaninfo"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	cfssl := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "cfssl", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{cfsslContainerConfig}, []*components.Volume{cfsslEmptyDir}, []*util.Container{},
@@ -106,6 +113,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "certificate", MountPath: "/tmp/secrets"},
 		},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webserverPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://localhost:8443/health-checks/liveness", "/tmp/secrets/WEBSERVER_CUSTOM_CERT_FILE"}},
+		// 	Delay:           180,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	webserver := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webserver",
 		Replicas: util.IntToInt32(1)}, createHub.Namespace, []*util.Container{webServerContainerConfig}, []*components.Volume{webServerEmptyDir, webServerSecretVol},
@@ -119,6 +133,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.DocumentationMemoryLimit, MaxMem: hubContainerFlavor.DocumentationMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs: hubConfigEnv,
 		PortConfig: &horizonapi.PortConfig{ContainerPort: documentationPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://127.0.0.1:8443/hubdoc/health-checks/liveness", "/opt/blackduck/hub/hub-documentation/security/root.crt"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	documentation := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "documentation", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{documentationContainerConfig}, []*components.Volume{}, []*util.Container{}, []horizonapi.AffinityConfig{})
@@ -134,6 +155,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-solr", MountPath: "/opt/blackduck/hub/solr/cores.data"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: solrPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "http://localhost:8983/solr/project/admin/ping?wt=json"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	solr := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "solr", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{solrContainerConfig}, []*components.Volume{solrEmptyDir}, []*util.Container{},
@@ -150,6 +178,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-registration", MountPath: "/opt/blackduck/hub/hub-registration/config"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: registrationPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://localhost:8443/registration/health-checks/liveness", "/opt/blackduck/hub/hub-registration/security/root.crt"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	registration := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "registration", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{registrationContainerConfig}, []*components.Volume{registrationEmptyDir}, []*util.Container{},
@@ -165,6 +200,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-zookeeper", MountPath: "/opt/blackduck/hub/logs"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: zookeeperPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"zkServer.sh", "status", "/opt/blackduck/zookeeper/conf/zoo.cfg"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	zookeeper := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "zookeeper", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{zookeeperContainerConfig}, []*components.Volume{zookeeperEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
@@ -180,6 +222,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   jobRunnerEnvs,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "db-passwords", MountPath: "/tmp/secrets"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: jobRunnerPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 
 	jobRunner := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "jobrunner", Replicas: hubContainerFlavor.JobRunnerReplicas}, "",
@@ -200,6 +249,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "db-passwords", MountPath: "/tmp/secrets"},
 			{Name: "dir-scan", MountPath: "/opt/blackduck/hub/hub-scan/security"}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: scannerPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://127.0.0.1:8443/api/health-checks/liveness", "/opt/blackduck/hub/hub-scan/security/root.crt"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	hubScan := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "hub-scan", Replicas: hubContainerFlavor.ScanReplicas}, "",
 		[]*util.Container{hubScanContainerConfig}, []*components.Volume{hubScanEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{}, []horizonapi.AffinityConfig{})
@@ -219,6 +275,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "db-passwords", MountPath: "/tmp/secrets"},
 			{Name: "dir-authentication", MountPath: "/opt/blackduck/hub/hub-authentication/security"}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: authenticationPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://127.0.0.1:8443/api/health-checks/liveness", "/opt/blackduck/hub/hub-authentication/security/root.crt"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 10,
+		// }},
 	}
 	hubAuth := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "hub-authentication", Replicas: util.IntToInt32(1)}, "",
 		[]*util.Container{hubAuthContainerConfig}, []*components.Volume{hubAuthEmptyDir, dbSecretVolume, dbEmptyDir}, []*util.Container{},
@@ -241,6 +304,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 			{Name: "dir-webapp", MountPath: "/opt/blackduck/hub/hub-webapp/security"},
 			{Name: "dir-logstash", MountPath: "/opt/blackduck/hub/logs"}},
 		PortConfig: &horizonapi.PortConfig{ContainerPort: webappPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "https://127.0.0.1:8443/api/health-checks/liveness", "/opt/blackduck/hub/hub-webapp/security/root.crt"}},
+		// 	Delay:           360,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 1000,
+		// }},
 	}
 	logstashEmptyDir, _ := util.CreateEmptyDirVolumeWithoutSizeLimit("dir-logstash")
 	logstashContainerConfig := &util.Container{
@@ -249,6 +319,13 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 		EnvConfigs:   hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{{Name: "dir-logstash", MountPath: "/var/lib/logstash/data"}},
 		PortConfig:   &horizonapi.PortConfig{ContainerPort: logstashPort, Protocol: horizonapi.ProtocolTCP},
+		// LivenessProbeConfigs: []*horizonapi.ProbeConfig{{
+		// 	ActionConfig:    horizonapi.ActionConfig{Command: []string{"/usr/local/bin/docker-healthcheck.sh", "http://localhost:9600/"}},
+		// 	Delay:           240,
+		// 	Interval:        30,
+		// 	Timeout:         10,
+		// 	MinCountFailure: 1000,
+		// }},
 	}
 	webappLogstash := util.CreateReplicationControllerFromContainer(&horizonapi.ReplicationControllerConfig{Namespace: createHub.Namespace, Name: "webapp-logstash", Replicas: util.IntToInt32(1)},
 		"", []*util.Container{webappContainerConfig, logstashContainerConfig}, []*components.Volume{webappEmptyDir, logstashEmptyDir, dbSecretVolume, dbEmptyDir},

@@ -108,10 +108,11 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 		echo "Backup file name: $NFS_PATH/$BACKUP_FILENAME"
 		echo "Clone file name: $NFS_PATH/$CLONE_FILENAME"
 		if [ ! -f $NFS_PATH/$BACKUP_FILENAME.sql ] && [ -f $NFS_PATH/$CLONE_FILENAME.sql ]; then
+			touch /tmp/BLACKDUCK_MIGRATING
 			echo "clone data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
-					echo "Migrating the data"
+					echo "Migrating the data from clone !"
 					psql < $NFS_PATH/$CLONE_FILENAME.sql
 					break
 				else
@@ -119,9 +120,11 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 					sleep 10
 				fi
 			done
+			rm -f /tmp/BLACKDUCK_MIGRATING
 		fi
 
 		if [ -f $NFS_PATH/$BACKUP_FILENAME.sql ]; then
+			touch /tmp/BLACKDUCK_MIGRATING
 			echo "backup data file found"
 			while true; do
 				if psql -c "SELECT 1" &>/dev/null; then
@@ -133,6 +136,7 @@ func (hc *Creater) createHubConfig(createHub *v1.HubSpec, hubContainerFlavor *Co
 					sleep 10
 				fi
 			done
+			rm -f /tmp/BLACKDUCK_MIGRATING
 		fi
 
 		if [ "%s" == "Yes" ]; then

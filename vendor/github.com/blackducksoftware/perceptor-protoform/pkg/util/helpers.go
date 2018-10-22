@@ -27,9 +27,11 @@ import (
 
 // Container defines the configuration for a container
 type Container struct {
-	ContainerConfig *horizonapi.ContainerConfig
-	EnvConfigs      []*horizonapi.EnvConfig
-	VolumeMounts    []*horizonapi.VolumeMountConfig
-	PortConfig      *horizonapi.PortConfig
-	ActionConfig    *horizonapi.ActionConfig
+	ContainerConfig       *horizonapi.ContainerConfig
+	EnvConfigs            []*horizonapi.EnvConfig
+	VolumeMounts          []*horizonapi.VolumeMountConfig
+	PortConfig            *horizonapi.PortConfig
+	ActionConfig          *horizonapi.ActionConfig
+	ReadinessProbeConfigs []*horizonapi.ProbeConfig
+	LivenessProbeConfigs  []*horizonapi.ProbeConfig
 }

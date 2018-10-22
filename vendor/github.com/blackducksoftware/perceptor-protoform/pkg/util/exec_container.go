@@ -19,26 +19,26 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package hub
+package util
 
 import (
 	"bytes"
 	"io"
 	"strings"
 
-	"github.com/blackducksoftware/perceptor-protoform/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-func (hc *Creater) execContainer(request *rest.Request, command []string) error {
+// ExecContainer will exec into the container and run the commands provided in the input
+func ExecContainer(kubeConfig *rest.Config, request *rest.Request, command []string) error {
 	var stdin io.Reader
-	stdin = util.NewStringReader(command)
+	stdin = NewStringReader(command)
 
 	log.Debugf("Request URL: %+v, request: %+v, command: %s", request.URL().String(), request, strings.Join(command, ""))
 
-	exec, err := remotecommand.NewSPDYExecutor(hc.KubeConfig, "POST", request.URL())
+	exec, err := remotecommand.NewSPDYExecutor(kubeConfig, "POST", request.URL())
 	log.Debugf("exec: %+v, error: %+v", exec, err)
 	if err != nil {
 		log.Errorf("error while creating Executor: %v", err)

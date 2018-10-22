@@ -115,7 +115,6 @@ func readBytes(readCloser io.ReadCloser) ([]byte, error) {
 func validateHTTPResponse(resp *http.Response, expectedStatusCode int) error {
 
 	if resp.StatusCode != expectedStatusCode { // Should this be a list at some point?
-		log.Errorf("Got a %d response instead of a %d.", resp.StatusCode, expectedStatusCode)
 		readResponseBody(resp)
 		return fmt.Errorf("got a %d response instead of a %d", resp.StatusCode, expectedStatusCode)
 	}
@@ -168,14 +167,14 @@ func (c *Client) HttpGetJSON(url string, result interface{}, expectedStatusCode 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 
 	if err != nil {
-		return errors.Annotate(err, "Error making http get request")
+		return errors.Annotatef(err, "Error creating http get request for %s", url)
 	}
 
 	c.doPreRequest(req)
 
 	httpStart := time.Now()
 	if resp, err = c.httpClient.Do(req); err != nil {
-		return errors.Annotate(err, "Error getting HTTP Response")
+		return errors.Annotatef(err, "Error getting HTTP Response from %s", url)
 	}
 
 	httpElapsed := time.Since(httpStart)
@@ -184,7 +183,7 @@ func (c *Client) HttpGetJSON(url string, result interface{}, expectedStatusCode 
 		log.Debugf("DEBUG HTTP GET ELAPSED TIME: %d ms.   -- Request: %s", (httpElapsed / 1000 / 1000), url)
 	}
 
-	return c.processResponse(resp, result, expectedStatusCode)
+	return errors.Annotatef(c.processResponse(resp, result, expectedStatusCode), "unable to process response from GET to %s", url)
 }
 
 func (c *Client) HttpPutJSON(url string, data interface{}, contentType string, expectedStatusCode int) error {
@@ -206,7 +205,7 @@ func (c *Client) HttpPutJSON(url string, data interface{}, contentType string, e
 
 	req, err := http.NewRequest(http.MethodPut, url, &buf)
 	if err != nil {
-		return errors.Annotate(err, "Error making http put request")
+		return errors.Annotatef(err, "Error creating http put request for %s", url)
 	}
 
 	req.Header.Set(HeaderNameContentType, contentType)
@@ -217,7 +216,7 @@ func (c *Client) HttpPutJSON(url string, data interface{}, contentType string, e
 	httpStart := time.Now()
 	if resp, err = c.httpClient.Do(req); err != nil {
 		readResponseBody(resp)
-		return errors.Annotate(err, "Error getting HTTP Response")
+		return errors.Annotatef(err, "Error getting HTTP Response from PUT to %s", url)
 	}
 
 	httpElapsed := time.Since(httpStart)
@@ -226,7 +225,7 @@ func (c *Client) HttpPutJSON(url string, data interface{}, contentType string, e
 		log.Debugf("DEBUG HTTP PUT ELAPSED TIME: %d ms.   -- Request: %s", (httpElapsed / 1000 / 1000), url)
 	}
 
-	return c.processResponse(resp, nil, expectedStatusCode) // TODO: Maybe need a response too?
+	return errors.Annotatef(c.processResponse(resp, nil, expectedStatusCode), "unable to process response from PUT to %s", url) // TODO: Maybe need a response too?
 }
 
 func (c *Client) HttpPostJSON(url string, data interface{}, contentType string, expectedStatusCode int) (string, error) {
@@ -248,7 +247,7 @@ func (c *Client) HttpPostJSON(url string, data interface{}, contentType string, 
 
 	req, err := http.NewRequest(http.MethodPost, url, &buf)
 	if err != nil {
-		return "", errors.Annotate(err, "Error making http post request")
+		return "", errors.Annotatef(err, "Error creating http post request for %s", url)
 	}
 
 	req.Header.Set(HeaderNameContentType, contentType)
@@ -259,7 +258,7 @@ func (c *Client) HttpPostJSON(url string, data interface{}, contentType string, 
 	httpStart := time.Now()
 	if resp, err = c.httpClient.Do(req); err != nil {
 		readResponseBody(resp)
-		return "", errors.Annotate(err, "Error getting HTTP Response")
+		return "", errors.Annotatef(err, "Error getting HTTP Response from POST to %s", url)
 	}
 
 	httpElapsed := time.Since(httpStart)
@@ -269,7 +268,7 @@ func (c *Client) HttpPostJSON(url string, data interface{}, contentType string, 
 	}
 
 	if err := c.processResponse(resp, nil, expectedStatusCode); err != nil {
-		return "", errors.Trace(err)
+		return "", errors.Annotatef(err, "unable to process response from POST to %s", url)
 	}
 
 	return resp.Header.Get("Location"), nil
@@ -294,7 +293,7 @@ func (c *Client) HttpPostJSONExpectResult(url string, data interface{}, result i
 
 	req, err := http.NewRequest(http.MethodPost, url, &buf)
 	if err != nil {
-		return "", errors.Annotate(err, "Error making http post request")
+		return "", errors.Annotatef(err, "Error creating http post request for %s", url)
 	}
 
 	req.Header.Set(HeaderNameContentType, contentType)
@@ -305,7 +304,7 @@ func (c *Client) HttpPostJSONExpectResult(url string, data interface{}, result i
 	httpStart := time.Now()
 	if resp, err = c.httpClient.Do(req); err != nil {
 		readResponseBody(resp)
-		return "", errors.Annotate(err, "Error getting HTTP Response")
+		return "", errors.Annotatef(err, "Error getting HTTP Response from POST to %s", url)
 	}
 
 	httpElapsed := time.Since(httpStart)
@@ -315,7 +314,7 @@ func (c *Client) HttpPostJSONExpectResult(url string, data interface{}, result i
 	}
 
 	if err := c.processResponse(resp, result, expectedStatusCode); err != nil {
-		return "", errors.Trace(err)
+		return "", errors.Annotatef(err, "unable to process response from POST to %s", url)
 	}
 
 	return resp.Header.Get("Location"), nil
@@ -332,7 +331,7 @@ func (c *Client) HttpDelete(url string, contentType string, expectedStatusCode i
 
 	req, err := http.NewRequest(http.MethodDelete, url, bytes.NewBuffer([]byte{}))
 	if err != nil {
-		return errors.Annotate(err, "Error making http delete request")
+		return errors.Annotatef(err, "Error creating http delete request for %s", url)
 	}
 
 	req.Header.Set(HeaderNameContentType, contentType)
@@ -343,7 +342,7 @@ func (c *Client) HttpDelete(url string, contentType string, expectedStatusCode i
 	httpStart := time.Now()
 	if resp, err = c.httpClient.Do(req); err != nil {
 		readResponseBody(resp)
-		return errors.Annotate(err, "Error getting HTTP Response")
+		return errors.Annotatef(err, "Error getting HTTP Response from DELETE to %s", url)
 	}
 
 	httpElapsed := time.Since(httpStart)
@@ -352,7 +351,7 @@ func (c *Client) HttpDelete(url string, contentType string, expectedStatusCode i
 		log.Debugf("DEBUG HTTP DELETE ELAPSED TIME: %d ms.   -- Request: %s", (httpElapsed / 1000 / 1000), url)
 	}
 
-	return c.processResponse(resp, nil, expectedStatusCode)
+	return errors.Annotatef(c.processResponse(resp, nil, expectedStatusCode), "unable to process response from DELETE to %s", url)
 }
 
 func (c *Client) doPreRequest(request *http.Request) {

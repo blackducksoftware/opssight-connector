@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -99,9 +100,11 @@ func (h *HubHandler) ObjectCreated(obj interface{}) {
 					h.updateState("error", "error", err, hubv1)
 				} else {
 					h.updateState("running", "running", err, hubv1)
+					hubURL := fmt.Sprintf("webserver.%s.svc", hubv1.Spec.Namespace)
+					h.verifyHub(hubURL, hubv1.Spec.Namespace)
+					h.autoRegisterHub(&hubv1.Spec)
+					h.callHubFederator()
 				}
-
-				h.callHubFederator()
 			}
 		}
 	}
@@ -152,6 +155,39 @@ func (h *HubHandler) updateState(specState string, statusState string, err error
 
 func (h *HubHandler) updateHubObject(obj *hub_v1.Hub) (*hub_v1.Hub, error) {
 	return h.HubClientset.SynopsysV1().Hubs(h.Namespace).Update(obj)
+}
+
+func (h *HubHandler) autoRegisterHub(createHub *hub_v1.HubSpec) error {
+	// Filter the registration pod to auto register the hub using the registration key from the environment variable
+	registrationPod, err := util.FilterPodByNamePrefixInNamespace(h.Clientset, createHub.Namespace, "registration")
+	log.Debugf("registration pod: %+v", registrationPod)
+	if err != nil {
+		return err
+	}
+	registrationKey := os.Getenv("REGISTRATION_KEY")
+	// log.Debugf("registration key: %s", registrationKey)
+
+	if registrationPod != nil && !strings.EqualFold(registrationKey, "") {
+		for i := 0; i < 20; i++ {
+			// Create the exec into kubernetes pod request
+			req := util.CreateExecContainerRequest(h.Clientset, registrationPod)
+			// Exec into the kubernetes pod and execute the commands
+			if strings.HasPrefix(createHub.HubVersion, "4.") {
+				err = util.ExecContainer(h.KubeConfig, req, []string{fmt.Sprintf(`curl -k -X POST "https://127.0.0.1:8443/registration/HubRegistration?registrationid=%s&action=activate"`, registrationKey)})
+			} else {
+				err = util.ExecContainer(h.KubeConfig, req, []string{fmt.Sprintf(`curl -k -X POST "https://127.0.0.1:8443/registration/HubRegistration?registrationid=%s&action=activate" -k --cert /opt/blackduck/hub/hub-registration/security/blackduck_system.crt --key /opt/blackduck/hub/hub-registration/security/blackduck_system.key`, registrationKey)})
+			}
+
+			if err != nil {
+				log.Infof("error in Stream: %v", err)
+			} else {
+				log.Infof("hub %s is created and auto registered. Exit!!!!", createHub.Namespace)
+				break
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}
+	return err
 }
 
 func (h *HubHandler) callHubFederator() {
@@ -206,7 +242,7 @@ func (h *HubHandler) verifyHub(hubURL string, name string) bool {
 		Timeout: 5 * time.Second,
 	}
 
-	for i := 0; i < 60; i++ {
+	for i := 0; i < 120; i++ {
 		resp, err := client.Get(fmt.Sprintf("https://%s:443/api/current-version", hubURL))
 		if err != nil {
 			log.Debugf("unable to talk with the hub %s", hubURL)

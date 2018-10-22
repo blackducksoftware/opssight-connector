@@ -24,7 +24,6 @@ package hub
 import (
 	"fmt"
 	"math"
-	"os"
 	"strings"
 	"time"
 
@@ -167,8 +166,8 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	}
 	// time.Sleep(20 * time.Second)
 
-	// Validate all pods are in running state
-	err = util.ValidatePodsAreRunningInNamespace(hc.KubeClient, createHub.Namespace)
+	// Validate postgres pod is cloned/backed up
+	err = util.WaitForServiceEndpointReady(hc.KubeClient, createHub.Namespace, "postgres")
 	if err != nil {
 		return "", "", true, err
 	}
@@ -202,36 +201,6 @@ func (hc *Creater) CreateHub(createHub *v1.HubSpec) (string, string, bool, error
 	err = util.ValidatePodsAreRunningInNamespace(hc.KubeClient, createHub.Namespace)
 	if err != nil {
 		return "", "", true, err
-	}
-
-	// Filter the registration pod to auto register the hub using the registration key from the environment variable
-	registrationPod, err := util.FilterPodByNamePrefixInNamespace(hc.KubeClient, createHub.Namespace, "registration")
-	log.Debugf("registration pod: %+v", registrationPod)
-	if err != nil {
-		return "", "", true, err
-	}
-	registrationKey := os.Getenv("REGISTRATION_KEY")
-	// log.Debugf("registration key: %s", registrationKey)
-
-	if registrationPod != nil && !strings.EqualFold(registrationKey, "") {
-		for i := 0; i < 20; i++ {
-			// Create the exec into kubernetes pod request
-			req := util.CreateExecContainerRequest(hc.KubeClient, registrationPod)
-			// Exec into the kubernetes pod and execute the commands
-			if strings.HasPrefix(createHub.HubVersion, "4.") {
-				err = hc.execContainer(req, []string{fmt.Sprintf(`curl -k -X POST "https://127.0.0.1:8443/registration/HubRegistration?registrationid=%s&action=activate"`, registrationKey)})
-			} else {
-				err = hc.execContainer(req, []string{fmt.Sprintf(`curl -k -X POST "https://127.0.0.1:8443/registration/HubRegistration?registrationid=%s&action=activate" -k --cert /opt/blackduck/hub/hub-registration/security/blackduck_system.crt --key /opt/blackduck/hub/hub-registration/security/blackduck_system.key`, registrationKey)})
-			}
-
-			if err != nil {
-				log.Infof("error in Stream: %v", err)
-			} else {
-				// Hub created and auto registered. Exit!!!!
-				break
-			}
-			time.Sleep(10 * time.Second)
-		}
 	}
 
 	// Retrieve the PVC volume name

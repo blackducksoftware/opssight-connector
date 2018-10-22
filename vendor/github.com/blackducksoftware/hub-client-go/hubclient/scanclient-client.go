@@ -41,7 +41,7 @@ func (c *Client) downloadScanClientHelper(path string, urlPath string) error {
 
 	resp, err := c.httpClient.Get(scanClientURL)
 	if err != nil {
-		return errors.Annotate(err, "unable to http GET")
+		return errors.Annotatef(err, "unable to http GET %s", urlPath)
 	} else if resp.StatusCode != http.StatusOK {
 		return errors.Errorf("GET failed: received status != 200 from %s: %s", scanClientURL, resp.Status)
 	}
