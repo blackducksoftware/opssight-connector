@@ -1,23 +1,36 @@
 ## Overview
 
-The opssight-connector provides integration between Black Duck Hub and OpenShift v3.x or Kubernetes. 
+The Black Duck OpsSight Connector provides software composition analysis of open-source components of containers in OpenShift v3.x and Kubernetes clusters. 
 
-In the current implementation, pre-existing images and pods are automatically discovered and monitored. 
+Pre-existing images and pods are automatically discovered, scanned and monitored. When a new image or pod is discovered, the OpsSight Connector kicks off a scan engine container to perform the scan and upload the results to your Black Duck instance.
 
-When a new image or pod is discovered, the integration kicks off a scan engine container to perform the scan and upload the results to your Black Duck Hub instance.
+For more information, click the [Wiki tab](https://github.com/blackducksoftware/opssight-connector/wiki).
 
 ## Getting involved 
 
-We expect most upstream contribubtions to come to the blackducksoftware perceptor/perceiver/perceptor-scan/perceptor-protoform projects.  This repo is the home for blackduck's downstream, supported product.
+We expect most upstream contributions to come to the blackducksoftware perceptor/perceiver/perceptor-scan/perceptor-protoform projects.
 
-This project is under active development and has had no official releases. We welcome all contributions, most of which will 
-probablby be to the aforementioned upstream repositories. 
+This project is under active development. We welcome all contributions, most of which will probably be to the aforementioned upstream repositories. 
 
 ## Release Status
 
-Note that anyone attempting to use the code contained in here should expect rough edges and operational issues until release. If you identify an issue, please raise it, or better yet propose a solution.
+Click the [releases tab](https://github.com/blackducksoftware/opssight-connector/releases) for the latest OpsSight releases. Alternatively, check out the [Release Notes](https://github.com/blackducksoftware/opssight-connector/wiki/Release-Notes).
+
+## Developer notes
+
+### Drafting a point release
+
+How to draft a new OpsSight release, for the developers, using OpsSight 2.0.3 as an example:
+
+- Tag branches in perceptor, perceiver, perceptor-scanner, perceptor-protoform ... which are changing (i.e. tag your perceptor branch you want to merge as release-2.0.3).
+- Clone this repo
+- Checkout the `release-2.0.x` opssight-connector branch
+- Edit the opssight-connector `Gopkg.toml` file to point to the branch in the corresponding repo which was just updated.
+- Run `dep ensure -update`
+- Push your changes to the `release-2.0.x` opssight-connector branch.
+- Now, the `build.properties` file should be something like 2.0.3-SNAPSHOT, and will automatically be updated once the downstream jenkins build is completed.
 
 ## License
 
-Apache License 2.0
 
+Apache License 2.0
