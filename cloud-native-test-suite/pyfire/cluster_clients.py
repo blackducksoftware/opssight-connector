@@ -64,8 +64,7 @@ class K8sClient:
         projects, err = subprocess.Popen(["oc","get", "projects", "--no-headers"], stdout=subprocess.PIPE).communicate()
         projects_list = ns.split("\n")[:-1] # remove empty string as last entry
         ns_list = [n.split()[0] for n in ns_list]
-        # split output and remove last entry (vault:latest)
-        return projects.split()[:-1] 
+        return projects.split()
 
 '''
 Hub Client
@@ -82,7 +81,6 @@ class HubClient:
         r = requests.post("https://"+self.host_name+":443/j_spring_security_check", verify=False, data=security_data, headers=security_headers)
         return r.cookies 
         
-
     def get_projects_dump(self): 
         r = requests.get("https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
         return r.json()['items']
@@ -102,11 +100,11 @@ OpsSight Client
 '''
 
 class OpsSightClient:
-    def __init__(self):
-        pass
+    def __init__(self, host_name):
+        self.host_name = host_name
     
     def get_dump(self):
-        r = requests.get('http://perceptor-ops.10.1.176.68.xip.io/model')
+        r = requests.get("http://"+self.host_name+"/model")
         return json.loads(r.text)
 
     def get_shas_names(self):

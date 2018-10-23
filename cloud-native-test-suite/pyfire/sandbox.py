@@ -97,7 +97,7 @@ def main():
     #k8s = K8sClient()
     #hub = HubClient("aci-471-aci-471.10.1.176.130.xip.io")
     hub = HubClient('engsreepath471-engsreepath471.10.1.176.130.xip.io')
-    #opssight = OpsSightClient()
+    #opssight = OpsSightClient('perceptor-ops.10.1.176.68.xip.io')
     #print(k8s.get_namespaces())
     #print(k8s.get_images())
     #print(hub.get_projects_names())
@@ -115,7 +115,7 @@ def main():
 
     #check_namespaces_loop(k8s)
 
-    print(hub.get_code_locations_names())
+    print(hub.get_projects_names())
 
 
 main()
