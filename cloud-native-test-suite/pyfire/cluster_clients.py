@@ -1,5 +1,6 @@
 import json
 import subprocess
+import requests
 
 NUM_MAX_PROJECTS=10000000
 
@@ -75,22 +76,23 @@ class HubClient:
         self.secure_login_cookie = self.get_secure_login_cookie()
 
     def get_secure_login_cookie(self):
-        secure_login_cookie, err = subprocess.Popen("curl -si --insecure --header 'Content-Type: application/x-www-form-urlencoded' --request POST --data 'j_username=sysadmin&j_password=blackduck' https://"+self.host_name+":443/j_spring_security_check | awk '/Set-Cookie/{print $2}' | sed 's/;$//'", shell=True, stdout=subprocess.PIPE).communicate()
-        return secure_login_cookie
+        security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
+        security_data = {'j_username':'sysadmin','j_password':'blackduck'}
+        # verify=False does not verify SSL connection - insecure
+        r = requests.post("https://"+self.host_name+":443/j_spring_security_check", verify=False, data=security_data, headers=security_headers)
+        return r.cookies 
+        
 
     def get_projects_dump(self): 
-        projects_json, err = subprocess.Popen("curl --insecure -sX GET -H 'Accept: application/json' -H 'Cookie: "+self.secure_login_cookie+"' https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS), shell=True, stdout=subprocess.PIPE).communicate()
-        d = json.loads(projects_json)
-        return d['items']
+        r = requests.get("https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
+        return r.json()['items']
 
     def get_projects_names(self):
         return [x['name'] for x in self.get_projects_dump()]
 
-
     def get_code_locations_dump(self):
-        code_locs_json, err = subprocess.Popen("curl --insecure -sX GET -H 'Accept: application/json' -H 'Cookie: "+self.secure_login_cookie+"' https://"+self.host_name+":443/api/codelocations?limit="+str(NUM_MAX_PROJECTS), shell=True, stdout=subprocess.PIPE).communicate()
-        d = json.loads(code_locs_json)
-        return d
+        r = requests.get("https://"+self.host_name+":443/api/codelocations?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
+        return r.json()
 
     def get_code_locations_names(self):
         return [x['name'] for x in self.get_code_locations_dump()['items']]
@@ -102,11 +104,10 @@ OpsSight Client
 class OpsSightClient:
     def __init__(self):
         pass
-
+    
     def get_dump(self):
-        code_locs_json, err = subprocess.Popen("curl -sX GET -H 'Accept: application/json' http://perceptor-ops.10.1.176.68.xip.io/model", shell=True, stdout=subprocess.PIPE).communicate()
-        d = json.loads(code_locs_json)
-        return d
+        r = requests.get('http://perceptor-ops.10.1.176.68.xip.io/model')
+        return json.loads(r.text)
 
     def get_shas_names(self):
         return self.get_dump()['CoreModel']['Images'].keys()
