@@ -1,0 +1,112 @@
+import json
+import subprocess
+
+NUM_MAX_PROJECTS=10000000
+
+''' 
+K8S Client 
+'''
+class K8sClient:
+    def __init__(self):
+        pass
+
+    def get_namespaces(self):
+        # K8s command to get a table of namespaces without the header line
+        ns, err = subprocess.Popen(["oc","get", "ns","--no-headers"], stdout=subprocess.PIPE).communicate()
+        # Split output by row
+        ns_list = ns.split("\n")[:-1] # remove empty string as last entry
+        # Get first entry in each row
+        ns_list = [n.split()[0] for n in ns_list]
+        return ns_list
+        
+
+    def get_images(self, namespace=""):
+        # Select all namespaces if one wasn't provided
+        if namespace == '':
+            namespace = '--all-namespaces'
+        else:
+            namespace = '-n '+namespace 
+        # Path to an image within a Pod's spec
+        image_path = '{.items[*].spec.containers[*].image}'
+        # K8s Terminal Command to get all pods and extract the images from the pod's json
+        k8s_command = ''.join(['oc get pods ',namespace,' -o jsonpath="',image_path,'"'])
+        images, err = subprocess.Popen(k8s_command, shell=True, stdout=subprocess.PIPE).communicate()
+        # Remove initial ", split output, and remove last entry (vault:latest")
+        return images[1:].split()
+
+    def get_images_per_pod(self):
+        pods = json.loads(subprocess.Popen("oc get pods --all-namespaces -o json", shell=True, stdout=subprocess.PIPE).communicate()[0])
+        pod_dump = []
+        for pod in pods['items']:
+            ns = pod['metadata']['namespace']
+            try:
+                for container in pod['status']['containerStatuses']:
+                    name = container['name']
+                    image = container['image']
+                    imageID = container['imageID']
+                    pod_dump.append([ns, name, image, imageID])
+            except:
+                print("======== NO CONTAINER STATUSES ========")
+                print(json.dumps(pod, indent=2))
+        return pod_dump
+
+
+    def get_annotations_per_pod(self):
+        pass 
+
+    def get_labels_per_pod(self):
+        pass
+
+
+    def get_all_projects(self): 
+        # K8s command to get all projects
+        projects, err = subprocess.Popen(["oc","get", "projects", "--no-headers"], stdout=subprocess.PIPE).communicate()
+        projects_list = ns.split("\n")[:-1] # remove empty string as last entry
+        ns_list = [n.split()[0] for n in ns_list]
+        # split output and remove last entry (vault:latest)
+        return projects.split()[:-1] 
+
+'''
+Hub Client
+'''
+class HubClient:
+    def __init__(self, host_name):
+        self.host_name = host_name
+        self.secure_login_cookie = self.get_secure_login_cookie()
+
+    def get_secure_login_cookie(self):
+        secure_login_cookie, err = subprocess.Popen("curl -si --insecure --header 'Content-Type: application/x-www-form-urlencoded' --request POST --data 'j_username=sysadmin&j_password=blackduck' https://"+self.host_name+":443/j_spring_security_check | awk '/Set-Cookie/{print $2}' | sed 's/;$//'", shell=True, stdout=subprocess.PIPE).communicate()
+        return secure_login_cookie
+
+    def get_projects_dump(self): 
+        projects_json, err = subprocess.Popen("curl --insecure -sX GET -H 'Accept: application/json' -H 'Cookie: "+self.secure_login_cookie+"' https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS), shell=True, stdout=subprocess.PIPE).communicate()
+        d = json.loads(projects_json)
+        return d['items']
+
+    def get_projects_names(self):
+        return [x['name'] for x in self.get_projects_dump()]
+
+
+    def get_code_locations_dump(self):
+        code_locs_json, err = subprocess.Popen("curl --insecure -sX GET -H 'Accept: application/json' -H 'Cookie: "+self.secure_login_cookie+"' https://"+self.host_name+":443/api/codelocations?limit="+str(NUM_MAX_PROJECTS), shell=True, stdout=subprocess.PIPE).communicate()
+        d = json.loads(code_locs_json)
+        return d
+
+    def get_code_locations_names(self):
+        return [x['name'] for x in self.get_code_locations_dump()['items']]
+
+'''
+OpsSight Client
+'''
+
+class OpsSightClient:
+    def __init__(self):
+        pass
+
+    def get_dump(self):
+        code_locs_json, err = subprocess.Popen("curl -sX GET -H 'Accept: application/json' http://perceptor-ops.10.1.176.68.xip.io/model", shell=True, stdout=subprocess.PIPE).communicate()
+        d = json.loads(code_locs_json)
+        return d
+
+    def get_shas_names(self):
+        return self.get_dump()['CoreModel']['Images'].keys()

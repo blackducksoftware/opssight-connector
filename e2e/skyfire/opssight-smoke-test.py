@@ -1,5 +1,3 @@
-from clusterClients import *
-
 def create_hub_yaml():
     ns, err = subprocess.Popen(["./create-hub.sh",arg1], stdout=subprocess.PIPE).communicate()
     return err
@@ -12,9 +10,6 @@ def checks():
     pass
 
 def main():
-    k8s = K8sClient()
-    hub = HubClient()
-    opssight = OpsSightClient()
     # Create Project in the Cluster
     ns, err = subprocess.Popen(["oc", "new-project", "opssight-smoke-test"], stdout=subprocess.PIPE).communicate()
     # Create yaml files
@@ -30,5 +25,3 @@ def main():
     ns, err = subprocess.Popen(["oc", "delete", "-f", "create-opssight.yml"], stdout=subprocess.PIPE).communicate()
     ns, err = subprocess.Popen(["oc", "delete", "project", "opssight-smoke-test"], stdout=subprocess.PIPE).communicate()
     return 0
-
-
