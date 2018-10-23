@@ -2,7 +2,7 @@
 
 CPUS=$1
 
-cat << EOF > create-opssight.yml
+cat << EOF > opssight.yml
 apiVersion: synopsys.com/v1
 kind: OpsSight
 metadata:
