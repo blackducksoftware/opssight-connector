@@ -94,7 +94,7 @@ def check_namespaces_loop(k8s):
         old_namespaces=new_namespaces
 
 def main():
-    #k8s = K8sClient()
+    k8s = K8sClient()
     #hub = HubClient("aci-471-aci-471.10.1.176.130.xip.io")
     hub = HubClient('engsreepath471-engsreepath471.10.1.176.130.xip.io')
     #opssight = OpsSightClient('perceptor-ops.10.1.176.68.xip.io')
@@ -115,7 +115,7 @@ def main():
 
     #check_namespaces_loop(k8s)
 
-    print(hub.get_projects_names())
+    print(k8s.get_annotations_per_pod())
 
 
 main()

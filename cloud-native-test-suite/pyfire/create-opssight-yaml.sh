@@ -7,58 +7,45 @@ apiVersion: synopsys.com/v1
 kind: OpsSight
 metadata:
   clusterName: ""
-  name: opssight-test
-  namespace: ""
+  name: ops
 spec:
-  annotationIntervalSeconds: 30
-  checkForStalledScansPauseHours: 999999
-  concurrentScanLimit: 2
-  defaultCpu: ${CPUS}
-  defaultMem: 1300Mi
-  defaultVersion: master
-  dumpIntervalMinutes: 30
-  hubClientTimeoutPerceptorMilliseconds: 100000
-  hubClientTimeoutScannerSeconds: 600
-  hubPort: 443
-  hubUser: sysadmin
-  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD
-  imageFacadeImageName: perceptor-imagefacade
-  imageFacadePort: 3004
-  imagePath: saas-hub-stg/blackducksoftware
-  imagePerceiver: false
-  imagePerceiverImageName: image-perceiver
-  logLevel: info
-  metrics: true
-  modelMetricsPauseSeconds: 15
-  names:
-    image-perceiver: image-perceiver
-    perceiver: perceiver
-    perceptor: perceptor
-    perceptor-image-facade: perceptor-imagefacade
-    perceptor-scanner: perceptor-scanner
-    pod-perceiver: pod-perceiver
-    skyfire: skyfire
-  namespace: opssight-test
-  perceiverPort: 3002
-  perceptorImageName: perceptor
-  perceptorPort: 3001
-  perceptorSkyfire: false
-  podPerceiver: true
-  podPerceiverImageName: pod-perceiver
-  registry: gcr.io
-  scannerImageName: perceptor-scanner
-  scannerPort: 3003
-  secretName: blackduck-secret
-  serviceAccounts:
-    image-perceiver: perceiver
-    perceptor-image-facade: perceptor-scanner
-    pod-perceiver: perceiver
-    skyfire: skyfire
-  skyfireImageName: skyfire
-  skyfirePort: 3005
-  stalledScanClientTimeoutHours: 999999
-  state: running
-  totalScanLimit: 1000
-  unknownImagePauseMilliseconds: 15000
-  useMockMode: false
+  namespace: ops
+  annotationIntervalSeconds: 30 # Optional
+  dumpIntervalMinutes: 30 # Optional
+  hubUser: sysadmin # Optional
+  hubPort: 443 # Optional
+  hubClientTimeoutPerceptorMilliseconds: 100000 # Optional
+  hubClientTimeoutScannerSeconds: 600 # Optional
+  concurrentScanLimit: 2 # Optional
+  totalScanLimit: 1000 # Optional
+  # CONTAINER PULL CONFIG
+  perceptorImage: "gcr.io/saas-hub-stg/blackducksoftware/perceptor:master"
+  scannerImage: "gcr.io/saas-hub-stg/blackducksoftware/perceptor-scanner:master"
+  podPerceiverImage: "gcr.io/saas-hub-stg/blackducksoftware/pod-perceiver:master"
+  imageFacadeImage: "gcr.io/saas-hub-stg/blackducksoftware/perceptor-imagefacade:master"
+  skyfireImage: "gcr.io/saas-hub-stg/blackducksoftware/skyfire:master"
+  imagePerceiver: false # OpenShift only!  Set to true to scan images in the OpenShift internal Docker registry
+  podPerceiver: true  # Both Kubernetes and Openshift.  Set to true to scan images running in pods.
+  metrics: true  # Set to true to enable a prometheus master for metrics visualizations.
+  # Example: "300m"
+  defaultCpu: 300m # Optional
+  # Example: "1300Mi"
+  defaultMem: 1300Mi # Optional
+  # Log level
+  logLevel: debug # Optional
+  # Environment Variables
+  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD # Optional, environment variable used to manage the Hub password
+  # Configuration secret
+  secretName: blackduck-secret # Optional, if the default perceptor secret name to be changed
+  initialNoOfHubs: 0
+  maxNoOfHubs: 0
+  hubSpec:
+    backupSupport: "No" # Required, possible values are 'Yes', 'No'
+    certificateName: default # Required, possible values are 'default', 'manual' or other hub names
+    dbPrototype: "empty" # Required, possible values are empty or other hub names
+    dockerRegistry: docker.io # Required
+    dockerRepo: blackducksoftware # Required
+    hubVersion: 5.0.0 # Required
+    flavor: small # Required, possible values are 'small', 'medium', 'large' or 'opssight'
+    hubType: senthil # Required, possible values are 'master' or 'worker' or 'any custom value to filter the hubs corresponding to particular opssight'
 EOF

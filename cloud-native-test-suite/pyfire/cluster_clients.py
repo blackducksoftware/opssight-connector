@@ -4,6 +4,10 @@ import requests
 
 NUM_MAX_PROJECTS=10000000
 
+class Client:
+    def k8sCommand():
+        pass
+
 ''' 
 K8S Client 
 '''
@@ -49,7 +53,6 @@ class K8sClient:
                 print("======== NO CONTAINER STATUSES ========")
                 print(json.dumps(pod, indent=2))
         return pod_dump
-
 
     def get_annotations_per_pod(self, namespace=""):
         namespace = '--all-namespaces' if namespace == '' else '-n '+namespace 
@@ -118,6 +121,10 @@ OpsSight Client
 class OpsSightClient:
     def __init__(self, host_name):
         self.host_name = host_name
+
+    def create(self):
+        pass # spin up with Matt's yaml
+        # get the url by exposing 
     
     def get_dump(self):
         r = requests.get("http://"+self.host_name+"/model")

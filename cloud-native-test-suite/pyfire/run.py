@@ -12,12 +12,12 @@ def tests(k8s_client, hub_client, opssight_client):
     if len(hub_client.get_projects_names()) > 0:
         print("Connected to Hub!")
     else:
-        print("Couldn't Connect to Hub")
+        sys.exit("Couldn't Connect to Hub")
 
     if len(opssight_client.get_shas_names()) > 0:
         print("Connected to OpsSight!")
     else:
-        print("Couldn't Connect to OpsSight")
+        sys.exit("Couldn't Connect to OpsSight")
     
 
 def main():
@@ -56,7 +56,7 @@ def main():
     ns, err = subprocess.Popen(["oc", "delete", "project", "opssight-smoke-test"], stdout=subprocess.PIPE).communicate()
     if err != None:
         sys.exit(err)
-        
+
     return 0
 
 
