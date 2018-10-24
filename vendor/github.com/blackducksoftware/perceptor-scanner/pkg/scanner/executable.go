@@ -46,7 +46,7 @@ func RunScanner(configPath string, stop <-chan struct{}) {
 	prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
 	prometheus.Unregister(prometheus.NewGoCollector())
 
-	scannerManager, err := NewScanner(config)
+	scannerManager, err := NewScanner(config, stop)
 	scannerManager.StartRequestingScanJobs()
 
 	http.Handle("/metrics", prometheus.Handler())

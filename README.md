@@ -1,16 +1,16 @@
 ## Overview
 
-The Black Duck OpsSight Connector provides software composition analysis of open-source components of containers in OpenShift v3.x and Kubernetes clusters. 
+The Black Duck OpsSight Connector provides software composition analysis of open-source components of containers in OpenShift v3.x and Kubernetes clusters.
 
 Pre-existing images and pods are automatically discovered, scanned and monitored. When a new image or pod is discovered, the OpsSight Connector kicks off a scan engine container to perform the scan and upload the results to your Black Duck instance.
 
 For more information, click the [Wiki tab](https://github.com/blackducksoftware/opssight-connector/wiki).
 
-## Getting involved 
+## Getting involved
 
 We expect most upstream contributions to come to the blackducksoftware perceptor/perceiver/perceptor-scan/perceptor-protoform projects.
 
-This project is under active development. We welcome all contributions, most of which will probably be to the aforementioned upstream repositories. 
+This project is under active development. We welcome all contributions, most of which will probably be to the aforementioned upstream repositories.
 
 ## Release Status
 
@@ -32,6 +32,4 @@ How to draft a new OpsSight release, for the developers, using OpsSight 2.0.3 as
 
 ## License
 
-
 Apache License 2.0
-

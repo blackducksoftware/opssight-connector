@@ -77,10 +77,10 @@ func NewPodPerceiver(handler annotations.PodAnnotatorHandler, configPath string)
 
 	perceptorURL := fmt.Sprintf("http://%s:%d", config.PerceptorHost, config.PerceptorPort)
 	p := PodPerceiver{
-		podController:      controller.NewPodController(clientset, perceptorURL, handler),
+		podController:      controller.NewPodController(clientset, perceptorURL, config.NamespaceFilter, handler),
 		podAnnotator:       annotator.NewPodAnnotator(clientset.CoreV1(), perceptorURL, handler),
 		annotationInterval: time.Second * time.Duration(config.AnnotationIntervalSeconds),
-		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL),
+		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL, config.NamespaceFilter),
 		dumpInterval:       time.Minute * time.Duration(config.DumpIntervalMinutes),
 		metricsURL:         fmt.Sprintf(":%d", config.Port),
 	}
@@ -95,7 +95,7 @@ func (pp *PodPerceiver) Run(stopCh <-chan struct{}) {
 	go pp.podAnnotator.Run(pp.annotationInterval, stopCh)
 	go pp.podDumper.Run(pp.dumpInterval, stopCh)
 
-	log.Infof("starting prometheus on %d", pp.metricsURL)
+	log.Infof("starting prometheus on %s", pp.metricsURL)
 	http.ListenAndServe(pp.metricsURL, nil)
 
 	<-stopCh

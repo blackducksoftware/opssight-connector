@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: List
+metadata:
+  name: blackduck-operator
+items:
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: blackduck-operator
+    labels:
+      name: blackduck-operator
+  spec:
+    replicas: 1
+    selector:
+      name: blackduck-operator
+    template:
+      metadata:
+        labels:
+          name: blackduck-operator
+      spec:
+        containers:
+        - name: blackduck-operator
+          image: docker.io/blackducksoftware/blackduck-operator:${TAG}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 8080
+          env:
+          - name: REGISTRATION_KEY
+            value: ${REGISTRATION_KEY}
+          volumeMounts:
+          - mountPath: /etc/blackduck-operator
+            name: blackduck-operator
+          args:
+          - /etc/blackduck-operator/config.json
+          command:
+          - ./blackduck-operator
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: blackduck-operator
+          name: blackduck-operator
+        serviceAccount: blackduck-operator
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: blackduck-operator
+  spec:
+    selector:
+      name: blackduck-operator
+    ports:
+      - protocol: TCP
+        port: 8080
+        targetPort: 8080
+        name: blackduck-operator
+      - protocol: TCP
+        port: 8072
+        targetPort: 8072
+        name: blackduck-operator-metrics
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: blackduck-operator
+  data:
+    config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "PostgresRestartInMins": 10, "NFSPath" : "/kubenfs", "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "docker.io", "ImagePath": "blackducksoftware", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: blackduck-operator
+    namespace: ${NAMESPACE}
+- kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+  metadata:
+    name: blackduck-operator-cluster-admin
+  subjects:
+  - kind: ServiceAccount
+    name: blackduck-operator
+    namespace: ${NAMESPACE}
+  roleRef:
+    kind: ClusterRole
+    name: cluster-admin
+    apiGroup: ""
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      prometheus.io/scrape: 'true'
+    labels:
+      name: prometheus
+    name: prometheus
+  spec:
+    selector:
+      app: prometheus
+    type: NodePort
+    ports:
+    - name: prometheus
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    name: prometheus
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: prometheus
+    template:
+      metadata:
+        name: prometheus
+        labels:
+          app: prometheus
+      spec:
+        containers:
+        - name: prometheus
+          image: prom/prometheus:v2.1.0
+          args:
+          - '--log.level=debug'
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/tmp/data/'
+          ports:
+          - name: web
+            containerPort: 9090
+          volumeMounts:
+          - name: data
+            mountPath: /data
+          - name: config-volume
+            mountPath: /etc/prometheus
+        volumes:
+        - name: data
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: prometheus
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: prometheus
+  data:
+    prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"blackduck-operator-scrape","scrape_interval":"5s","static_configs":[{"targets":["blackduck-operator:8072"]}]}]}'

@@ -10,7 +10,7 @@ ARG VERSION
 COPY ./LICENSE /licenses/
 COPY ./help.1 /help.1
 
-COPY ./opssight-scanner ./perceptor-scanner
+COPY ./opssight-scanner ./opssight-scanner
 
 LABEL name="Black Duck OpsSight Scanner" \
       vendor="Black Duck Software" \
@@ -19,6 +19,8 @@ LABEL name="Black Duck OpsSight Scanner" \
       description="This container is used to scan images received from opsight-core." \
       lastcommit="$LASTCOMMIT" \
       buildtime="$BUILDTIME" \
-      license="apache"
+      license="apache" \
+      release="$VERSION" \
+      version="$VERSION"
 
-CMD ["./perceptor-scanner"]
+CMD ["./opssight-scanner"]

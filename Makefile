@@ -18,6 +18,8 @@ endif
 OUTDIR=_output
 BUILDDIR=build
 LOCAL_TARGET=local
+FEDERATOR:=federator
+OPSSIGHT_CORE:=opssight-core
 
 CURRENT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
@@ -42,13 +44,32 @@ endif
 	mv cmd/$@/$@ ${OUTDIR}
 
 container: registry_check container_prep
-	$(foreach p,${BINARY},cd ${CURRENT_DIR}/${BUILDDIR}/$p; docker build . -t $(REGISTRY)/$(PREFIX)${p}:$(TAG) --build-arg VERSION=$(TAG) --build-arg 'BUILDTIME=$(BUILD_TIME)' --build-arg LASTCOMMIT=$(LAST_COMMIT);)
+	$(foreach p,${BINARY}, \
+		if [[ $(p) != $(FEDERATOR) ]]; then \
+			cd ${CURRENT_DIR}/${BUILDDIR}/$p; \
+			docker build . -t $(REGISTRY)/$(PREFIX)${p}:$(TAG) --build-arg VERSION=$(TAG) --build-arg 'BUILDTIME=$(BUILD_TIME)' --build-arg LASTCOMMIT=$(LAST_COMMIT);\
+		fi; \
+	 )
 
 container_prep: ${OUTDIR} $(BINARY)
-	$(foreach p,${BINARY},mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p;)
+	$(foreach p,${BINARY},\
+		if [[ $(p) = $(FEDERATOR) ]]; then \
+			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
+			cp ${CURRENT_DIR}/cmd/$p/* ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
+		else \
+			if [[ $(p) != $(OPSSIGHT_CORE) ]]; then \
+				mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; \
+			fi; \
+			cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p; \
+		fi; \
+	 )
 
 push: container
-	$(foreach p,${BINARY},$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:$(TAG);)
+	$(foreach p,${BINARY}, \
+		if [[ $(p) != $(FEDERATOR) ]]; then \
+			$(PREFIX_CMD) docker $(DOCKER_OPTS) push $(REGISTRY)/$(PREFIX)${p}:$(TAG);\
+		fi; \
+	)
 
 test:
 	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.9 go test ./pkg/...

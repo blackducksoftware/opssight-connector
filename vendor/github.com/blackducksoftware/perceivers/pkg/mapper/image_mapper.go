@@ -41,6 +41,6 @@ func NewPerceptorImageFromOSImage(image *imageapi.Image) (*perceptorapi.Image, e
 		metrics.RecordError("image_mapper", "unable to parse openshift imageID")
 		return nil, fmt.Errorf("unable to parse openshift imageID %s: %v", dockerRef, err)
 	}
-
-	return perceptorapi.NewImage(name, "", sha), nil
+	priority := 0
+	return perceptorapi.NewImage(name, "", sha, &priority), nil
 }

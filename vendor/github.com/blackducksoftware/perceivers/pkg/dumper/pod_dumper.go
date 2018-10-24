@@ -32,8 +32,6 @@ import (
 
 	perceptorapi "github.com/blackducksoftware/perceptor/pkg/api"
 
-	"k8s.io/api/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -45,13 +43,18 @@ import (
 type PodDumper struct {
 	coreV1     corev1.CoreV1Interface
 	allPodsURL string
+	filter     string
 }
 
 // NewPodDumper creates a new PodDumper object
-func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string) *PodDumper {
+func NewPodDumper(core corev1.CoreV1Interface, perceptorURL string, nsFilter string) *PodDumper {
+	if nsFilter == "" {
+		nsFilter = metav1.NamespaceAll
+	}
 	return &PodDumper{
 		coreV1:     core,
 		allPodsURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.AllPodsPath),
+		filter:     nsFilter,
 	}
 }
 
@@ -101,7 +104,8 @@ func (pd *PodDumper) getAllPodsAsPerceptorPods() ([]perceptorapi.Pod, error) {
 
 	// Get all pods from kubernetes
 	getPodsStart := time.Now()
-	pods, err := pd.coreV1.Pods(v1.NamespaceAll).List(metav1.ListOptions{})
+
+	pods, err := pd.coreV1.Pods(pd.filter).List(metav1.ListOptions{})
 	metrics.RecordDuration("get pods", time.Now().Sub(getPodsStart))
 	if err != nil {
 		return nil, err

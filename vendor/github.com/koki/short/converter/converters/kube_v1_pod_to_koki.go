@@ -154,6 +154,9 @@ func convertPodSpec(kubeSpec v1.PodSpec) (*types.PodTemplate, error) {
 			if container.UID == nil {
 				container.UID = securityContext.RunAsUser
 			}
+			if container.GID == nil {
+				container.GID = securityContext.RunAsGroup
+			}
 			if container.ForceNonRoot == nil {
 				container.ForceNonRoot = securityContext.RunAsNonRoot
 			}
@@ -847,6 +850,7 @@ func convertContainer(container *v1.Container) (*types.Container, error) {
 		}
 		kokiContainer.ForceNonRoot = container.SecurityContext.RunAsNonRoot
 		kokiContainer.UID = container.SecurityContext.RunAsUser
+		kokiContainer.GID = container.SecurityContext.RunAsGroup
 		kokiContainer.SELinux = convertSELinux(container.SecurityContext.SELinuxOptions)
 		kokiContainer.AddCapabilities = convertCapabilitiesAdds(container.SecurityContext.Capabilities)
 		kokiContainer.DelCapabilities = convertCapabilitiesDels(container.SecurityContext.Capabilities)
@@ -1233,7 +1237,7 @@ func convertVolumeMounts(mounts []v1.VolumeMount) ([]types.VolumeMount, error) {
 			if err != nil {
 				return nil, err
 			}
-			km.Propagation = propagation
+			km.Propagation = &propagation
 		}
 		access := "rw"
 		if mount.ReadOnly {

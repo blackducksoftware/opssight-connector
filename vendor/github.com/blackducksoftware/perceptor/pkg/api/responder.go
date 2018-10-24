@@ -43,7 +43,6 @@ type Responder interface {
 	PostFinishScan(job FinishedScanClientJob) error
 
 	// internal use
-	PostConfig(config *PostConfig)
 	PostCommand(commands *PostCommand)
 
 	// errors

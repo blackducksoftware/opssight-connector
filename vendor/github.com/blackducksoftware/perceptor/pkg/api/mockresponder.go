@@ -25,9 +25,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"time"
 
-	"github.com/blackducksoftware/perceptor/pkg/hub"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -58,28 +56,32 @@ type ImageInfo struct {
 
 // GetModel .....
 func (mr *MockResponder) GetModel() Model {
-	images := map[string]*ModelImageInfo{}
-	for key, image := range mr.Images {
-		scanResults := &hub.ScanResults{
-			PolicyStatus: hub.PolicyStatus{
-				OverallStatus: hub.PolicyStatusTypeNotInViolation,
-				UpdatedAt:     time.Now().String(),
-				ComponentVersionStatusCounts: map[hub.PolicyStatusType]int{
-					hub.PolicyStatusTypeNotInViolation: 3,
-				},
-			},
-			RiskProfile: hub.RiskProfile{BomLastUpdatedAt: time.Now().String()}}
-		images[key] = &ModelImageInfo{
-			ImageSha: key,
-			RepoTags: []*ModelRepoTag{
-				{Repository: image.Image.Repository, Tag: image.Image.Tag},
-			},
-			ScanResults: scanResults}
-	}
-	return Model{
-		Images: images,
-		Pods:   mr.Pods,
-	}
+	// images := map[string]*ModelImageInfo{}
+	// for key, image := range mr.Images {
+	// 	scanResults := map[string]interface{}{
+	// 		"PolicyStatus": "NOT_IN_VIOLATION",
+	// 	}
+	// 	// &hub.ScanResults{
+	// 	// PolicyStatus: hub.PolicyStatus{
+	// 	// 	OverallStatus: hub.PolicyStatusTypeNotInViolation,
+	// 	// 	UpdatedAt:     time.Now().String(),
+	// 	// 	ComponentVersionStatusCounts: map[hub.PolicyStatusType]int{
+	// 	// 		hub.PolicyStatusTypeNotInViolation: 3,
+	// 	// 	},
+	// 	// },
+	// 	// RiskProfile: hub.RiskProfile{BomLastUpdatedAt: time.Now().String()}}
+	// 	images[key] = &ModelImageInfo{
+	// 		ImageSha: key,
+	// 		RepoTags: []*ModelRepoTag{
+	// 			{Repository: image.Image.Repository, Tag: image.Image.Tag},
+	// 		},
+	// 		ScanResults: scanResults}
+	// }
+	// return Model{
+	// 	Images: images,
+	// 	Pods:   mr.Pods,
+	// }
+	return Model{}
 }
 
 // perceiver
@@ -213,11 +215,6 @@ func (mr *MockResponder) PostFinishScan(job FinishedScanClientJob) error {
 }
 
 // internal use
-
-// PostConfig .....
-func (mr *MockResponder) PostConfig(config *PostConfig) {
-	// TODO
-}
 
 // PostCommand ...
 func (mr *MockResponder) PostCommand(command *PostCommand) {
