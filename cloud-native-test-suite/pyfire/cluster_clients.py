@@ -23,20 +23,19 @@ class K8sClient:
 
     def get_images(self, namespace=""):
         # Select all namespaces if one wasn't provided
-        if namespace == '':
-            namespace = '--all-namespaces'
-        else:
-            namespace = '-n '+namespace 
+        namespace = '--all-namespaces' if namespace == '' else '-n '+namespace 
         # Path to an image within a Pod's spec
         image_path = '{.items[*].spec.containers[*].image}'
         # K8s Terminal Command to get all pods and extract the images from the pod's json
         k8s_command = ''.join(['oc get pods ',namespace,' -o jsonpath="',image_path,'"'])
         images, err = subprocess.Popen(k8s_command, shell=True, stdout=subprocess.PIPE).communicate()
-        # Remove initial ", split output, and remove last entry (vault:latest")
+        # Remove initial "
         return images[1:].split()
 
-    def get_images_per_pod(self):
-        pods = json.loads(subprocess.Popen("oc get pods --all-namespaces -o json", shell=True, stdout=subprocess.PIPE).communicate()[0])
+    def get_images_per_pod(self, namespace=""):
+        namespace = '--all-namespaces' if namespace == '' else '-n '+namespace 
+        k8s_command = ''.join(["oc get pods ",namespace," -o json"])
+        pods = json.loads(subprocess.Popen(k8s_command, shell=True, stdout=subprocess.PIPE).communicate()[0])
         pod_dump = []
         for pod in pods['items']:
             ns = pod['metadata']['namespace']
@@ -52,12 +51,29 @@ class K8sClient:
         return pod_dump
 
 
-    def get_annotations_per_pod(self):
-        pass 
+    def get_annotations_per_pod(self, namespace=""):
+        namespace = '--all-namespaces' if namespace == '' else '-n '+namespace 
+        k8s_command = ''.join(["oc get pods ",namespace," -o json"])
+        pods = json.loads(subprocess.Popen(k8s_command, shell=True, stdout=subprocess.PIPE).communicate()[0])
+        pod_dump = []
+        for pod in pods['items']:
+            ns = pod['metadata']['namespace']
+            name = pod['metadata']['name']
+            annotation = pod['metadata']['annotations']
+            pod_dump.append([ns, name, annotation])
+        return pod_dump
 
-    def get_labels_per_pod(self):
-        pass
-
+    def get_labels_per_pod(self, namespace=""):
+        namespace = '--all-namespaces' if namespace == '' else '-n '+namespace 
+        k8s_command = ''.join(["oc get pods ",namespace," -o json"])
+        pods = json.loads(subprocess.Popen(k8s_command, shell=True, stdout=subprocess.PIPE).communicate()[0])
+        pod_dump = []
+        for pod in pods['items']:
+            ns = pod['metadata']['namespace']
+            name = pod['metadata']['name']
+            annotation = pod['metadata']['labels']
+            pod_dump.append([ns, name, annotation])
+        return pod_dump
 
     def get_all_projects(self): 
         # K8s command to get all projects
