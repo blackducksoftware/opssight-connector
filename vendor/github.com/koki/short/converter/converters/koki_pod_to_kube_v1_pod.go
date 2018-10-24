@@ -1382,6 +1382,11 @@ func revertSecurityContext(container types.Container) (*v1.SecurityContext, erro
 		mark = true
 	}
 
+	if container.GID != nil {
+		sc.RunAsGroup = container.GID
+		mark = true
+	}
+
 	if container.AddCapabilities != nil || container.DelCapabilities != nil {
 		caps := &v1.Capabilities{}
 		var capMark bool
@@ -1522,7 +1527,9 @@ func revertVolumeMounts(mounts []types.VolumeMount) []v1.VolumeMount {
 	for i := range mounts {
 		mount := mounts[i]
 		kubeMount := v1.VolumeMount{}
-		kubeMount.MountPropagation = revertMountPropagation(mount.Propagation)
+		if mount.Propagation != nil {
+			kubeMount.MountPropagation = revertMountPropagation(mount.Propagation)
+		}
 		kubeMount.MountPath = mount.MountPath
 
 		fields := strings.Split(mount.Store, ":")
@@ -1545,14 +1552,14 @@ func revertVolumeMounts(mounts []types.VolumeMount) []v1.VolumeMount {
 	return kubeMounts
 }
 
-func revertMountPropagation(prop types.MountPropagation) *v1.MountPropagationMode {
+func revertMountPropagation(prop *types.MountPropagation) *v1.MountPropagationMode {
 	mode := v1.MountPropagationHostToContainer
 
-	if prop == types.MountPropagationBidirectional {
+	if *prop == types.MountPropagationBidirectional {
 		mode = v1.MountPropagationBidirectional
 	}
 
-	if prop == types.MountPropagationNone {
+	if *prop == types.MountPropagationNone {
 		mode = v1.MountPropagationNone
 	}
 

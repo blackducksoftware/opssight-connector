@@ -59,7 +59,7 @@ func RecordImageAnnotation(annotator string, imageName string) {
 
 // RecordPodAnnotation records metric information related to pod annotations
 func RecordPodAnnotation(annotator string, podName string) {
-	podsAnnotated.With(prometheus.Labels{"annotator": annotator, "pod_name": podName})
+	podsAnnotated.With(prometheus.Labels{"annotator": annotator, "pod_name": podName}).Inc()
 	totalPodsAnnotated.With(prometheus.Labels{"annotator": annotator, "pods_annotated": "total"}).Inc()
 }
 

@@ -98,7 +98,7 @@ func (ip *ImagePerceiver) Run(stopCh <-chan struct{}) {
 	go ip.ImageAnnotator.Run(ip.annotationInterval, stopCh)
 	go ip.ImageDumper.Run(ip.dumpInterval, stopCh)
 
-	log.Infof("starting prometheus on %d", ip.metricsURL)
+	log.Infof("starting prometheus on %s", ip.metricsURL)
 	http.ListenAndServe(ip.metricsURL, nil)
 
 	<-stopCh

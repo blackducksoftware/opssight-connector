@@ -37,7 +37,6 @@ const (
 // HubScanClient implements ScanClientInterface using
 // the Black Duck hub and scan client programs.
 type HubScanClient struct {
-	host           string
 	username       string
 	port           int
 	scanClientInfo *scanClientInfo
@@ -45,9 +44,8 @@ type HubScanClient struct {
 }
 
 // NewHubScanClient requires hub login credentials
-func NewHubScanClient(host string, username string, port int, scanClientInfo *scanClientInfo, imagePuller ImagePullerInterface) (*HubScanClient, error) {
+func NewHubScanClient(username string, port int, scanClientInfo *scanClientInfo, imagePuller ImagePullerInterface) (*HubScanClient, error) {
 	hsc := HubScanClient{
-		host:           host,
 		username:       username,
 		port:           port,
 		scanClientInfo: scanClientInfo,
@@ -80,7 +78,7 @@ func (hsc *HubScanClient) Scan(job ScanJob) error {
 		"-Done-jar.silent=true",
 		"-Done-jar.jar.path="+scanCliImplJarPath,
 		"-jar", scanCliJarPath,
-		"--host", hsc.host,
+		"--host", job.HubHost,
 		"--port", fmt.Sprintf("%d", hsc.port),
 		"--scheme", hubScheme,
 		"--project", job.HubProjectName,

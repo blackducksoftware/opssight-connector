@@ -22,7 +22,6 @@ under the License.
 package main
 
 import (
-	"fmt"
 	"os"
 
 	core "github.com/blackducksoftware/perceptor/pkg/core"
@@ -30,9 +29,11 @@ import (
 )
 
 func main() {
-	log.Infof("starting core")
-	configPath := os.Args[1]
-	fmt.Printf("Config path: %s", configPath)
-
+	var configPath string
+	log.Info("starting opssight-core")
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+	log.Infof("Config path: %s", configPath)
 	core.RunPerceptor(configPath)
 }

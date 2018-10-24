@@ -35,6 +35,7 @@ type PodPerceiverConfig struct {
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
+	NamespaceFilter           string
 }
 
 // GetPodPerceiverConfig returns a configuration object to configure a PodPerceiver

@@ -221,25 +221,4 @@ func SetupHTTPServer(responder Responder) {
 			responder.NotFound(w, r)
 		}
 	})
-
-	// internal use
-	http.HandleFunc("/config", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
-			body, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				responder.Error(w, r, err, 400)
-				return
-			}
-			var config PostConfig
-			err = json.Unmarshal(body, &config)
-			if err != nil {
-				responder.Error(w, r, err, 400)
-				return
-			}
-			responder.PostConfig(&config)
-			fmt.Fprint(w, "")
-		} else {
-			responder.NotFound(w, r)
-		}
-	})
 }
