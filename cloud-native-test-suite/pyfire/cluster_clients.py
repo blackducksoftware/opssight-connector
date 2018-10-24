@@ -1,6 +1,8 @@
 import json
 import subprocess
 import requests
+import time
+import sys
 
 NUM_MAX_PROJECTS=10000000
 
@@ -89,9 +91,20 @@ class K8sClient:
 Hub Client
 '''
 class HubClient:
-    def __init__(self, host_name):
+    def __init__(self, host_name, yaml_path="hub.yml"):
         self.host_name = host_name
         self.secure_login_cookie = self.get_secure_login_cookie()
+        self.yaml_path = yaml_path
+
+    def create(self):
+        self.create_yaml()
+        ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
+
+    def create_yaml(self):
+        ns, err = subprocess.Popen(["./create-hub-yaml.sh"], stdout=subprocess.PIPE).communicate()
+
+    def destory(self):
+         ns, err = subprocess.Popen(["oc", "delete", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
 
     def get_secure_login_cookie(self):
         security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
@@ -119,16 +132,51 @@ OpsSight Client
 '''
 
 class OpsSightClient:
-    def __init__(self, host_name):
+    def __init__(self, host_name=None, yaml_path="opssight.yml"):
         self.host_name = host_name
+        self.yaml_path = yaml_path
 
     def create(self):
-        pass # spin up with Matt's yaml
-        # get the url by exposing 
+        #self.create_yaml()
+        
+        print("Pushing OpsSight Yaml.")
+        ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
+        print("")
+
+        print("Exposing Perceptor Service.",end="")
+        ns, err = subprocess.Popen(["oc", "expose", "svc", "perceptor", "-n", "ops"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        while err != b'':
+            ns, err = subprocess.Popen(["oc", "expose", "svc", "perceptor", "-n", "ops"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+            print(".",end="")
+            sys.stdout.flush()
+        print("\n")
+        sys.stdout.flush()
+
+        print("Getting the route to connect to.",end="")
+        ns, err = subprocess.Popen(["oc", "get", "routes", "-n", "ops", "--no-headers"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        while err != b'':
+            ns, err = subprocess.Popen(["oc", "get", "routes", "-n", "ops", "--no-headers"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+            print(".",end="")
+            sys.stdout.flush()
+        print("\n")
+        sys.stdout.flush()
+        print("Route: "+str(ns.split()[1].decode('unicode_escape')))
+        
+        self.host_name = ns.split()[1].decode('unicode_escape')
+
+    def create_yaml(self):
+        ns, err = subprocess.Popen(["./create-opssight-yaml.sh"], stdout=subprocess.PIPE).communicate()
+    
+    def destroy(self):
+        print("Tearing down OpsSight Yaml")
+        ns, err = subprocess.Popen(["oc", "delete", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
     
     def get_dump(self):
-        r = requests.get("http://"+self.host_name+"/model")
-        return json.loads(r.text)
+        while True:
+            r = requests.get("http://"+self.host_name+"/model")
+            if 200 <= r.status_code < 300:
+                return json.loads(r.text)
+        
 
     def get_shas_names(self):
         return self.get_dump()['CoreModel']['Images'].keys()
