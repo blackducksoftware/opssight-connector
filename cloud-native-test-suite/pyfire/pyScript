@@ -1,2 +1,3 @@
-docker build -t pyd .
-docker run --name pyd_container --rm -i -t pyd:latest  /bin/bash
+docker build -t mikephammer/pyfire:latest .
+#docker run --name pyd_container --rm -i -t pyd:latest  /bin/bash
+docker push mikephammer/pyfire:latest 

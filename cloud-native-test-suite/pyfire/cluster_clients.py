@@ -109,10 +109,12 @@ class K8sClient:
 Hub Client
 '''
 class HubClient:
-    def __init__(self, host_name, yaml_path="hub.yml"):
+    def __init__(self, host_name=None, k8s=None, usr="", pswd="", yaml_path="hub.yml"):
         self.host_name = host_name
         self.secure_login_cookie = self.get_secure_login_cookie()
         self.yaml_path = yaml_path
+        self.username = usr
+        self.password = pswd
 
     def create(self):
         self.create_yaml()
@@ -126,7 +128,8 @@ class HubClient:
 
     def get_secure_login_cookie(self):
         security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
-        security_data = {'j_username':'sysadmin','j_password':'duck'}
+        # todo fix
+        security_data = {'j_username': "sysadmin",'j_password': "blackduck"}
         # verify=False does not verify SSL connection - insecure
         r = requests.post("https://"+self.host_name+":443/j_spring_security_check", verify=False, data=security_data, headers=security_headers)
         return r.cookies 
@@ -150,7 +153,7 @@ OpsSight Client
 '''
 
 class OpsSightClient:
-    def __init__(self, host_name=None, k8s, yaml_path="opssight.yml"):
+    def __init__(self, host_name=None, k8s=None, yaml_path="opssight.yml"):
         self.host_name = host_name
         self.yaml_path = yaml_path
         self.k8s = k8s
