@@ -3,12 +3,31 @@ import subprocess
 import requests
 import time
 import sys
+from kubernetes import client, config
+
 
 NUM_MAX_PROJECTS=10000000
 
-class Client:
-    def k8sCommand():
-        pass
+class k8sClientWrapper:
+    def __init__(self):
+        config.load_kube_config()
+        self.v1 = client.CoreV1Api()
+    
+    def k8sCommand(self):
+        print("Listing pods with their IPs:")
+        ret = self.v1.list_pod_for_all_namespaces(watch=False)
+        for i in ret.items:
+            print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+    
+    def get_namespaces(self):
+        names = []
+        for ns in self.v1.list_namespace().items:
+            names.append(ns.metadata.name)
+        return names
+
+    def get_api_resources(self):
+        resources = self.v1.get_api_resources()
+        return [x.name for x in resources.resources]
 
 ''' 
 K8S Client 
@@ -21,11 +40,10 @@ class K8sClient:
         # K8s command to get a table of namespaces without the header line
         ns, err = subprocess.Popen(["oc","get", "ns","--no-headers"], stdout=subprocess.PIPE).communicate()
         # Split output by row
-        ns_list = ns.split("\n")[:-1] # remove empty string as last entry
+        ns_list = ns.decode('unicode_escape').split("\n")[:-1] # remove empty string as last entry
         # Get first entry in each row
         ns_list = [n.split()[0] for n in ns_list]
         return ns_list
-        
 
     def get_images(self, namespace=""):
         # Select all namespaces if one wasn't provided
@@ -108,7 +126,7 @@ class HubClient:
 
     def get_secure_login_cookie(self):
         security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
-        security_data = {'j_username':'sysadmin','j_password':'blackduck'}
+        security_data = {'j_username':'sysadmin','j_password':'duck'}
         # verify=False does not verify SSL connection - insecure
         r = requests.post("https://"+self.host_name+":443/j_spring_security_check", verify=False, data=security_data, headers=security_headers)
         return r.cookies 
@@ -132,12 +150,13 @@ OpsSight Client
 '''
 
 class OpsSightClient:
-    def __init__(self, host_name=None, yaml_path="opssight.yml"):
+    def __init__(self, host_name=None, k8s, yaml_path="opssight.yml"):
         self.host_name = host_name
         self.yaml_path = yaml_path
+        self.k8s = k8s
 
     def create(self):
-        #self.create_yaml()
+        self.create_yaml()
         
         print("Pushing OpsSight Yaml.")
         ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
@@ -164,17 +183,24 @@ class OpsSightClient:
         
         self.host_name = ns.split()[1].decode('unicode_escape')
 
+    def create_in_cluster(self):
+        print("Creating Yaml File")
+        self.create_yaml()
+        
+        self.host_name = ns.split()[1].decode('unicode_escape')
+
     def create_yaml(self):
         ns, err = subprocess.Popen(["./create-opssight-yaml.sh"], stdout=subprocess.PIPE).communicate()
     
     def destroy(self):
-        print("Tearing down OpsSight Yaml")
         ns, err = subprocess.Popen(["oc", "delete", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
     
     def get_dump(self):
         while True:
             r = requests.get("http://"+self.host_name+"/model")
-            if 200 <= r.status_code < 300:
+            #print(r.text)
+            #if 200 <= r.status_code < 300:
+            if r.status_code == 200:
                 return json.loads(r.text)
         
 

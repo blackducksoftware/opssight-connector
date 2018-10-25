@@ -1,0 +1,2 @@
+docker build -t pyd .
+docker run --name pyd_container --rm -i -t pyd:latest  /bin/bash
