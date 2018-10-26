@@ -25,7 +25,7 @@ class myHandler(BaseHTTPRequestHandler):
         except:
             server.socket.close()
 
-    def my_own_server_function():
+    def my_own_server_function(self):
         # TO DO
         pass
 
@@ -165,7 +165,15 @@ class HubClient(CloudNativeClient):
         return r.json()
 
     def get_projects_names(self):
-        return [x['name'] for x in self.get_projects_dump()]
+        return [project['name'] for project in self.get_projects_dump()['items']]
+
+    def get_projects_link(self, link_name):
+        links = []
+        for project in self.get_projects_dump()['items']:
+            for link in project['_meta']['links']:
+                if link['rel'] == link_name:
+                    links.append(link['href'])
+        return links
 
     def get_code_locations_dump(self):
         r = requests.get("https://"+self.host_name+":443/api/codelocations?limit="+str(self.max_projects),verify=False, cookies=self.secure_login_cookie)
@@ -225,4 +233,3 @@ class OpsSightClient(CloudNativeClient):
     def get_shas_names(self):
         return self.get_dump()['CoreModel']['Images'].keys()
 
-        
