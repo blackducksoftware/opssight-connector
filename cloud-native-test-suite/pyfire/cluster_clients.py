@@ -7,9 +7,6 @@ from kubernetes import client, config
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import logging 
 
-
-NUM_MAX_PROJECTS=10000000
-
 class myHandler(BaseHTTPRequestHandler):
     def __init__(self):
         self.status = "UNKNOWN"
@@ -33,10 +30,22 @@ class myHandler(BaseHTTPRequestHandler):
         pass
 
 
-class K8sClient:
+class K8sClientWrapper:
     def __init__(self):
         config.load_kube_config()
         self.v1 = client.CoreV1Api()
+
+    def create_from_yaml(self, yaml_path):
+        return subprocess.Popen(["oc", "create", "-f", yaml_path], stdout=subprocess.PIPE).communicate()
+
+    def delete_from_yaml(self, yaml_path):
+        return subprocess.Popen(["oc", "delete", "-f", yaml_path], stdout=subprocess.PIPE).communicate()
+
+    def expose_service(self, service_name, namespace):
+        return subprocess.Popen(["oc", "expose", "svc", service_name, "-n", namespace], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+    
+    def get_routes(self, namespace):
+        return subprocess.Popen(["oc", "get", "routes", "-n", namespace, "--no-headers"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
     def get_pods_kube(self):
         ret = self.v1.list_pod_for_all_namespaces(watch=False)
@@ -122,24 +131,26 @@ class K8sClient:
         ns_list = [n.split()[0] for n in ns_list]
         return projects.split()
 
+class CloudNativeClient:
+    k8s = K8sClientWrapper()
 
-class HubClient:
-    def __init__(self, host_name=None, k8s=None, username="", password="", yaml_path="hub.yml"):
+    def __init__(self):
+        pass
+
+class HubClient(CloudNativeClient):
+    def __init__(self, host_name=None, username="", password="", yaml_path="hub.yml"):
         self.host_name = host_name
         self.username = username
         self.password = password 
         self.secure_login_cookie = self.get_secure_login_cookie()
         self.yaml_path = yaml_path
-        
-    def create(self):
-        self.create_yaml()
-        ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
+        self.max_projects = 10000000
 
+    def test_func(self):
+        print(self.k8s.get_namespaces())
+        
     def create_yaml(self):
         ns, err = subprocess.Popen(["./create-hub-yaml.sh"], stdout=subprocess.PIPE).communicate()
-
-    def destory(self):
-         ns, err = subprocess.Popen(["oc", "delete", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
 
     def get_secure_login_cookie(self):
         security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
@@ -150,65 +161,58 @@ class HubClient:
         return r.cookies 
         
     def get_projects_dump(self): 
-        r = requests.get("https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
+        r = requests.get("https://"+self.host_name+":443/api/projects?limit="+str(self.max_projects),verify=False, cookies=self.secure_login_cookie)
         return r.json()
 
     def get_projects_names(self):
         return [x['name'] for x in self.get_projects_dump()]
 
     def get_code_locations_dump(self):
-        r = requests.get("https://"+self.host_name+":443/api/codelocations?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
+        r = requests.get("https://"+self.host_name+":443/api/codelocations?limit="+str(self.max_projects),verify=False, cookies=self.secure_login_cookie)
         return r.json()
 
     def get_code_locations_names(self):
         return [x['name'] for x in self.get_code_locations_dump()['items']]
 
 
-class OpsSightClient:
-    def __init__(self, host_name=None, k8s=None, yaml_path="opssight.yml"):
+class OpsSightClient(CloudNativeClient):
+    def __init__(self, host_name=None, yaml_path="opssight.yml"):
         self.host_name = host_name
         self.yaml_path = yaml_path
-        self.k8s = k8s
 
     def create(self):
         self.create_yaml()
         
         print("Pushing OpsSight Yaml.")
-        ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
+        self.k8s.create_from_yaml(self.yaml_path)
         print("")
 
         print("Exposing Perceptor Service.",end="")
-        ns, err = subprocess.Popen(["oc", "expose", "svc", "perceptor", "-n", "ops"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-        while err != b'':
-            ns, err = subprocess.Popen(["oc", "expose", "svc", "perceptor", "-n", "ops"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        while True:
+            ns, err = self.k8s.expose_service("perceptor", "ops")
             print(".",end="")
             sys.stdout.flush()
+            if err != b'':
+                break
         print("\n")
         sys.stdout.flush()
 
         print("Getting the route to connect to.",end="")
-        ns, err = subprocess.Popen(["oc", "get", "routes", "-n", "ops", "--no-headers"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-        while err != b'':
-            ns, err = subprocess.Popen(["oc", "get", "routes", "-n", "ops", "--no-headers"], stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        while True:
+            ns, err = self.k8s.get_routes("ops")
             print(".",end="")
             sys.stdout.flush()
+            if err != b'':
+                break
         print("\n")
         sys.stdout.flush()
-        print("Route: "+str(ns.split()[1].decode('unicode_escape')))
-        
-        self.host_name = ns.split()[1].decode('unicode_escape')
 
-    def create_in_cluster(self):
-        print("Creating Yaml File")
-        self.create_yaml()
+        print("Route: "+str(ns.split()[1].decode('unicode_escape')))
         
         self.host_name = ns.split()[1].decode('unicode_escape')
 
     def create_yaml(self):
         ns, err = subprocess.Popen(["./create-opssight-yaml.sh"], stdout=subprocess.PIPE).communicate()
-    
-    def destroy(self):
-        ns, err = subprocess.Popen(["oc", "delete", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
     
     def get_dump(self):
         while True:
@@ -218,6 +222,7 @@ class OpsSightClient:
             if r.status_code == 200:
                 return json.loads(r.text)
         
-
     def get_shas_names(self):
         return self.get_dump()['CoreModel']['Images'].keys()
+
+        
