@@ -13,6 +13,7 @@ class myHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(STATUS)
 
+
 def diff_hub_IDs_and_opssight_IDs(hub_IDs, opssight_IDs):
     hub_IDs_set = set(hub_IDs)
     opssight_IDs_set = set(opssight_IDs)
@@ -22,20 +23,47 @@ def diff_hub_IDs_and_opssight_IDs(hub_IDs, opssight_IDs):
     IDs_opssight_only = opssight_IDs_set.difference(hub_IDs_set)
 
     return IDs_hub_only, IDs_both, IDs_opssight_only
-    
-def compare_huub_IDs_and_opssight_IDs(raw_hub, raw_opssight, onlyHub, both, onlyOpssight):
-    print("==== ERROR LOG ====")
-    for elem in onlyHub:
-        if elem in raw_opssight or elem not in raw_hub:
-            print("ERROR - onlyHub "+elem)      
-    for elem in both:
-        if elem not in raw_hub or elem not in raw_opssight:
-            print("ERROR - both "+elem)
-    for elem in onlyOpssight:
-        if elem not in raw_opssight or elem in raw_hub:
-            print("ERROR - onlyOpsight {}".format(elem))
 
-def tests(k8s_client, hub_client, opssight_client, PORT_NUMBER):
+
+def assess_opssight(hubs, opssight, k8s):
+    print("\n")
+    # Get Total Images in Cluster
+    cluster_images = k8s.get_images()
+    print("Images In Your Kubernetes Cluster :", len(cluster_images))
+
+    # Get Scanned Images from OpsSight
+    opssight_IDs = opssight.get_shas_names()
+    num_opssight_IDs = len(opssight_IDs)
+    print("Images in OpsSight:", num_opssight_IDs)
+
+    # Get Scanned Images from Hubs
+    total_hub_IDs = []
+    num_total_hub_IDs = 0
+    for hub in hubs:
+        hub_IDs = hub.get_code_locations_names()
+        print("Total Images Scanned in Hub1 :", len(hub_IDs))
+        num_total_hub_IDs += len(hub_IDs)
+        total_hub_IDs.extend(hub_IDs)
+    print("Cumulative Images Scanned by Hubs:", num_total_hub_IDs)
+
+    # Analyze Scanned Images
+    IDs_hub_only, IDs_hub_and_opssight, IDs_opssight_only = diff_hub_IDs_and_opssight_IDs(total_hub_IDs, opssight_IDs)
+
+    # Display Ship-It Policy Results
+    print("\n")
+    print("***************************************")
+    print("OpsSight Test Policy : "+str(100)+"% Image coverage to ship.")
+    coverage = len(IDs_opssight_only) / float(len(cluster_images))
+    print("OpsSight Coverage : %.2f%% Image Coverage" % coverage)
+    print("***************************************")
+    if coverage < 100.0:
+        print("OpsSight Test Result: No Automated Release is Possible at this time.")
+    else:
+        print("OpsSight Test Result: PASS")
+    print("***************************************")
+
+
+def hub_opssight_connection_test(k8s_client, hub_client, opssight_client, port):
     global STATUS
     if len(hub_client.get_projects_names()) > 0 and len(opssight_client.get_shas_names()) > 0:
         print("Connected to Hub!")
@@ -48,87 +76,43 @@ def tests(k8s_client, hub_client, opssight_client, PORT_NUMBER):
         STATUS = b'FAILED'
 
     try:
-        server = HTTPServer(('', PORT_NUMBER), myHandler)
+        server = HTTPServer(('', port), myHandler)
         server.serve_forever()
     except:
         server.socket.close()
     
 
 def main():
-    '''logger = logging.getLogger('output')
-    logger.setLevel(logging.INFO)
+    if len(sys.argv) < 2:
+        print("USAGE:")
+        print("python3 run.py <config_file_path>")
+        sys.exit("Wrong Number of Parameters")
     
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)'''
-
-    if len(sys.argv) < 1:
-        print("Invalid Parameters")
-        return 0
-    # path to config
+    # Read parameters from config file
     test_config_path = sys.argv[1]
+
     test_config_json = None
     with open(test_config_path) as f:
         test_config_json = json.load(f)
+
     opssight_url = test_config_json["PerceptorURL"]
     hub_url = test_config_json["HubURL"]
-    PORT_NUMBER = test_config_json["Port"]
+    port = test_config_json["Port"]
     usr = test_config_json["Username"]
     password = test_config_json["Password"]
 
-    # Create Clients to access Cluster Data
-    k8s_client = None #k8sClientWrapper()
-    hub_client = HubClient(hub_url, None, usr, password)
-    opssight_client = OpsSightClient(opssight_url, None)
+    # Create Kubernetes, OpsSight, and Hub Clients
+    k8s_client = K8sClient()
+    opssight_client = OpsSightClient(opssight_url, k8s_client)
+    hub_client1 = HubClient(hub_url, k8s_client, usr, password)
+    hub_client2 = HubClient("int-eric-int-eric.10.1.176.130.xip.io", k8s_client, usr, password)
+    hub_client3 = HubClient("jim-emea-scaffold-jim-emea-scaffold.10.1.176.130.xip.io", k8s_client, usr, password)
+    hub_client4 = HubClient("hammerp-hammerp.10.1.176.130.xip.io", k8s_client, usr, password)
 
-    # Check if Scans are being performed
-    '''logger.info("Running Tests")'''
-    sys.stdout.flush()
-    #tests(k8s_client, hub_client, opssight_client, PORT_NUMBER)
-    print()
+    # TO DO: Testing...
 
-    hub_IDs = hub_client.get_code_locations_names()
-    '''print("Scans in the Hub: ",len(hub_IDs))
-    print(sorted(hub_IDs))
-    print()'''
-
-    opssight_IDs = opssight_client.get_shas_names()
-    '''print("Scans in OpsSight: ",len(opssight_IDs))
-    print(sorted(opssight_IDs))
-    print()'''
-
-    IDs_hub_only, IDs_hub_and_opssight, IDs_opssight_only = diff_hub_IDs_and_opssight_IDs(hub_IDs, opssight_IDs)
-    '''print("Scans Only on OpSight: ",len(IDs_opssight_only))
-    print(sorted(IDs_opssight_only))
-    print()'''
-
-    '''print("Scans Only on Hub: ", len(IDs_hub_only))
-    print(sorted(IDs_hub_only))
-    print()
-
-    print("Scans Found in Both: ", len(IDs_hub_and_opssight))
-    print(sorted(IDs_hub_and_opssight))
-    print()'''
-
-    print("")
-    print("Images In Your Kubernetes Cluster : ", len(IDs_opssight_only)+len(IDs_hub_only))
-    print("Total Images Scanned in Hub1 : ", len(hub_IDs))
-    print("Total Images Scanned in Hub2 : ", 0)
-    print("Cumulative Images Scanned : ", len(opssight_IDs))
-    print("\n")
-    print("***************************************")
-    print("OpsSight Test Threshold : ",100,"% Image coverage to ship.")
-    coverage = len(IDs_opssight_only)+len(IDs_hub_only) 
-    print("OpsSight Target Completion : ",coverage  ,"% Image coverage")
-    print("***************************************")
-
-    if coverage < 100 :
-        print("OpsSight Test Result: No Automated Release is Possible at this time.")
-    else:
-        print("OpsSight Test Result: PASS")
-    
-    print("***************************************")
-
-    return 0
+    # Display OpsSight Assessment Test
+    assess_opssight([hub_client1,hub_client2,hub_client3,hub_client4], opssight_client, k8s_client)
 
 
 main()

@@ -8,33 +8,26 @@ from kubernetes import client, config
 
 NUM_MAX_PROJECTS=10000000
 
-class k8sClientWrapper:
+
+class K8sClient:
     def __init__(self):
         config.load_kube_config()
         self.v1 = client.CoreV1Api()
-    
-    def k8sCommand(self):
-        print("Listing pods with their IPs:")
+
+    def get_pods_kube(self):
         ret = self.v1.list_pod_for_all_namespaces(watch=False)
         for i in ret.items:
             print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
+
+    def get_api_resources_kube(self):
+        resources = self.v1.get_api_resources()
+        return [x.name for x in resources.resources]
     
-    def get_namespaces(self):
+    def get_namespaces_kube(self):
         names = []
         for ns in self.v1.list_namespace().items:
             names.append(ns.metadata.name)
         return names
-
-    def get_api_resources(self):
-        resources = self.v1.get_api_resources()
-        return [x.name for x in resources.resources]
-
-''' 
-K8S Client 
-'''
-class K8sClient:
-    def __init__(self):
-        pass
 
     def get_namespaces(self):
         # K8s command to get a table of namespaces without the header line
@@ -105,16 +98,15 @@ class K8sClient:
         ns_list = [n.split()[0] for n in ns_list]
         return projects.split()
 
-'''
-Hub Client
-'''
+
 class HubClient:
-    def __init__(self, host_name=None, k8s=None, usr="", pswd="", yaml_path="hub.yml"):
+    def __init__(self, host_name=None, k8s=None, username="", password="", yaml_path="hub.yml"):
         self.host_name = host_name
+        self.username = username
+        self.password = password 
         self.secure_login_cookie = self.get_secure_login_cookie()
         self.yaml_path = yaml_path
-        self.username = usr
-        self.password = pswd
+        
 
     def create(self):
         self.create_yaml()
@@ -129,7 +121,7 @@ class HubClient:
     def get_secure_login_cookie(self):
         security_headers = {'Content-Type':'application/x-www-form-urlencoded'}
         # todo fix
-        security_data = {'j_username': "sysadmin",'j_password': "blackduck"}
+        security_data = {'j_username': self.username,'j_password': self.password}
         # verify=False does not verify SSL connection - insecure
         r = requests.post("https://"+self.host_name+":443/j_spring_security_check", verify=False, data=security_data, headers=security_headers)
         return r.cookies 
@@ -148,9 +140,6 @@ class HubClient:
     def get_code_locations_names(self):
         return [x['name'] for x in self.get_code_locations_dump()['items']]
 
-'''
-OpsSight Client
-'''
 
 class OpsSightClient:
     def __init__(self, host_name=None, k8s=None, yaml_path="opssight.yml"):
