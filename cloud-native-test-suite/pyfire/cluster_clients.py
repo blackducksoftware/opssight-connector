@@ -13,12 +13,20 @@ NUM_MAX_PROJECTS=10000000
 class myHandler(BaseHTTPRequestHandler):
     def __init__(self):
         self.status = "UNKNOWN"
+        self.port = None
 
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type','text/html')
         self.end_headers()
         self.wfile.write(self.status)
+
+    def serve(self):
+        try:
+            server = HTTPServer(('', self.port), myHandler)
+            server.serve_forever()
+        except:
+            server.socket.close()
 
     def my_own_server_function():
         # TO DO
@@ -123,7 +131,6 @@ class HubClient:
         self.secure_login_cookie = self.get_secure_login_cookie()
         self.yaml_path = yaml_path
         
-
     def create(self):
         self.create_yaml()
         ns, err = subprocess.Popen(["oc", "create", "-f", self.yaml_path], stdout=subprocess.PIPE).communicate()
@@ -144,7 +151,7 @@ class HubClient:
         
     def get_projects_dump(self): 
         r = requests.get("https://"+self.host_name+":443/api/projects?limit="+str(NUM_MAX_PROJECTS),verify=False, cookies=self.secure_login_cookie)
-        return r.json()['items']
+        return r.json()
 
     def get_projects_names(self):
         return [x['name'] for x in self.get_projects_dump()]

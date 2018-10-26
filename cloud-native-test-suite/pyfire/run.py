@@ -53,25 +53,6 @@ def assess_opssight(hubs, opssight, k8s):
     else:
         print("OpsSight Test Result: PASS")
     print("***************************************")
-
-
-def hub_opssight_connection_test(k8s_client, hub_client, opssight_client, port):
-    ws = myHandler()
-    if len(hub_client.get_projects_names()) > 0 and len(opssight_client.get_shas_names()) > 0:
-        print("Connected to Hub!")
-        print("Connected to OpsSight!")
-        sys.stdout.flush()
-        ws.status = b'PASSED'
-    else:
-        print("Couldn't Connect to Hub")
-        sys.stdout.flush()
-        ws.status = b'FAILED'
-
-    try:
-        server = HTTPServer(('', port), myHandler)
-        server.serve_forever()
-    except:
-        server.socket.close()
     
 
 def main():
@@ -105,7 +86,6 @@ def main():
     hub_client4 = HubClient("hammerp-hammerp.10.1.176.130.xip.io", k8s_client, usr, password)
 
     # TO DO: Testing...
-
 
     # Display OpsSight Assessment Test
     assess_opssight([hub_client1,hub_client2,hub_client3,hub_client4], opssight_client, k8s_client)
