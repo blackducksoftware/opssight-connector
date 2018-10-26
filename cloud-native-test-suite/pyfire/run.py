@@ -1,17 +1,9 @@
 import json
 import sys 
 from cluster_clients import *
-from http.server import BaseHTTPRequestHandler, HTTPServer
 import logging
 
 STATUS = b'UNKNOWN'
-
-class myHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type','text/html')
-        self.end_headers()
-        self.wfile.write(STATUS)
 
 
 def diff_hub_IDs_and_opssight_IDs(hub_IDs, opssight_IDs):
@@ -64,16 +56,16 @@ def assess_opssight(hubs, opssight, k8s):
 
 
 def hub_opssight_connection_test(k8s_client, hub_client, opssight_client, port):
-    global STATUS
+    ws = myHandler()
     if len(hub_client.get_projects_names()) > 0 and len(opssight_client.get_shas_names()) > 0:
         print("Connected to Hub!")
         print("Connected to OpsSight!")
         sys.stdout.flush()
-        STATUS = b'PASSED'
+        ws.status = b'PASSED'
     else:
         print("Couldn't Connect to Hub")
         sys.stdout.flush()
-        STATUS = b'FAILED'
+        ws.status = b'FAILED'
 
     try:
         server = HTTPServer(('', port), myHandler)
@@ -87,6 +79,9 @@ def main():
         print("USAGE:")
         print("python3 run.py <config_file_path>")
         sys.exit("Wrong Number of Parameters")
+
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout)
+    logging.debug("Starting Tests")
     
     # Read parameters from config file
     test_config_path = sys.argv[1]
@@ -110,6 +105,7 @@ def main():
     hub_client4 = HubClient("hammerp-hammerp.10.1.176.130.xip.io", k8s_client, usr, password)
 
     # TO DO: Testing...
+
 
     # Display OpsSight Assessment Test
     assess_opssight([hub_client1,hub_client2,hub_client3,hub_client4], opssight_client, k8s_client)

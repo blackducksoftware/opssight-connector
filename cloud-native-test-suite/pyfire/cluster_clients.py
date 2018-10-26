@@ -4,9 +4,25 @@ import requests
 import time
 import sys
 from kubernetes import client, config
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import logging 
 
 
 NUM_MAX_PROJECTS=10000000
+
+class myHandler(BaseHTTPRequestHandler):
+    def __init__(self):
+        self.status = "UNKNOWN"
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type','text/html')
+        self.end_headers()
+        self.wfile.write(self.status)
+
+    def my_own_server_function():
+        # TO DO
+        pass
 
 
 class K8sClient:
