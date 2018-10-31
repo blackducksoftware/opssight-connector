@@ -106,7 +106,7 @@ func (hc *Creater) createDeployer(deployer *horizon.Deployer, createHub *v1.HubS
 	webServerSecretVol, _ := util.CreateSecretVolume("certificate", "blackduck-certificate", 0777)
 	webServerContainerConfig := &util.Container{
 		ContainerConfig: &horizonapi.ContainerConfig{Name: "webserver", Image: fmt.Sprintf("%s/%s/%s-nginx:%s", createHub.DockerRegistry, createHub.DockerRepo, createHub.ImagePrefix, hc.getTag(createHub, "nginx")),
-			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: "", UID: util.IntToInt64(1000)},
+			PullPolicy: horizonapi.PullAlways, MinMem: hubContainerFlavor.WebserverMemoryLimit, MaxMem: hubContainerFlavor.WebserverMemoryLimit, MinCPU: "", MaxCPU: ""},
 		EnvConfigs: hubConfigEnv,
 		VolumeMounts: []*horizonapi.VolumeMountConfig{
 			{Name: "dir-webserver", MountPath: "/opt/blackduck/hub/webserver/security"},
