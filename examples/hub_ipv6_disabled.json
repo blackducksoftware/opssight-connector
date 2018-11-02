@@ -1,0 +1,47 @@
+{
+  "apiVersion": "synopsys.com/v1",
+  "kind": "Hub",
+  "metadata": {
+    "clusterName": "",
+    "name": "${BLACKDUCK_NAMESPACE}"
+  },
+  "spec": {
+    "namespace": "${BLACKDUCK_NAMESPACE}",
+    "backupSupport": "No",
+    "certificateName": "default",
+    "environs": [
+      {
+        "key": "IPV4_ONLY",
+        "value": "1"
+      },
+      {
+        "key": "BLACKDUCK_HUB_SERVER_ADDRESS",
+        "value": "0.0.0.0"
+      }
+    ],
+    "dbPrototype": "empty",
+    "dockerRegistry": "gcr.io",
+    "dockerRepo": "saas-hub-stg/blackducksoftware",
+    "hubVersion": "${BLACKDUCK_VERSION}",
+    "flavor": "small",
+    "hubType": "worker",
+    "imagePrefix": "blackduck",
+    "imageTagMap": {
+      "authentication": "${BLACKDUCK_VERSION}",
+      "cfssl": "${THIRDPARTY_VERSION}",
+      "documentation": "${BLACKDUCK_VERSION}",
+      "hub-authentication": "${BLACKDUCK_VERSION}",
+      "hub-scan": "${BLACKDUCK_VERSION}",
+      "jobrunner": "${BLACKDUCK_VERSION}",
+      "logstash": "${THIRDPARTY_VERSION}",
+      "nginx": "${THIRDPARTY_VERSION}",
+      "postgres": "${THIRDPARTY_VERSION}",
+      "registration": "${BLACKDUCK_VERSION}",
+      "scan": "${BLACKDUCK_VERSION}",
+      "solr": "${THIRDPARTY_VERSION}",
+      "webapp": "${BLACKDUCK_VERSION}",
+      "webserver": "${THIRDPARTY_VERSION}",
+      "zookeeper": "${THIRDPARTY_VERSION}"
+    }
+  }
+}
