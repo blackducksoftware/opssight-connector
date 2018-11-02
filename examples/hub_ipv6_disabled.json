@@ -20,8 +20,8 @@
       }
     ],
     "dbPrototype": "empty",
-    "dockerRegistry": "gcr.io",
-    "dockerRepo": "saas-hub-stg/blackducksoftware",
+    "dockerRegistry": "docker.io",
+    "dockerRepo": "blackducksoftware",
     "hubVersion": "${BLACKDUCK_VERSION}",
     "flavor": "small",
     "hubType": "worker",
