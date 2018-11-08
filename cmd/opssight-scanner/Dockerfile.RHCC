@@ -13,7 +13,7 @@ RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Cri
 COPY ./LICENSE /licenses/
 COPY ./help.1 /help.1
 
-COPY ./opssight-scanner ./perceptor-scanner
+COPY ./opssight-scanner ./opssight-scanner
 
 LABEL name="Black Duck OpsSight Scanner" \
       vendor="Black Duck Software" \
@@ -26,4 +26,4 @@ LABEL name="Black Duck OpsSight Scanner" \
       release="$VERSION" \
       version="$VERSION"
 
-CMD ["./perceptor-scanner"]
+CMD ["./opssight-scanner"]
