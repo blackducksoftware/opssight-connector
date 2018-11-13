@@ -3,7 +3,7 @@
 # This is a rather minimal example Argbash potential
 # Example taken from http://argbash.readthedocs.io/en/stable/example.html
 #
-# ARG_OPTIONAL_SINGLE([tag],[t],[Version of Blackduck],[5.0.2])
+# ARG_OPTIONAL_SINGLE([tag],[t],[Version of Blackduck],[4.8.2])
 # ARG_OPTIONAL_BOOLEAN([push],[],[Enable Docker push],[off])
 # ARG_OPTIONAL_SINGLE([registry],[r],[Docker registry],[docker.io])
 # ARG_OPTIONAL_SINGLE([project],[p],[Docker repository/project],[])
@@ -36,7 +36,7 @@ begins_with_short_option()
 
 
 # THE DEFAULTS INITIALIZATION - OPTIONALS
-_arg_tag="5.0.2"
+_arg_tag="4.8.2"
 _arg_push="off"
 _arg_registry="docker.io"
 _arg_project=
@@ -46,7 +46,7 @@ print_help ()
 {
 	printf '%s\n' "The general script's help msg"
 	printf 'Usage: %s [-t|--tag <arg>] [--(no-)push] [-r|--registry <arg>] [-p|--project <arg>] [-u|--user <arg>] [-h|--help]\n' "$0"
-	printf '\t%s\n' "-t,--tag: Version of BlackDuck (default: '5.0.2')"
+	printf '\t%s\n' "-t,--tag: Version of BlackDuck (default: '4.8.2')"
 	printf '\t%s\n' "--push,--no-push: Enable Docker push (off by default)"
 	printf '\t%s\n' "-r,--registry: Docker registry (default: 'docker.io')"
 	printf '\t%s\n' "-p,--project: Docker repository/project (no default)"
