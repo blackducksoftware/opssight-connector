@@ -1,0 +1,48 @@
+apiVersion: synopsys.com/v1
+kind: OpsSight
+metadata:
+  clusterName: ""
+  name: ${NAMESPACE} # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
+spec:
+  namespace: ${NAMESPACE} # Required, lowercase letters, numbers, and hyphens only. Cannot start or end with hypens.
+
+  internalRegistries: [] # Optional, add entries only if there are secured registries to be scanned. The format for adding the registry auth is
+  #- Url: docker-registry
+  #  User: unused
+  #  Password: $$$$$
+  annotationIntervalSeconds: 30 # Annotation interval in seconds
+  dumpIntervalMinutes: 30 # Dump interval in minutes
+  hubUser: sysadmin # Black Duck user to login as
+  hubPort: 443 # Port to expose for Black Duck service
+  hubClientTimeoutPerceptorMilliseconds: 100000 # Hub client timeout in seconds for opssight-core
+  hubClientTimeoutScannerSeconds: 600 # Hub client timeout in seconds for opssight-scanner
+  concurrentScanLimit: 2 # Max number of concurrent scans per hub
+  totalScanLimit: 1000 # Max total number of scans per hub
+ 
+  # CONTAINER PULL CONFIG
+  # These are for defining docker registry and image location and versions
+  registry: ${DOCKER_REGISTRY} # Docker registry to use
+  imagePath: ${DOCKER_REPO} # Docker repository to use
+  defaultVersion: ${TAG} # Required, possible values are OpsSight release versions
+
+  imagePerceiver: true # Enable if using OpenShift (not needed in Kubernetes); default false
+  podPerceiver: true  # Enable if there are Pods that need to be scanned; default true
+  metrics: true  # Enable for prometheus metrics; default true
+  
+  # Should be passed like: e.g "blackduck-operator"
+  #namespaceFilter: "" # Add the name of the specific namespace to be scanned. By default it will scan all namespaces
+
+  # CPU and memory configurations
+  # Should be passed like: e.g. "300m"
+  defaultCpu: 300m # CPU configuration for all OpsSight containers
+  # Should be passed like: e.g "1300Mi"
+  defaultMem: 1300Mi # Memory configuration for all OpsSight containers
+
+  # Log level
+  logLevel: info # Log level to use (info, debug, etc.)
+
+  # Environment Variables
+  hubuserPasswordEnvVar: PCP_HUBUSERPASSWORD # Default Black Duck password to use
+
+  # Configuration secret
+  secretName: blackduck-secret # OpsSight configuration secret

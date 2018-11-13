@@ -4,6 +4,23 @@ metadata:
   name: blackduck-operator
 items:
 - apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: blackduck-operator
+    namespace: ${NAMESPACE}
+- kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+  metadata:
+    name: blackduck-operator-admin
+  subjects:
+  - kind: ServiceAccount
+    name: blackduck-operator
+    namespace: ${NAMESPACE}
+  roleRef:
+    kind: ClusterRole
+    name: cluster-admin
+    apiGroup: ""
+- apiVersion: v1
   kind: ReplicationController
   metadata:
     name: blackduck-operator
@@ -20,7 +37,7 @@ items:
       spec:
         containers:
         - name: blackduck-operator
-          image: docker.io/blackducksoftware/blackduck-operator:${TAG}
+          image: ${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-operator:${TAG}
           imagePullPolicy: Always
           ports:
           - containerPort: 8080
@@ -61,24 +78,7 @@ items:
   metadata:
     name: blackduck-operator
   data:
-    config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "PostgresRestartInMins": 10, "NFSPath" : "/kubenfs", "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "docker.io", "ImagePath": "blackducksoftware", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: blackduck-operator
-    namespace: ${NAMESPACE}
-- kind: ClusterRoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1beta1
-  metadata:
-    name: blackduck-operator-cluster-admin
-  subjects:
-  - kind: ServiceAccount
-    name: blackduck-operator
-    namespace: ${NAMESPACE}
-  roleRef:
-    kind: ClusterRole
-    name: cluster-admin
-    apiGroup: ""
+    config.json: '{"DryRun": false, "LogLevel": "debug", "Namespace": "${NAMESPACE}", "Threadiness": 5, "PostgresRestartInMins": 10, "NFSPath" : "/kubenfs", "HubFederatorConfig": {"HubConfig": {"User": "sysadmin", "PasswordEnvVar": "HUB_PASSWORD", "ClientTimeoutMilliseconds": 5000, "Port": 443, "FetchAllProjectsPauseSeconds": 60}, "UseMockMode": false, "Port": 3016, "Registry": "${DOCKER_REGISTRY}", "ImagePath": "${DOCKER_REPO}", "ImageName": "opssight-core", "ImageVersion": "${TAG}"}}'
 - apiVersion: v1
   kind: Service
   metadata:
