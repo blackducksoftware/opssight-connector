@@ -30,7 +30,7 @@ spec:
   # These are for defining docker registry and image location and versions
   registry: docker.io # Docker registry to use
   imagePath: blackducksoftware # Docker repository to use
-  defaultVersion: "2.1.0-RC" # Required, possible values are OpsSight release versions
+  defaultVersion: "2.1.0" # Required, possible values are OpsSight release versions
 
   perceptorImageName: opssight-core # Internal parameter; do not edit
   scannerImageName: opssight-scanner # Internal parameter; do not edit

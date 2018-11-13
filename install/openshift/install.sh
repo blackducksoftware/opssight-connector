@@ -1,4 +1,7 @@
 #!/bin/bash
+
+unset DYLD_INSERT_LIBRARIES
+
 echo "args = Namespace, Reg_key, version"
 
 NS=$1
