@@ -1,10 +1,3 @@
-
-perceivers/_output/image-perceiver
-perceivers/_output/pod-perceiver
-perceptor-protoform/protoform
-perceptor-scanner/perceptor-imagefacade
-perceptor-scanner/perceptor-scanner
-perceptor/perceptor
 install/kube/protoform.yaml
 install/kube/rbac.yaml
 install/.DS_Store
@@ -12,3 +5,5 @@ install/.DS_Store
 _output/*
 build/*
 install/openshift/protoform.yaml
+install/secured-registry/dockercfg.json
+.vscode/settings.json
