@@ -28,19 +28,34 @@ import (
 	"github.com/spf13/viper"
 )
 
-// PodPerceiverConfig contains all configuration for a PodPerceiver
+// PerceptorConfig contains Perceptor config
+type PerceptorConfig struct {
+	Host string
+	Port int
+}
+
+// PodPerceiverConfig contains config specific to pod perceivers
 type PodPerceiverConfig struct {
-	PerceptorHost             string
-	PerceptorPort             int
+	NamespaceFilter string
+}
+
+// PerceiverConfig contains general Perceiver config
+type PerceiverConfig struct {
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
-	NamespaceFilter           string
+	Pod                       PodPerceiverConfig
 }
 
-// GetPodPerceiverConfig returns a configuration object to configure a PodPerceiver
-func GetPodPerceiverConfig(configPath string) (*PodPerceiverConfig, error) {
-	var cfg *PodPerceiverConfig
+// Config contains all configuration for a PodPerceiver
+type Config struct {
+	Perceptor PerceptorConfig
+	Perceiver PerceiverConfig
+}
+
+// GetConfig returns a configuration object to configure a PodPerceiver
+func GetConfig(configPath string) (*Config, error) {
+	var cfg *Config
 
 	viper.SetConfigFile(configPath)
 
@@ -58,7 +73,7 @@ func GetPodPerceiverConfig(configPath string) (*PodPerceiverConfig, error) {
 
 // StartWatch will start watching the PodPerceiver configuration file and
 // call the passed handler function when the configuration file has changed
-func (p *PodPerceiverConfig) StartWatch(handler func(fsnotify.Event)) {
+func (p *Config) StartWatch(handler func(fsnotify.Event)) {
 	viper.WatchConfig()
 	viper.OnConfigChange(handler)
 }

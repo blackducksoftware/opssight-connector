@@ -55,7 +55,7 @@ type PodPerceiver struct {
 
 // NewPodPerceiver creates a new PodPerceiver object
 func NewPodPerceiver(handler annotations.PodAnnotatorHandler, configPath string) (*PodPerceiver, error) {
-	config, err := GetPodPerceiverConfig(configPath)
+	config, err := GetConfig(configPath)
 	if err != nil {
 		panic(fmt.Errorf("failed to read config: %v", err))
 	}
@@ -75,14 +75,14 @@ func NewPodPerceiver(handler annotations.PodAnnotatorHandler, configPath string)
 	prometheus.Unregister(prometheus.NewGoCollector())
 	http.Handle("/metrics", prometheus.Handler())
 
-	perceptorURL := fmt.Sprintf("http://%s:%d", config.PerceptorHost, config.PerceptorPort)
+	perceptorURL := fmt.Sprintf("http://%s:%d", config.Perceptor.Host, config.Perceptor.Port)
 	p := PodPerceiver{
-		podController:      controller.NewPodController(clientset, perceptorURL, config.NamespaceFilter, handler),
+		podController:      controller.NewPodController(clientset, perceptorURL, config.Perceiver.Pod.NamespaceFilter, handler),
 		podAnnotator:       annotator.NewPodAnnotator(clientset.CoreV1(), perceptorURL, handler),
-		annotationInterval: time.Second * time.Duration(config.AnnotationIntervalSeconds),
-		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL, config.NamespaceFilter),
-		dumpInterval:       time.Minute * time.Duration(config.DumpIntervalMinutes),
-		metricsURL:         fmt.Sprintf(":%d", config.Port),
+		annotationInterval: time.Second * time.Duration(config.Perceiver.AnnotationIntervalSeconds),
+		podDumper:          dumper.NewPodDumper(clientset.CoreV1(), perceptorURL, config.Perceiver.Pod.NamespaceFilter),
+		dumpInterval:       time.Minute * time.Duration(config.Perceiver.DumpIntervalMinutes),
+		metricsURL:         fmt.Sprintf(":%d", config.Perceiver.Port),
 	}
 
 	return &p, nil

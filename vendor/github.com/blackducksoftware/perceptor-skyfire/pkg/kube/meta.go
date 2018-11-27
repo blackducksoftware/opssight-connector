@@ -21,6 +21,7 @@ under the License.
 
 package kube
 
+// Meta .....
 type Meta struct {
 	MajorVersion string
 	MinorVersion string

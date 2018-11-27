@@ -21,6 +21,7 @@ under the License.
 
 package kube
 
+// Dump .....
 type Dump struct {
 	Meta              *Meta
 	Pods              []*Pod
@@ -32,6 +33,22 @@ type Dump struct {
 	ImagesMissingSha   []*Image
 }
 
+// ServiceDump .....
+type ServiceDump struct {
+	Meta     *Meta
+	Services []*Service
+}
+
+// NewServiceDump .....
+func NewServiceDump(meta *Meta, services []*Service) *ServiceDump {
+	dump := &ServiceDump{
+		Meta:     meta,
+		Services: services,
+	}
+	return dump
+}
+
+// NewDump .....
 func NewDump(meta *Meta, pods []*Pod) *Dump {
 	dump := &Dump{
 		Meta:               meta,

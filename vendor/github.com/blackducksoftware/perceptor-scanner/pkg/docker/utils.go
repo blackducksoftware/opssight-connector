@@ -25,7 +25,7 @@ import "strings"
 
 func needsAuthHeader(image Image, registries []RegistryAuth) *RegistryAuth {
 	for _, registry := range registries {
-		if strings.HasPrefix(image.DockerPullSpec(), registry.Url) {
+		if strings.HasPrefix(image.DockerPullSpec(), registry.URL) {
 			return &registry
 		}
 	}

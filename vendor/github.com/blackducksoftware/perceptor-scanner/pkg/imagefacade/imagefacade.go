@@ -33,57 +33,39 @@ const (
 	diskMetricsPause = 15 * time.Second
 )
 
+// ImageFacade ...
 type ImageFacade struct {
-	server            *HTTPServer
-	reducer           *reducer
-	finishedImagePull chan *finishedImagePull
-	imagePuller       *pdocker.ImagePuller
-	createImagesOnly  bool
+	model            *Model
+	imagePuller      *pdocker.ImagePuller
+	createImagesOnly bool
 }
 
-func NewImageFacade(dockerRegistries []pdocker.RegistryAuth, createImagesOnly bool) *ImageFacade {
-	actions := make(chan Action)
-	finishedImagePull := make(chan *finishedImagePull)
-
-	server := NewHTTPServer()
-	model := NewModel()
-	reducer := newReducer(model, actions)
-
-	go func() {
-		for {
-			select {
-			case pullImage := <-server.PullImageChannel():
-				actions <- pullImage
-			case getImage := <-server.GetImageChannel():
-				actions <- getImage
-			case finished := <-finishedImagePull:
-				actions <- finished
-			}
-		}
-	}()
+// NewImageFacade ...
+func NewImageFacade(dockerRegistries []pdocker.RegistryAuth, createImagesOnly bool, stop <-chan struct{}) *ImageFacade {
+	model := NewModel(stop)
 
 	imageFacade := &ImageFacade{
-		server:            server,
-		reducer:           reducer,
-		finishedImagePull: finishedImagePull,
-		imagePuller:       pdocker.NewImagePuller(dockerRegistries),
-		createImagesOnly:  createImagesOnly}
+		model:            model,
+		imagePuller:      pdocker.NewImagePuller(dockerRegistries),
+		createImagesOnly: createImagesOnly}
+
+	SetupHTTPServer(imageFacade)
 
 	go func() {
 		for {
 			select {
-			case nextImage := <-model.PullImageChannel():
-				imageFacade.pullImage(nextImage)
+			case <-stop:
+				return
+			case <-time.After(diskMetricsPause):
+				imageFacade.pullDiskMetrics()
 			}
 		}
 	}()
-
-	go imageFacade.pullDiskMetrics()
 
 	return imageFacade
 }
 
-func (imf *ImageFacade) pullImage(image *common.Image) {
+func (imf *ImageFacade) pullImage(image *common.Image) error {
 	var err error
 	if imf.createImagesOnly {
 		err = imf.imagePuller.CreateImageInLocalDocker(image)
@@ -91,19 +73,47 @@ func (imf *ImageFacade) pullImage(image *common.Image) {
 		err = imf.imagePuller.PullImage(image)
 	}
 	recordImagePullResult(err == nil)
-	imf.finishedImagePull <- &finishedImagePull{image: image, err: err}
+	return err
 }
 
 func (imf *ImageFacade) pullDiskMetrics() {
-	for {
-		log.Debugf("getting disk metrics")
-		diskMetrics, err := getDiskMetrics()
-		if err == nil {
-			log.Debugf("got disk metrics: %+v", diskMetrics)
-			recordDiskMetrics(diskMetrics)
-		} else {
-			log.Errorf("unable to get disk metrics: %s", err.Error())
-		}
-		time.Sleep(diskMetricsPause)
+	log.Debugf("getting disk metrics")
+	diskMetrics, err := getDiskMetrics()
+	if err == nil {
+		log.Debugf("got disk metrics: %+v", diskMetrics)
+		recordDiskMetrics(diskMetrics)
+	} else {
+		log.Errorf("unable to get disk metrics: %s", err.Error())
 	}
+}
+
+// HTTPResponder implementation
+
+// PullImage ...
+func (imf *ImageFacade) PullImage(image *common.Image) error {
+	err := imf.model.StartImagePull(image)
+	if err != nil {
+		return err
+	}
+	go func() {
+		pullErr := imf.pullImage(image)
+		if pullErr != nil {
+			log.Errorf("unable to pull image: %s", pullErr.Error())
+		}
+		finishErr := imf.model.finishImagePull(image, pullErr)
+		if finishErr != nil {
+			log.Errorf("unable to finish image pull: %s", finishErr.Error())
+		}
+	}()
+	return nil
+}
+
+// GetImage ...
+func (imf *ImageFacade) GetImage(image *common.Image) common.ImageStatus {
+	return imf.model.GetImageStatus(image)
+}
+
+// GetModel ...
+func (imf *ImageFacade) GetModel() map[string]interface{} {
+	return imf.model.GetAPIModel()
 }

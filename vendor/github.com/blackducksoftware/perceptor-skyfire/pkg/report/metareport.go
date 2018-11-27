@@ -27,27 +27,34 @@ import (
 	"github.com/blackducksoftware/perceptor-skyfire/pkg/kube"
 )
 
+// MetaReport .....
 type MetaReport struct {
-	KubeMeta   *kube.Meta
-	HubVersion string
+	KubeMeta    *kube.Meta
+	HubVersions map[string]string
 	//	HubScanClientVersion string // TODO we don't need this, do we?
 }
 
+// NewMetaReport .....
 func NewMetaReport(dump *Dump) *MetaReport {
+	hubVersions := map[string]string{}
+	for host, dump := range dump.Hubs {
+		hubVersions[host] = dump.Version
+	}
 	return &MetaReport{
-		KubeMeta:   dump.Kube.Meta,
-		HubVersion: dump.Hub.Version,
+		KubeMeta:    dump.Kube.Meta,
+		HubVersions: hubVersions,
 	}
 }
 
+// HumanReadableString .....
 func (m *MetaReport) HumanReadableString() string {
 	return fmt.Sprintf(`
 Overview:
- - Hub version %s
+ - Hub versions %+v
  - Kubernetes version %s with build date %s
  - the cluster had %d nodes
 `,
-		m.HubVersion,
+		m.HubVersions,
 		m.KubeMeta.GitVersion,
 		m.KubeMeta.BuildDate,
 		m.KubeMeta.NodeCount)

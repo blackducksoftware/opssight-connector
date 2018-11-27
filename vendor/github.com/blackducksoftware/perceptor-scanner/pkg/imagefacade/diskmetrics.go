@@ -24,9 +24,10 @@ package imagefacade
 import (
 	"syscall"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/juju/errors"
 )
 
+// DiskMetrics ...
 type DiskMetrics struct {
 	FreeBytes      uint64
 	AvailableBytes uint64
@@ -38,8 +39,7 @@ func getDiskMetrics() (*DiskMetrics, error) {
 	var stat syscall.Statfs_t
 	err := syscall.Statfs("/var/images", &stat)
 	if err != nil {
-		log.Errorf("unable to get disk stats: %s", err.Error())
-		return nil, err
+		return nil, errors.Annotatef(err, "unable to get disk stats")
 	}
 	metrics := &DiskMetrics{
 		FreeBytes:      stat.Bfree * uint64(stat.Bsize),

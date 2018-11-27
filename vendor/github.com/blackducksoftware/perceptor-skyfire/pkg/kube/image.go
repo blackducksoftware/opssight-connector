@@ -21,15 +21,18 @@ under the License.
 
 package kube
 
+// Image .....
 type Image struct {
 	Image   string
 	ImageID string
 }
 
+// NewImage .....
 func NewImage(image string, imageID string) *Image {
 	return &Image{Image: image, ImageID: imageID}
 }
 
+// ParseImageID .....
 func (image *Image) ParseImageID() (name string, sha string, err error) {
 	name, sha, err = ParseImageIDString(image.ImageID)
 	// if err != nil {

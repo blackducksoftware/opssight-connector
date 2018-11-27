@@ -28,7 +28,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/juju/errors"
 )
 
 // This code is from https://golangcode.com/unzip-files-in-go/ and
@@ -36,16 +36,14 @@ import (
 func unzip(source string, destination string) error {
 	r, err := zip.OpenReader(source)
 	if err != nil {
-		log.Errorf("unable to open reader: %s", err.Error())
-		return err
+		return errors.Annotatef(err, "unable to open reader")
 	}
 	defer r.Close()
 
 	for _, f := range r.File {
 		rc, err := f.Open()
 		if err != nil {
-			log.Errorf("unable to open file: %s", err.Error())
-			return err
+			return errors.Annotatef(err, "unable to open file")
 		}
 		defer rc.Close()
 
@@ -61,20 +59,17 @@ func unzip(source string, destination string) error {
 
 			err = os.MkdirAll(fdir, os.ModePerm)
 			if err != nil {
-				log.Errorf("unable to make directory: %s", err.Error())
-				return err
+				return errors.Annotatef(err, "unable to make directory")
 			}
 			f, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
-				log.Errorf("unable to open file: %s", err.Error())
-				return err
+				return errors.Annotatef(err, "unable to open file")
 			}
 			defer f.Close()
 
 			_, err = io.Copy(f, rc)
 			if err != nil {
-				log.Errorf("unable to copy file: %s", err.Error())
-				return err
+				return errors.Annotatef(err, "unable to copy file")
 			}
 		}
 	}

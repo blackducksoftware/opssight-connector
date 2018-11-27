@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/blackducksoftware/hub-client-go/hubapi"
-	"github.com/juju/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -32,7 +31,7 @@ func (c *Client) ListProjectVersionComponents(link hubapi.ResourceLink) (*hubapi
 	err := c.HttpGetJSON(link.Href+"?limit=2", &bomList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error while trying to get Project Version Component list")
+		return nil, AnnotateHubClientError(err, "Error while trying to get Project Version Component list")
 	}
 
 	return &bomList, nil
@@ -48,7 +47,7 @@ func (c *Client) ListProjectVersionVulnerableComponents(link hubapi.ResourceLink
 	err := c.HttpGetJSON(link.Href+"?limit=2", &bomList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve vulnerable components list")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve vulnerable components list")
 	}
 
 	return &bomList, nil
@@ -63,7 +62,7 @@ func (c *Client) PageProjectVersionVulnerableComponents(link hubapi.ResourceLink
 	err := c.HttpGetJSON(url, &bomList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve vulnerable components page")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve vulnerable components page")
 	}
 
 	return &bomList, nil
@@ -78,7 +77,7 @@ func (c *Client) CountProjectVersionVulnerableComponents(link hubapi.ResourceLin
 	err := c.HttpGetJSON(link.Href+"?offset=0&limit=1", &bomList, 200)
 
 	if err != nil {
-		return 0, errors.Annotate(err, "Error trying to retrieve count of vulnerable components")
+		return 0, AnnotateHubClientError(err, "Error trying to retrieve count of vulnerable components")
 	}
 
 	return bomList.TotalCount, nil

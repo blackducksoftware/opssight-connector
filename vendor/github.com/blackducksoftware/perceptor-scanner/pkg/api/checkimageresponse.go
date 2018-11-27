@@ -23,6 +23,7 @@ package api
 
 import "github.com/blackducksoftware/perceptor-scanner/pkg/common"
 
+// CheckImageResponse ...
 type CheckImageResponse struct {
 	PullSpec    string
 	ImageStatus common.ImageStatus

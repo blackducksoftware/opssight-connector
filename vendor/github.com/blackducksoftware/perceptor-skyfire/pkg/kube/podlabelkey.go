@@ -25,6 +25,7 @@ import (
 	"fmt"
 )
 
+// PodLabelKey .....
 type PodLabelKey int
 
 const (
@@ -33,6 +34,7 @@ const (
 	PodLabelKeyOverallStatus    PodLabelKey = iota
 )
 
+// String .....
 func (pak PodLabelKey) String() string {
 	switch pak {
 	case PodLabelKeyVulnerabilities:

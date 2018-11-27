@@ -23,8 +23,10 @@ package common
 
 import "fmt"
 
+// ImageStatus ...
 type ImageStatus int
 
+// ...
 const (
 	ImageStatusUnknown    ImageStatus = iota
 	ImageStatusInProgress ImageStatus = iota

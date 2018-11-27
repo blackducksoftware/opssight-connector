@@ -27,6 +27,7 @@ import (
 	"github.com/blackducksoftware/perceptor-skyfire/pkg/kube"
 )
 
+// KubeReport .....
 type KubeReport struct {
 	UnanalyzeablePods      []string
 	UnparseableImages      []string
@@ -34,6 +35,7 @@ type KubeReport struct {
 	PartiallyLabeledPods   []string
 }
 
+// NewKubeReport .....
 func NewKubeReport(dump *kube.Dump) *KubeReport {
 	partiallyAnnotatedKubePods, partiallyLabeledKubePods := PartiallyHandledKubePods(dump)
 	return &KubeReport{
@@ -44,6 +46,7 @@ func NewKubeReport(dump *kube.Dump) *KubeReport {
 	}
 }
 
+// HumanReadableString .....
 func (k *KubeReport) HumanReadableString() string {
 	return fmt.Sprintf(`
 Kubernetes:
@@ -58,6 +61,7 @@ Kubernetes:
 		len(k.PartiallyLabeledPods))
 }
 
+// PartiallyHandledKubePods .....
 func PartiallyHandledKubePods(dump *kube.Dump) (partiallyAnnotatedKubePods []string, partiallyLabeledKubePods []string) {
 	partiallyAnnotatedKubePods = []string{}
 	partiallyLabeledKubePods = []string{}
@@ -73,6 +77,7 @@ func PartiallyHandledKubePods(dump *kube.Dump) (partiallyAnnotatedKubePods []str
 	return
 }
 
+// UnparseableKubeImages .....
 func UnparseableKubeImages(dump *kube.Dump) []string {
 	images := []string{}
 	for _, image := range dump.ImagesMissingSha {
@@ -81,6 +86,7 @@ func UnparseableKubeImages(dump *kube.Dump) []string {
 	return images
 }
 
+// UnanalyzeablePods .....
 func UnanalyzeablePods(dump *kube.Dump) []string {
 	unanalyzeablePods := []string{}
 	for podName, pod := range dump.PodsByName {

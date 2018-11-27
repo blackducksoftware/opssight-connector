@@ -21,6 +21,7 @@ under the License.
 
 package kube
 
+// KubeClientConfig .....
 type KubeClientConfig struct {
 	MasterURL      string
 	KubeConfigPath string

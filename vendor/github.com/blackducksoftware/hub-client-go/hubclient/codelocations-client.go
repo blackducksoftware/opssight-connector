@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/blackducksoftware/hub-client-go/hubapi"
-	"github.com/juju/errors"
 )
 
 func (c *Client) ListAllCodeLocations(options *hubapi.GetListOptions) (*hubapi.CodeLocationList, error) {
@@ -34,7 +33,7 @@ func (c *Client) ListAllCodeLocations(options *hubapi.GetListOptions) (*hubapi.C
 	err := c.HttpGetJSON(codeLocationsURL, &codeLocationsList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve code locations list")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve code locations list")
 	}
 
 	return &codeLocationsList, nil
@@ -53,7 +52,7 @@ func (c *Client) ListCodeLocations(link hubapi.ResourceLink, options *hubapi.Get
 	err := c.HttpGetJSON(codeLocationsURL, &codeLocationList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve code location list")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve code location list")
 	}
 
 	return &codeLocationList, nil
@@ -65,7 +64,7 @@ func (c *Client) GetCodeLocation(link hubapi.ResourceLink) (*hubapi.CodeLocation
 	err := c.HttpGetJSON(link.Href, &codeLocation, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve a code location")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve a code location")
 	}
 
 	return &codeLocation, nil
@@ -86,7 +85,7 @@ func (c *Client) ListScanSummaries(link hubapi.ResourceLink) (*hubapi.ScanSummar
 	err := c.HttpGetJSON(link.Href, &scanSummaryList, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve scan summary list")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve scan summary list")
 	}
 
 	return &scanSummaryList, nil
@@ -98,7 +97,7 @@ func (c *Client) GetScanSummary(link hubapi.ResourceLink) (*hubapi.ScanSummary, 
 	err := c.HttpGetJSON(link.Href, &scanSummary, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve a scan summary")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve a scan summary")
 	}
 
 	return &scanSummary, nil

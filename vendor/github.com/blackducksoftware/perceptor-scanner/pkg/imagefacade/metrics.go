@@ -73,8 +73,7 @@ func init() {
 		Subsystem: "imagefacade",
 		Name:      "http_requests_received",
 		Help:      "HTTP requests received by imagefacade",
-	},
-		[]string{"path"})
+	}, []string{"path"})
 	prometheus.MustRegister(httpRequestsCounter)
 
 	actionsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -82,8 +81,7 @@ func init() {
 		Subsystem: "imagefacade",
 		Name:      "actions",
 		Help:      "actions processed by imagefacade and applied to the model",
-	},
-		[]string{"action"})
+	}, []string{"action"})
 	prometheus.MustRegister(actionsCounter)
 
 	reducerActivityCounter = prometheus.NewCounterVec(prometheus.CounterOpts{

@@ -32,6 +32,7 @@ var httpResults *prometheus.CounterVec
 var scanClientDurationHistogram *prometheus.HistogramVec
 var totalScannerDurationHistogram *prometheus.HistogramVec
 var errorsCounter *prometheus.CounterVec
+var cleanUpFileCounter *prometheus.CounterVec
 
 // helpers
 
@@ -65,11 +66,8 @@ func recordScannerError(errorName string) {
 	recordError("scan client", errorName)
 }
 
-func recordCleanUpTarFile(isSuccess bool) {
-	if !isSuccess {
-		recordScannerError("clean up tar file")
-	}
-	// TODO should we have a metric for success?
+func recordCleanUpFile(isSuccess bool) {
+	cleanUpFileCounter.With(prometheus.Labels{"success": fmt.Sprintf("%t", isSuccess)})
 }
 
 // init
@@ -81,6 +79,7 @@ func init() {
 		Name:      "http_response_status_codes",
 		Help:      "status codes for responses from HTTP requests issued by scanner",
 	}, []string{"path", "code"})
+	prometheus.MustRegister(httpResults)
 
 	scanClientDurationHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "perceptor",
@@ -89,6 +88,7 @@ func init() {
 		Help:      "time duration of running the java scan client",
 		Buckets:   prometheus.ExponentialBuckets(0.25, 2, 20),
 	}, []string{"result"})
+	prometheus.MustRegister(scanClientDurationHistogram)
 
 	totalScannerDurationHistogram = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Namespace: "perceptor",
@@ -97,6 +97,7 @@ func init() {
 		Help:      "total time duration of running the scanner",
 		Buckets:   prometheus.ExponentialBuckets(0.25, 2, 20),
 	}, []string{"result"})
+	prometheus.MustRegister(totalScannerDurationHistogram)
 
 	errorsCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "perceptor",
@@ -104,9 +105,13 @@ func init() {
 		Name:      "scannerErrors",
 		Help:      "error codes from image scanning",
 	}, []string{"stage", "errorName"})
-
 	prometheus.MustRegister(errorsCounter)
-	prometheus.MustRegister(scanClientDurationHistogram)
-	prometheus.MustRegister(totalScannerDurationHistogram)
-	prometheus.MustRegister(httpResults)
+
+	cleanUpFileCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "perceptor",
+		Subsystem: "scanner",
+		Name:      "clean_up_file_results",
+		Help:      "success, failure of cleaning up files after pulling them",
+	}, []string{"success"})
+	prometheus.MustRegister(cleanUpFileCounter)
 }

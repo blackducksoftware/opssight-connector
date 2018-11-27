@@ -23,6 +23,7 @@ package kube
 
 import "fmt"
 
+// PodImageLabelKey .....
 type PodImageLabelKey int
 
 const (
@@ -53,6 +54,7 @@ var podImageLabelKeys = []PodImageLabelKey{
 	PodImageLabelKeyImage,
 }
 
+// String .....
 func (pak PodImageLabelKey) String(index int) string {
 	return fmt.Sprintf(pak.formatString(), index)
 }

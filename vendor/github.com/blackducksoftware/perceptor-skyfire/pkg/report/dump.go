@@ -27,16 +27,18 @@ import (
 	"github.com/blackducksoftware/perceptor-skyfire/pkg/perceptor"
 )
 
+// Dump .....
 type Dump struct {
 	Kube      *kube.Dump
 	Perceptor *perceptor.Dump
-	Hub       *hub.Dump
+	Hubs      map[string]*hub.Dump
 }
 
-func NewDump(kube *kube.Dump, perceptor *perceptor.Dump, hub *hub.Dump) *Dump {
+// NewDump .....
+func NewDump(kube *kube.Dump, perceptor *perceptor.Dump, hubs map[string]*hub.Dump) *Dump {
 	return &Dump{
 		Kube:      kube,
 		Perceptor: perceptor,
-		Hub:       hub,
+		Hubs:      hubs,
 	}
 }

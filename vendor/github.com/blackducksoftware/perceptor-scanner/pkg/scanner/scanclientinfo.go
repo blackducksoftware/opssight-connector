@@ -23,23 +23,45 @@ package scanner
 
 import "fmt"
 
-type scanClientInfo struct {
-	hubVersion         string
-	scanClientRootPath string
+// ScanClientInfo ...
+type ScanClientInfo struct {
+	HubVersion string
+	RootPath   string
+	OSType     OSType
 }
 
-func (sci *scanClientInfo) scanCliShPath() string {
-	return fmt.Sprintf("%s/scan.cli-%s/bin/scan.cli.sh", sci.scanClientRootPath, sci.hubVersion)
+// NewScanClientInfo ...
+func NewScanClientInfo(hubVersion string, rootPath string, osType OSType) *ScanClientInfo {
+	return &ScanClientInfo{HubVersion: hubVersion, RootPath: rootPath, OSType: osType}
 }
 
-func (sci *scanClientInfo) scanCliImplJarPath() string {
-	return fmt.Sprintf("%s/scan.cli-%s/lib/cache/scan.cli.impl-standalone.jar", sci.scanClientRootPath, sci.hubVersion)
+// ScanCliZipPath ...
+func (sci *ScanClientInfo) ScanCliZipPath() string {
+	return fmt.Sprintf("%s/scanclient.zip", sci.RootPath)
 }
 
-func (sci *scanClientInfo) scanCliJarPath() string {
-	return fmt.Sprintf("%s/scan.cli-%s/lib/scan.cli-%s-standalone.jar", sci.scanClientRootPath, sci.hubVersion, sci.hubVersion)
+// ScanCliShPath ...
+func (sci *ScanClientInfo) ScanCliShPath() string {
+	return fmt.Sprintf("%s/scan.cli-%s/bin/scan.cli.sh", sci.RootPath, sci.HubVersion)
 }
 
-func (sci *scanClientInfo) scanCliJavaPath() string {
-	return fmt.Sprintf("%s/scan.cli-%s/jre/bin/", sci.scanClientRootPath, sci.hubVersion)
+// ScanCliImplJarPath ...
+func (sci *ScanClientInfo) ScanCliImplJarPath() string {
+	return fmt.Sprintf("%s/scan.cli-%s/lib/cache/scan.cli.impl-standalone.jar", sci.RootPath, sci.HubVersion)
+}
+
+// ScanCliJarPath ...
+func (sci *ScanClientInfo) ScanCliJarPath() string {
+	return fmt.Sprintf("%s/scan.cli-%s/lib/scan.cli-%s-standalone.jar", sci.RootPath, sci.HubVersion, sci.HubVersion)
+}
+
+// ScanCliJavaPath ...
+func (sci *ScanClientInfo) ScanCliJavaPath() string {
+	switch sci.OSType {
+	case OSTypeLinux:
+		return fmt.Sprintf("%s/scan.cli-%s/jre/bin/java", sci.RootPath, sci.HubVersion)
+	case OSTypeMac:
+		return fmt.Sprintf("%s/scan.cli-%s/jre/Contents/Home/bin/java", sci.RootPath, sci.HubVersion)
+	}
+	panic(fmt.Errorf("invalid os type: %d", sci.OSType))
 }

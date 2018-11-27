@@ -28,18 +28,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-// ImagePerceiverConfig contains all configuration for a ImagePerceiver
-type ImagePerceiverConfig struct {
-	PerceptorHost             string
-	PerceptorPort             int
+// PerceptorConfig contains Perceptor config
+type PerceptorConfig struct {
+	Host string
+	Port int
+}
+
+// PerceiverConfig contains general Perceiver config
+type PerceiverConfig struct {
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
 }
 
-// GetImagePerceiverConfig returns a configuration object to configure a ImagePerceiver
-func GetImagePerceiverConfig(configPath string) (*ImagePerceiverConfig, error) {
-	var cfg *ImagePerceiverConfig
+// Config contains all configuration for a PodPerceiver
+type Config struct {
+	Perceptor PerceptorConfig
+	Perceiver PerceiverConfig
+}
+
+// GetConfig returns a configuration object to configure a ImagePerceiver
+func GetConfig(configPath string) (*Config, error) {
+	var cfg *Config
 
 	viper.SetConfigFile(configPath)
 
@@ -57,7 +67,7 @@ func GetImagePerceiverConfig(configPath string) (*ImagePerceiverConfig, error) {
 
 // StartWatch will start watching the ImagePerceiver configuration file and
 // call the passed handler function when the configuration file has changed
-func (p *ImagePerceiverConfig) StartWatch(handler func(fsnotify.Event)) {
+func (p *Config) StartWatch(handler func(fsnotify.Event)) {
 	viper.WatchConfig()
 	viper.OnConfigChange(handler)
 }
