@@ -8,10 +8,6 @@
     "namespace": "hub-test",
     "backupSupport": "No",
     "certificateName": "default",
-    "environs": [
-      "IPV4_ONLY:1",
-      "BLACKDUCK_HUB_SERVER_ADDRESS:0.0.0.0"
-    ],
     "dbPrototype": "empty",
     "hubVersion": "2018.11.0",
     "flavor": "small",
