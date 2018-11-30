@@ -27,7 +27,6 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,6 +47,9 @@ func RunScanner(configPath string, stop <-chan struct{}) {
 	prometheus.Unregister(prometheus.NewGoCollector())
 
 	manager, err := NewManager(config, stop)
+	if err != nil {
+		panic(err)
+	}
 	manager.StartRequestingScanJobs()
 
 	http.Handle("/metrics", prometheus.Handler())

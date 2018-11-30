@@ -69,11 +69,13 @@ func (pd *Client) Dump() (*Dump, error) {
 
 // DumpModel .....
 func (pd *Client) DumpModel() (*api.Model, error) {
-	url := fmt.Sprintf("http://%s/model", pd.Host)
-	//url := fmt.Sprintf("http://%s:%d/model", pd.Host, pd.Port)
+	url := fmt.Sprintf("http://%s:%d/model", pd.Host, pd.Port)
 	resp, err := pd.Resty.R().SetResult(&api.Model{}).Get(url)
 	if err != nil {
 		return nil, errors.Trace(err)
+	}
+	if resp.IsError() {
+		return nil, fmt.Errorf("http request to %s failed with status code %d", url, resp.StatusCode())
 	}
 	switch result := resp.Result().(type) {
 	case *api.Model:
@@ -85,11 +87,13 @@ func (pd *Client) DumpModel() (*api.Model, error) {
 
 // DumpScanResults .....
 func (pd *Client) DumpScanResults() (*api.ScanResults, error) {
-	url := fmt.Sprintf("http://%s/scanresults", pd.Host)
-	//url := fmt.Sprintf("http://%s:%d/scanresults", pd.Host, pd.Port)
+	url := fmt.Sprintf("http://%s:%d/scanresults", pd.Host, pd.Port)
 	resp, err := pd.Resty.R().SetResult(&api.ScanResults{}).Get(url)
 	if err != nil {
 		return nil, errors.Trace(err)
+	}
+	if resp.IsError() {
+		return nil, fmt.Errorf("http request to %s failed with status code %d", url, resp.StatusCode())
 	}
 	switch result := resp.Result().(type) {
 	case *api.ScanResults:

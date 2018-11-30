@@ -24,10 +24,12 @@ package kube
 import (
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
+
 	"k8s.io/api/core/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	rest "k8s.io/client-go/rest"
+
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -104,52 +106,6 @@ func (client *KubeClient) GetAllPods() ([]*Pod, error) {
 		pods = append(pods, mapKubePod(&kubePod))
 	}
 	return pods, nil
-}
-
-/* DumpServices .....
-func (client *KubeClient) GetAnnotations() {
-	pods, x := client.GetAllPods()
-	for _, pod := range pods {
-		for k,v :=  range pod.BDAnnotations {
-			log.Infof("annotation !!!  %v %v",k,v)
-		}
-	}
-}*/
-
-// DumpServices .....
-func (client *KubeClient) DumpServices() (*ServiceDump, error) {
-	// Get a Slice of Service items for all services
-	kubeServices, err := client.GetAllServices()
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	// Get meta data about the cluster
-	kubeMeta, err := client.GetMeta()
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	// Return the Services in a dump format
-	return NewServiceDump(kubeMeta, kubeServices), nil
-}
-
-// GetAllServices .....
-func (client *KubeClient) GetAllServices() ([]*Service, error) {
-	// Empty Slice to store Service type items
-	services := []*Service{}
-	// Get a list of services from the KubeClient
-	kubeServices, err := client.clientset.CoreV1().Services(v1.NamespaceAll).List(meta_v1.ListOptions{})
-	if err != nil {
-		return nil, errors.Trace(err)
-	}
-	// Append Service items to the Slice
-	for _, kubeService := range kubeServices.Items {
-		var ports []int32
-		for _, port := range kubeService.Spec.Ports {
-			ports = append(ports, port.Port)
-		}
-		services = append(services, NewService(kubeService.Name, kubeService.Namespace, ports))
-	}
-	return services, nil
 }
 
 // GetMeta .....

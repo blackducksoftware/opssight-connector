@@ -21,7 +21,6 @@
   revision = "75776aa0330a633894b700a7d766632f616d9ab8"
 
 [[projects]]
-  branch = "master"
   digest = "1:5230b2b927e6b30aee9df0fc403124f69c9c61f3bd21b023442d8cfe9db0806f"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
@@ -38,10 +37,10 @@
     "pkg/utils",
   ]
   pruneopts = "UT"
-  revision = "ac21fc73745b934bdc3c984877609af24a87e595"
+  revision = "8f8863c8d82fc562dfe664ec7d1ced9fcd7983ab"
+  version = "v2.2.0"
 
 [[projects]]
-  branch = "master"
   digest = "1:084f275b18793540622e1378731dfb4bdcf663a6f46533c286ac4a5cf6ac0b52"
   name = "github.com/blackducksoftware/perceptor"
   packages = [
@@ -55,10 +54,10 @@
   ]
   pruneopts = "UT"
   revision = "90a7d94bc18a617589eb477a31ada856298e2abd"
+  version = "v2.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a1060e07d84d3bca47b952a551769e2b6395d0d56d435201f56311db380c0450"
+  digest = "1:462cc3a403902bf966ef66d433c0b89b6efd9d88742cdd088aba68678820e300"
   name = "github.com/blackducksoftware/perceptor-scanner"
   packages = [
     "pkg/api",
@@ -68,11 +67,11 @@
     "pkg/scanner",
   ]
   pruneopts = "UT"
-  revision = "caaa28b1e279e7c64eced34ee64a8acaecc2f0cb"
+  revision = "aef3f3839ad23c6b739497870a9b71680523019d"
+  version = "v2.2.0"
 
 [[projects]]
-  branch = "hammerSandbox"
-  digest = "1:21d854e43700fdea76d45702832fd1d446c1fe5595571fca04fa1f2b6497ec68"
+  digest = "1:9b5578179d351a88fd5751423a8d70b9565645edaaf0c1e4dbcefb5232616181"
   name = "github.com/blackducksoftware/perceptor-skyfire"
   packages = [
     "pkg/hub",
@@ -81,7 +80,8 @@
     "pkg/report",
   ]
   pruneopts = "UT"
-  revision = "e64608d27a046b3d42454c3ccf23e96c94320768"
+  revision = "e49830f129bab5b8659d15e84502749f1bbcef0d"
+  version = "v2.2.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -402,7 +402,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
+  digest = "1:9ea97158ea06d60b1f324aa384f6a4cbd596a81b3cae994e17108b195f398d01"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -411,7 +411,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "619930b0b4713cc1280189bf0a4c54b3fb506f60"
+  revision = "aa55a523dc0a8297edf51bb75e8eec13eb3be45d"
 
 [[projects]]
   digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
@@ -470,7 +470,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "e657309f52e71501f9934566ac06dc5c2f7f11a1"
+  revision = "eb0de9b17e854e9b1ccd9963efafc79862359959"
 
 [[projects]]
   branch = "master"
@@ -488,18 +488,18 @@
     "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "adae6a3d119ae4890b46832a2e88a95adc62b8e7"
+  revision = "fae4c4e3ad76c295c3d6d259f898136b4bf833a8"
 
 [[projects]]
   branch = "master"
-  digest = "1:f343f077a5b0bc3a3788b3a04e24dd417e3e25b2acb529c413e212d2c42416ef"
+  digest = "1:0c7cb58af944f9690af91474a75371eecfe54c1ce3771a8dc08924430ee785d3"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "62eef0e2fa9b2c385f7b2778e763486da6880d37"
+  revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"
@@ -570,12 +570,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
 
 [[projects]]
   digest = "1:cae8f1d1d786aa486a7ed236a8c1f099b3b44697ec6bbb5951d7e9bdb53a5125"

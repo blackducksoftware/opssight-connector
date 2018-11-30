@@ -29,7 +29,12 @@ import (
 	"strings"
 
 	"github.com/juju/errors"
+	log "github.com/sirupsen/logrus"
 )
+
+type closable interface {
+	Close() error
+}
 
 // This code is from https://golangcode.com/unzip-files-in-go/ and
 // https://stackoverflow.com/a/24792688/894284
@@ -38,14 +43,34 @@ func unzip(source string, destination string) error {
 	if err != nil {
 		return errors.Annotatef(err, "unable to open reader")
 	}
+	defer log.Debugf("about to close %s", source)
 	defer r.Close()
 
+	openFiles := []closable{}
+	addFileHandle := func(rc closable) {
+		openFiles = append(openFiles, rc)
+	}
+	closeFiles := func() {
+		log.Debugf("closing %d files", len(openFiles))
+		for _, rc := range openFiles {
+			err := rc.Close()
+			if err != nil {
+				log.Errorf("unable to close file: %s", err.Error())
+			} else {
+				log.Debugf("closed file")
+			}
+		}
+		openFiles = []closable{}
+	}
+	defer closeFiles()
+
 	for _, f := range r.File {
+		log.Debugf("looking at %s", f.Name)
 		rc, err := f.Open()
 		if err != nil {
 			return errors.Annotatef(err, "unable to open file")
 		}
-		defer rc.Close()
+		addFileHandle(rc)
 
 		fpath := filepath.Join(destination, f.Name)
 
@@ -61,17 +86,19 @@ func unzip(source string, destination string) error {
 			if err != nil {
 				return errors.Annotatef(err, "unable to make directory")
 			}
+			log.Debugf("looking at %s", fpath)
 			f, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return errors.Annotatef(err, "unable to open file")
 			}
-			defer f.Close()
+			addFileHandle(f)
 
 			_, err = io.Copy(f, rc)
 			if err != nil {
 				return errors.Annotatef(err, "unable to copy file")
 			}
 		}
+		closeFiles()
 	}
 	return nil
 }
