@@ -69,7 +69,7 @@
 		"secretName": "blackduck",
     "hub" : {
       "initialCount": 0,
-      "maxCount": 4,
+      "maxCount": 0,
       "concurrentScanLimit": 2,
       "totalScanLimit": 1000,
       "hubSpec": {
