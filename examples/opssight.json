@@ -44,7 +44,7 @@
 			"podPerceiver": {
 				"name": "opssight-pod-processor",
 				"image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.0-RC",
-				"NamespaceFilter": ""
+				"namespaceFilter": ""
 			},
 			"serviceAccount": "opssight-processor",
 			"annotationIntervalSeconds": 30,
