@@ -34,7 +34,7 @@
       "replicaCount": 1
     },
     "perceiver": {
-      "enableImagePerceiver": false,
+      "enableImagePerceiver": true,
       "enablePodPerceiver": true,
       "port": 3002,
       "imagePerceiver": {

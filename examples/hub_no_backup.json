@@ -9,8 +9,7 @@
     "backupSupport": "No",
     "certificateName": "default",
     "dbPrototype": "empty",
-    "hubVersion": "2018.11.0",
-    "flavor": "small",
+    "size": "small",
     "hubType": "worker",
     "imageRegistries": [
       "docker.io/blackducksoftware/blackduck-authentication:2018.11.0",
@@ -24,6 +23,9 @@
       "docker.io/blackducksoftware/blackduck-nginx:1.0.0",
       "docker.io/blackducksoftware/blackduck-solr:1.0.0",
       "docker.io/blackducksoftware/blackduck-zookeeper:1.0.0"
+    ],
+    "environs": [
+      "HUB_VERSION:2018.11.0"
     ]
   }
 }

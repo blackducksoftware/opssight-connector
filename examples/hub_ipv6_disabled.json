@@ -10,11 +10,11 @@
     "certificateName": "default",
     "environs": [
       "IPV4_ONLY:1",
-      "BLACKDUCK_HUB_SERVER_ADDRESS:0.0.0.0"
+      "BLACKDUCK_HUB_SERVER_ADDRESS:0.0.0.0",
+      "HUB_VERSION:2018.11.0"
     ],
     "dbPrototype": "empty",
-    "hubVersion": "2018.11.0",
-    "flavor": "small",
+    "size": "small",
     "hubType": "worker",
     "imageRegistries": [
       "docker.io/blackducksoftware/blackduck-authentication:2018.11.0",
