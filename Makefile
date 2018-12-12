@@ -57,9 +57,7 @@ container_prep: ${OUTDIR} $(BINARY)
 			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 			cp ${CURRENT_DIR}/cmd/$p/* ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 		else \
-			if [[ $(p) != $(OPSSIGHT_CORE) ]]; then \
-				mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; \
-			fi; \
+			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; \
 			cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p; \
 		fi; \
 	 )
