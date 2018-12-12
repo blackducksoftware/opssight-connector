@@ -68,6 +68,7 @@
     "logLevel": "debug",
     "secretName": "blackduck",
     "hub": {
+      "user": "sysadmin",
       "initialCount": 0,
       "maxCount": 0,
       "concurrentScanLimit": 2,
