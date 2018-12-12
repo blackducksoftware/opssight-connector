@@ -12,8 +12,6 @@ COPY ./help.1 /help.1
 
 COPY ./opssight-core ./opssight-core
 
-COPY ./federator ./federator
-
 LABEL name="Black Duck OpsSight Core" \
       vendor="Black Duck Software" \
       release.version="$VERSION" \

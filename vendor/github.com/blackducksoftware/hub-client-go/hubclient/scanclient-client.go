@@ -19,6 +19,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/juju/errors"
 )
 
 func (c *Client) DownloadScanClientMac(path string) error {
@@ -39,9 +41,9 @@ func (c *Client) downloadScanClientHelper(path string, urlPath string) error {
 
 	resp, err := c.httpClient.Get(scanClientURL)
 	if err != nil {
-		return AnnotateHubClientErrorf(err, "unable to http GET %s", urlPath)
+		return errors.Annotate(err, "unable to http GET")
 	} else if resp.StatusCode != http.StatusOK {
-		return HubClientErrorf("GET failed: received status != 200 from %s: %s", scanClientURL, resp.Status)
+		return errors.Errorf("GET failed: received status != 200 from %s: %s", scanClientURL, resp.Status)
 	}
 
 	body := resp.Body
@@ -51,10 +53,10 @@ func (c *Client) downloadScanClientHelper(path string, urlPath string) error {
 
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
-		return AnnotateHubClientError(err, "unable to open file")
+		return errors.Annotate(err, "unable to open file")
 	}
 	if _, err = io.Copy(f, body); err != nil {
-		return AnnotateHubClientError(err, "unable to copy file")
+		return errors.Annotate(err, "unable to copy file")
 	}
 
 	return nil

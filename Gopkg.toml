@@ -28,22 +28,22 @@
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.1"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.1"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor-scanner"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.1"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor-skyfire"
   #branch = "hammerSandbox"
-  version = "v2.2.0"
+  version = "v2.2.1"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
