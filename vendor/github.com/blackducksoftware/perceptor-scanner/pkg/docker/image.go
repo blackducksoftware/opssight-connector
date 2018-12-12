@@ -26,6 +26,7 @@ import (
 	"net/url"
 )
 
+// Image ...
 type Image interface {
 	DockerPullSpec() string
 	DockerTarFilePath() string
@@ -45,4 +46,8 @@ func createURL(image Image) string {
 // getURL returns the URL used for hitting the docker daemon's get endpoint
 func getURL(image Image) string {
 	return fmt.Sprintf("http://localhost/v1.24/images/%s/get", urlEncodedName(image))
+}
+
+func inspectURL(image Image) string {
+	return fmt.Sprintf("http://localhost/v1.24/images/%s/json", urlEncodedName(image))
 }

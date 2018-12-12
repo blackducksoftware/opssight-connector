@@ -21,43 +21,39 @@ under the License.
 
 package hub
 
+// Dump .....
 type Dump struct {
-	Version           string
-	Projects          []*Project
-	ProjectsBySha     map[string]*Project
-	DuplicateShas     map[string]bool
-	ShortProjectNames []string
+	Version       string
+	Projects      []*Project
+	Scans         []*CodeLocation
+	ScansByName   map[string]*CodeLocation
+	DuplicateShas map[string]bool
 }
 
+// NewDump .....
 func NewDump(version string, projects []*Project) *Dump {
 	dump := &Dump{
-		Version:           version,
-		Projects:          projects,
-		ProjectsBySha:     map[string]*Project{},
-		DuplicateShas:     map[string]bool{},
-		ShortProjectNames: []string{}}
+		Version:       version,
+		Projects:      projects,
+		Scans:         []*CodeLocation{},
+		ScansByName:   map[string]*CodeLocation{},
+		DuplicateShas: map[string]bool{}}
 	dump.computeDerivedData()
 	return dump
 }
 
 func (hd *Dump) computeDerivedData() {
 	for _, project := range hd.Projects {
-		// handle unexpectedly short names
-		if len(project.Name) < 20 {
-			hd.ShortProjectNames = append(hd.ShortProjectNames, project.Name)
-			continue
+		for _, version := range project.Versions {
+			for _, scan := range version.CodeLocations {
+				hd.Scans = append(hd.Scans, scan)
+				_, ok := hd.ScansByName[scan.Name]
+				if !ok {
+					hd.ScansByName[scan.Name] = scan
+				} else {
+					hd.DuplicateShas[scan.Name] = true
+				}
+			}
 		}
-
-		startIndex := len(project.Name) - 20 // TODO is this right?
-		sha := project.Name[startIndex:]
-
-		// handle duplicate shas
-		_, ok := hd.ProjectsBySha[sha]
-		if ok {
-			hd.DuplicateShas[sha] = true
-			continue
-		}
-
-		hd.ProjectsBySha[sha] = project
 	}
 }

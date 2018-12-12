@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,11 +32,11 @@ func (c *Client) Login(username string, password string) error {
 	resp, err := c.httpClient.PostForm(loginURL, formValues)
 
 	if err != nil {
-		return errors.Annotate(err, "Error trying to login via form login")
+		return AnnotateHubClientError(err, "Error trying to login via form login")
 	}
 
 	if resp.StatusCode != 204 {
-		return errors.Errorf("got a %d response instead of a 204", resp.StatusCode)
+		return HubClientErrorf("got a %d response instead of a 204", resp.StatusCode)
 	}
 
 	if csrf := resp.Header.Get(HeaderNameCsrfToken); csrf != "" {

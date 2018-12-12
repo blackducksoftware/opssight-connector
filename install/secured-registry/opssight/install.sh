@@ -4,7 +4,7 @@ unset DYLD_INSERT_LIBRARIES
 
 source `dirname ${BASH_SOURCE}`/args.sh "${@}"
 
-cat ./opssight_with_min_parameter.yaml | \
+cat ./opssight.json | \
 sed 's/${NAMESPACE}/'$_arg_namespace'/g' | \
 sed 's/${TAG}/'$_arg_version'/g' | \
 sed 's/${DOCKER_REGISTRY}/'$_arg_registry'/g' | \

@@ -23,6 +23,7 @@ package hub
 
 import "github.com/blackducksoftware/hub-client-go/hubapi"
 
+// Project .....
 type Project struct {
 	Name        string
 	Versions    []*Version
@@ -30,6 +31,7 @@ type Project struct {
 	Source      string
 }
 
+// Version .....
 type Version struct {
 	Name            string
 	CodeLocations   []*CodeLocation
@@ -43,6 +45,7 @@ type Version struct {
 	PolicyStatus    *PolicyStatus
 }
 
+// PolicyStatus .....
 type PolicyStatus struct {
 	ComponentVersionStatusCounts []*ComponentVersionStatusCount
 	Meta                         hubapi.Meta
@@ -50,11 +53,13 @@ type PolicyStatus struct {
 	UpdatedAt                    string
 }
 
+// ComponentVersionStatusCount .....
 type ComponentVersionStatusCount struct {
 	Name  string
 	Value int
 }
 
+// CodeLocation .....
 type CodeLocation struct {
 	ScanSummaries        []*ScanSummary
 	CreatedAt            string
@@ -66,12 +71,14 @@ type CodeLocation struct {
 	UpdatedAt            string
 }
 
+// RiskProfile .....
 type RiskProfile struct {
 	BomLastUpdatedAt string
 	Categories       map[string]map[string]int
 	Meta             hubapi.Meta
 }
 
+// ScanSummary .....
 type ScanSummary struct {
 	CreatedAt string
 	Meta      hubapi.Meta

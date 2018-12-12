@@ -42,6 +42,7 @@ func getInt(dict map[string]string, key string) (int, error) {
 	return strconv.Atoi(str)
 }
 
+// CopyMap .....
 func CopyMap(dict map[string]string) map[string]string {
 	copy := map[string]string{}
 	for key, val := range dict {
@@ -50,6 +51,7 @@ func CopyMap(dict map[string]string) map[string]string {
 	return copy
 }
 
+// RemoveKeys .....
 func RemoveKeys(dict map[string]string, keys []string) map[string]string {
 	copy := CopyMap(dict)
 	for _, key := range keys {
@@ -58,6 +60,7 @@ func RemoveKeys(dict map[string]string, keys []string) map[string]string {
 	return copy
 }
 
+// HasAllKeys .....
 func HasAllKeys(dict map[string]string, keys []string) bool {
 	for _, key := range keys {
 		_, ok := dict[key]
@@ -68,6 +71,7 @@ func HasAllKeys(dict map[string]string, keys []string) bool {
 	return true
 }
 
+// HasAnyKeys .....
 func HasAnyKeys(dict map[string]string, keys []string) bool {
 	for _, key := range keys {
 		_, ok := dict[key]

@@ -21,8 +21,9 @@ under the License.
 
 package docker
 
+// RegistryAuth ...
 type RegistryAuth struct {
-	Url      string
+	URL      string
 	User     string
 	Password string
 }

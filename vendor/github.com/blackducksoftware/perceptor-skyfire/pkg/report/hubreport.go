@@ -27,12 +27,14 @@ import (
 	"github.com/blackducksoftware/perceptor-skyfire/pkg/hub"
 )
 
+// HubReport .....
 type HubReport struct {
 	ProjectsMultipleVersions           []string
 	VersionsMultipleCodeLocations      []string
 	CodeLocationsMultipleScanSummaries []string
 }
 
+// NewHubReport .....
 func NewHubReport(dump *hub.Dump) *HubReport {
 	return &HubReport{
 		ProjectsMultipleVersions:           HubProjectsWrongNumberOfVersions(dump),
@@ -41,18 +43,21 @@ func NewHubReport(dump *hub.Dump) *HubReport {
 	}
 }
 
-func (h *HubReport) HumanReadableString() string {
+// HumanReadableString .....
+func (h *HubReport) HumanReadableString(host string) string {
 	return fmt.Sprintf(`
-Hub:
+Hub %s:
  - %d project(s) with multiple versions
  - %d version(s) with multiple code locations
  - %d code location(s) with multiple scan summaries
 `,
+		host,
 		len(h.ProjectsMultipleVersions),
 		len(h.VersionsMultipleCodeLocations),
 		len(h.CodeLocationsMultipleScanSummaries))
 }
 
+// HubProjectsWrongNumberOfVersions .....
 func HubProjectsWrongNumberOfVersions(d *hub.Dump) []string {
 	projectNames := []string{}
 	for _, project := range d.Projects {
@@ -63,6 +68,7 @@ func HubProjectsWrongNumberOfVersions(d *hub.Dump) []string {
 	return projectNames
 }
 
+// HubVersionsWrongNumberOfCodeLocations .....
 func HubVersionsWrongNumberOfCodeLocations(d *hub.Dump) []string {
 	versionNames := []string{}
 	for _, project := range d.Projects {
@@ -75,6 +81,7 @@ func HubVersionsWrongNumberOfCodeLocations(d *hub.Dump) []string {
 	return versionNames
 }
 
+// HubCodeLocationsWrongNumberOfScans .....
 func HubCodeLocationsWrongNumberOfScans(d *hub.Dump) []string {
 	codeLocationNames := []string{}
 	for _, project := range d.Projects {

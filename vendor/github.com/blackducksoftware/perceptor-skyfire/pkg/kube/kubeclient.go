@@ -22,6 +22,7 @@ under the License.
 package kube
 
 import (
+	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 
 	"k8s.io/api/core/v1"
@@ -32,11 +33,17 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// ClientInterface .....
+type ClientInterface interface {
+	Dump() (*Dump, error)
+}
+
 // KubeClient is an implementation of the Client interface for kubernetes
 type KubeClient struct {
 	clientset kubernetes.Clientset
 }
 
+// NewKubeClient .....
 func NewKubeClient(config *KubeClientConfig) (*KubeClient, error) {
 	if config != nil {
 		return NewKubeClientFromOutsideCluster(config.MasterURL, config.KubeConfigPath)
@@ -50,8 +57,7 @@ func NewKubeClient(config *KubeClientConfig) (*KubeClient, error) {
 func NewKubeClientFromInsideCluster() (*KubeClient, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		log.Errorf("unable to build config from cluster: %s", err.Error())
-		return nil, err
+		return nil, errors.Annotate(err, "unable to build config from cluster")
 	}
 	return newKubeClientHelper(config)
 }
@@ -61,8 +67,7 @@ func NewKubeClientFromInsideCluster() (*KubeClient, error) {
 func NewKubeClientFromOutsideCluster(masterURL string, kubeconfigPath string) (*KubeClient, error) {
 	config, err := clientcmd.BuildConfigFromFlags(masterURL, kubeconfigPath)
 	if err != nil {
-		log.Errorf("unable to build config from flags: %s", err.Error())
-		return nil, err
+		return nil, errors.Annotate(err, "unable to build config from flags")
 	}
 
 	return newKubeClientHelper(config)
@@ -71,30 +76,31 @@ func NewKubeClientFromOutsideCluster(masterURL string, kubeconfigPath string) (*
 func newKubeClientHelper(config *rest.Config) (*KubeClient, error) {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Errorf("unable to create kubernetes clientset: %s", err.Error())
-		return nil, err
+		return nil, errors.Annotate(err, "unable to create kubernetes clientset")
 	}
 
 	return &KubeClient{clientset: *clientset}, nil
 }
 
+// Dump .....
 func (client *KubeClient) Dump() (*Dump, error) {
 	kubePods, err := client.GetAllPods()
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	kubeMeta, err := client.GetMeta()
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	return NewDump(kubeMeta, kubePods), nil
 }
 
+// GetAllPods .....
 func (client *KubeClient) GetAllPods() ([]*Pod, error) {
 	pods := []*Pod{}
 	kubePods, err := client.clientset.CoreV1().Pods(v1.NamespaceAll).List(meta_v1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	for _, kubePod := range kubePods.Items {
 		pods = append(pods, mapKubePod(&kubePod))
@@ -102,14 +108,15 @@ func (client *KubeClient) GetAllPods() ([]*Pod, error) {
 	return pods, nil
 }
 
+// GetMeta .....
 func (client *KubeClient) GetMeta() (*Meta, error) {
 	nodeList, err := client.clientset.CoreV1().Nodes().List(meta_v1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	version, err := client.clientset.ServerVersion()
 	if err != nil {
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 	meta := &Meta{
 		BuildDate:    version.BuildDate,

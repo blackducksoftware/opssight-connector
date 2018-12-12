@@ -1,6 +1,6 @@
 # Gopkg.toml example
 #
-# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
 # for detailed Gopkg.toml documentation.
 #
 # required = ["github.com/user/thing/cmd/thing"]
@@ -24,53 +24,42 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[constraint]]
-  name = "github.com/blackducksoftware/perceptor-scanner"
-  version = "v2.1.0"
-  #branch = "master"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
-  version = "1.2.1"
   #branch = "master"
+  version = "v2.2.0"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor"
-  version = "v2.1.0"
   #branch = "master"
+  version = "v2.2.0"
 
 [[constraint]]
-  name = "github.com/blackducksoftware/perceptor-protoform"
-  version  = "3.1.0"
+  name = "github.com/blackducksoftware/perceptor-scanner"
   #branch = "master"
+  version = "v2.2.0"
+
+[[constraint]]
+  name = "github.com/blackducksoftware/perceptor-skyfire"
+  #branch = "hammerSandbox"
+  version = "v2.2.0"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.7.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.4.3"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
-  version = "1.0.5"
+  version = "1.2.0"
 
 [[override]]
   source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"
   name = "gopkg.in/fsnotify.v1"
-
-[[override]]
-  name = "k8s.io/api"
-  revision = "d216743eed4c3242b85d094d2a589f41a793652d"
-
-[[override]]
-  name = "k8s.io/apimachinery"
-  revision = "94ebb086c69b9fec4ddbfb6a1433d28ecca9292b"
-
-[[override]]
-  name = "k8s.io/client-go"
-  version = "v8.0.0"
-
-[[override]]
-  name = "k8s.io/apiextensions-apiserver"
-  revision = "b5a9dfcf0afdc336c921e56e70166b5e291e77f5"
-
-[[override]]
-  name = "k8s.io/kube-aggregator"
-  revision = "89512616b165a8d1280cf4b7dfdc266e96d8abe1"
 
 [prune]
   go-tests = true

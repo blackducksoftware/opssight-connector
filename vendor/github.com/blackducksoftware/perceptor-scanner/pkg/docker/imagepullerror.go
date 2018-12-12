@@ -23,8 +23,10 @@ package docker
 
 import "fmt"
 
+// ErrorType ...
 type ErrorType int
 
+// ...
 const (
 	ErrorTypeUnableToCreateImage       ErrorType = iota
 	ErrorTypeUnableToGetImage          ErrorType = iota
@@ -52,6 +54,7 @@ func (et ErrorType) String() string {
 	panic(fmt.Errorf("invalid ErrorType value: %d", et))
 }
 
+// ImagePullError ...
 type ImagePullError struct {
 	Code      ErrorType
 	RootCause error

@@ -23,6 +23,7 @@ package kube
 
 import "fmt"
 
+// PodImageAnnotationKey .....
 type PodImageAnnotationKey int
 
 const (
@@ -65,6 +66,7 @@ var podImageAnnotationKeys = []PodImageAnnotationKey{
 	PodImageAnnotationKeyImage,
 }
 
+// String .....
 func (pak PodImageAnnotationKey) String(index int) string {
 	return fmt.Sprintf(pak.formatString(), index)
 }

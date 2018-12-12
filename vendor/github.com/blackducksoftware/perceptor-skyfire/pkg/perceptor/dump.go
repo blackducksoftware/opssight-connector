@@ -27,6 +27,7 @@ import (
 	"github.com/blackducksoftware/perceptor/pkg/api"
 )
 
+// Dump .....
 type Dump struct {
 	ScanResults        *api.ScanResults
 	Model              *api.Model
@@ -36,6 +37,7 @@ type Dump struct {
 	DuplicateImageShas map[string]bool
 }
 
+// NewDump .....
 func NewDump(scanResults *api.ScanResults, model *api.Model) *Dump {
 	dump := &Dump{
 		ScanResults:        scanResults,

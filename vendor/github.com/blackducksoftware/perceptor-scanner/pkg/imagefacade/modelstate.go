@@ -23,8 +23,10 @@ package imagefacade
 
 import "fmt"
 
+// ModelState ...
 type ModelState int
 
+// ...
 const (
 	ModelStateReady   ModelState = iota
 	ModelStatePulling ModelState = iota

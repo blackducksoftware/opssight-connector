@@ -25,18 +25,33 @@ import (
 	"fmt"
 )
 
+// PerceptorHubReport .....
 type PerceptorHubReport struct {
 	JustPerceptorImages []string
 	JustHubImages       []string
+	allHubImages        []string
+	allHubImagesSet     map[string]bool
 }
 
+// NewPerceptorHubReport .....
 func NewPerceptorHubReport(dump *Dump) *PerceptorHubReport {
+	images := []string{}
+	imagesSet := map[string]bool{}
+	for _, hubDump := range dump.Hubs {
+		for _, scan := range hubDump.Scans {
+			images = append(images, scan.Name)
+			imagesSet[scan.Name] = true
+		}
+	}
 	return &PerceptorHubReport{
-		JustPerceptorImages: PerceptorNotHubImages(dump),
+		JustPerceptorImages: PerceptorNotHubImages(dump, imagesSet),
 		JustHubImages:       HubNotPerceptorImages(dump),
+		allHubImages:        images,
+		allHubImagesSet:     imagesSet,
 	}
 }
 
+// HumanReadableString .....
 func (p *PerceptorHubReport) HumanReadableString() string {
 	return fmt.Sprintf(`
 Perceptor<->Hub:
@@ -47,11 +62,11 @@ Perceptor<->Hub:
 		len(p.JustHubImages))
 }
 
-func PerceptorNotHubImages(dump *Dump) []string {
+// PerceptorNotHubImages .....
+func PerceptorNotHubImages(dump *Dump, allHubImagesSet map[string]bool) []string {
 	images := []string{}
 	for sha := range dump.Perceptor.ImagesBySha {
-		sha20 := sha[:20]
-		_, ok := dump.Hub.ProjectsBySha[sha20]
+		_, ok := allHubImagesSet[sha]
 		if !ok {
 			images = append(images, sha)
 		}
@@ -59,19 +74,14 @@ func PerceptorNotHubImages(dump *Dump) []string {
 	return images
 }
 
+// HubNotPerceptorImages .....
 func HubNotPerceptorImages(dump *Dump) []string {
 	images := []string{}
-	for sha := range dump.Hub.ProjectsBySha {
-		foundMatch := false
-		// can't do a dictionary lookup, because hub sha only has first 20 characters
-		for _, perceptorImage := range dump.Perceptor.ScanResults.Images {
-			if perceptorImage.Sha[:20] == sha {
-				foundMatch = true
-				break
+	for _, hubDump := range dump.Hubs {
+		for _, scan := range hubDump.Scans {
+			if _, ok := dump.Perceptor.ImagesBySha[scan.Name]; !ok {
+				images = append(images, scan.Name)
 			}
-		}
-		if !foundMatch {
-			images = append(images, sha)
 		}
 	}
 	return images

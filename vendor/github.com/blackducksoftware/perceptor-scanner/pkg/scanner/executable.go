@@ -27,10 +27,10 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
-
 	log "github.com/sirupsen/logrus"
 )
 
+// RunScanner ...
 func RunScanner(configPath string, stop <-chan struct{}) {
 	config, err := GetConfig(configPath)
 	if err != nil {
@@ -46,13 +46,16 @@ func RunScanner(configPath string, stop <-chan struct{}) {
 	prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
 	prometheus.Unregister(prometheus.NewGoCollector())
 
-	scannerManager, err := NewScanner(config, stop)
-	scannerManager.StartRequestingScanJobs()
+	manager, err := NewManager(config, stop)
+	if err != nil {
+		panic(err)
+	}
+	manager.StartRequestingScanJobs()
 
 	http.Handle("/metrics", prometheus.Handler())
 
-	addr := fmt.Sprintf(":%d", config.Port)
-	log.Infof("successfully instantiated scanner %+v, serving on %s", scannerManager, addr)
+	addr := fmt.Sprintf(":%d", config.Scanner.Port)
+	log.Infof("successfully instantiated manager %+v, serving on %s", manager, addr)
 	go func() {
 		http.ListenAndServe(addr, nil)
 	}()

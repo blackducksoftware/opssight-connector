@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
 
 	api "github.com/blackducksoftware/perceptor-scanner/pkg/api"
 	common "github.com/blackducksoftware/perceptor-scanner/pkg/common"
@@ -34,28 +33,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type HTTPServer struct {
-	pullImage chan *PullImage
-	getImage  chan *GetImage
+// HTTPResponder ...
+type HTTPResponder interface {
+	PullImage(*common.Image) error
+	GetImage(*common.Image) common.ImageStatus
+	GetModel() map[string]interface{}
 }
 
-func NewHTTPServer() *HTTPServer {
-	server := &HTTPServer{
-		pullImage: make(chan *PullImage),
-		getImage:  make(chan *GetImage)}
-	server.setup()
-	return server
-}
-
-func (h *HTTPServer) PullImageChannel() <-chan *PullImage {
-	return h.pullImage
-}
-
-func (h *HTTPServer) GetImageChannel() <-chan *GetImage {
-	return h.getImage
-}
-
-func (h *HTTPServer) setup() {
+// SetupHTTPServer ...
+func SetupHTTPServer(responder HTTPResponder) {
 	http.HandleFunc("/pullimage", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "POST":
@@ -73,16 +59,7 @@ func (h *HTTPServer) setup() {
 				http.Error(w, err.Error(), 400)
 				return
 			}
-			var pullError error
-			var wg sync.WaitGroup
-			wg.Add(1)
-			continuation := func(err error) {
-				pullError = err
-				wg.Done()
-			}
-
-			h.pullImage <- NewPullImage(image, continuation)
-			wg.Wait()
+			pullError := responder.PullImage(image)
 
 			if pullError == nil {
 				log.Debugf("successfully handled pullimage for %s", image.PullSpec)
@@ -112,20 +89,12 @@ func (h *HTTPServer) setup() {
 				http.Error(w, err.Error(), 400)
 				return
 			}
-			var response api.CheckImageResponse
-			var wg sync.WaitGroup
-			wg.Add(1)
-			continuation := func(imageStatus common.ImageStatus) {
-				response = api.CheckImageResponse{ImageStatus: imageStatus, PullSpec: image.PullSpec}
-				wg.Done()
-			}
-
-			h.getImage <- NewGetImage(image, continuation)
-			wg.Wait()
+			imageStatus := responder.GetImage(image)
+			response := api.CheckImageResponse{ImageStatus: imageStatus, PullSpec: image.PullSpec}
 
 			responseBytes, err := json.Marshal(response)
 			if err != nil {
-				log.Errorf("unable to ummarshal JSON for checkimage: %s", err.Error())
+				log.Errorf("unable to unmarshal JSON for checkimage: %s", err.Error())
 				http.Error(w, err.Error(), 500)
 				return
 			}
@@ -138,14 +107,22 @@ func (h *HTTPServer) setup() {
 	})
 
 	http.HandleFunc("/model", func(w http.ResponseWriter, r *http.Request) {
-		// TODO
-		// statsBytes, err := json.Marshal(results)
-		// if err != nil {
-		// 	http.Error(w, err.Error(), 400)
-		// } else {
-		// 	fmt.Fprint(w, string(statsBytes))
-		// }
-		fmt.Fprint(w, "TODO")
+		switch r.Method {
+		case "GET":
+			recordHTTPRequest("model")
+			jsonBytes, err := json.MarshalIndent(responder.GetModel(), "", "  ")
+			if err != nil {
+				log.Errorf("unable to marshal JSON for model: %s", err.Error())
+				http.Error(w, err.Error(), 500)
+				return
+			}
+			header := w.Header()
+			header.Set(http.CanonicalHeaderKey("content-type"), "application/json")
+			fmt.Fprint(w, string(jsonBytes))
+		default:
+			http.NotFound(w, r)
+		}
 	})
+
 	http.Handle("/metrics", prometheus.Handler())
 }

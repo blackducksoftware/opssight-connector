@@ -25,6 +25,7 @@ import (
 	"fmt"
 )
 
+// Pod .....
 type Pod struct {
 	Name        string
 	UID         string
@@ -34,6 +35,7 @@ type Pod struct {
 	Labels      map[string]string
 }
 
+// QualifiedName .....
 func (pod *Pod) QualifiedName() string {
 	return fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
 }
@@ -47,6 +49,7 @@ func (pod *Pod) hasImage(image *Image) bool {
 	return false
 }
 
+// NewPod .....
 func NewPod(name string, uid string, namespace string, containers []*Container) *Pod {
 	return &Pod{
 		Name:       name,
@@ -58,6 +61,7 @@ func NewPod(name string, uid string, namespace string, containers []*Container) 
 
 // BD annotations
 
+// BDAnnotations .....
 func (pod *Pod) BDAnnotations() map[string]string {
 	bdKeys := BDPodAnnotationKeys(len(pod.Containers))
 	dict := map[string]string{}
@@ -70,14 +74,17 @@ func (pod *Pod) BDAnnotations() map[string]string {
 	return dict
 }
 
+// HasAllBDAnnotations .....
 func (pod *Pod) HasAllBDAnnotations() bool {
 	return len(pod.BDAnnotations()) == len(BDPodAnnotationKeys(len(pod.Containers)))
 }
 
+// HasAnyBDAnnotations .....
 func (pod *Pod) HasAnyBDAnnotations() bool {
 	return len(pod.BDAnnotations()) > 0
 }
 
+// BDPodAnnotationKeys .....
 func BDPodAnnotationKeys(containerCount int) []string {
 	keys := append([]string{}, podAnnotationKeyStrings...)
 	for i := 0; i < containerCount; i++ {
@@ -86,6 +93,7 @@ func BDPodAnnotationKeys(containerCount int) []string {
 	return keys
 }
 
+// RemoveBDPodAnnotationKeys .....
 func RemoveBDPodAnnotationKeys(containerCount int, annotations map[string]string) map[string]string {
 	dict := CopyMap(annotations)
 	return RemoveKeys(dict, BDPodAnnotationKeys(containerCount))
@@ -93,6 +101,7 @@ func RemoveBDPodAnnotationKeys(containerCount int, annotations map[string]string
 
 // BD labels
 
+// BDLabels .....
 func (pod *Pod) BDLabels() map[string]string {
 	bdKeys := BDPodLabelKeys(len(pod.Containers))
 	dict := map[string]string{}
@@ -105,14 +114,17 @@ func (pod *Pod) BDLabels() map[string]string {
 	return dict
 }
 
+// HasAllBDLabels .....
 func (pod *Pod) HasAllBDLabels() bool {
 	return len(pod.BDLabels()) == len(BDPodLabelKeys(len(pod.Containers)))
 }
 
+// HasAnyBDLabels .....
 func (pod *Pod) HasAnyBDLabels() bool {
 	return len(pod.BDLabels()) > 0
 }
 
+// BDPodLabelKeys .....
 func BDPodLabelKeys(containerCount int) []string {
 	keys := append([]string{}, podLabelKeyStrings...)
 	for i := 0; i < containerCount; i++ {
@@ -121,6 +133,7 @@ func BDPodLabelKeys(containerCount int) []string {
 	return keys
 }
 
+// RemoveBDPodLabelKeys .....
 func RemoveBDPodLabelKeys(containerCount int, labels map[string]string) map[string]string {
 	dict := CopyMap(labels)
 	return RemoveKeys(dict, BDPodLabelKeys(containerCount))

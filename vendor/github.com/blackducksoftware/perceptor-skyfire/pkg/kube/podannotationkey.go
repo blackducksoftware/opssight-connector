@@ -25,6 +25,7 @@ import (
 	"fmt"
 )
 
+// PodAnnotationKey .....
 type PodAnnotationKey int
 
 const (
@@ -35,6 +36,7 @@ const (
 	PodAnnotationKeyScannerVersion   PodAnnotationKey = iota
 )
 
+// String .....
 func (pak PodAnnotationKey) String() string {
 	switch pak {
 	case PodAnnotationKeyVulnerabilities:

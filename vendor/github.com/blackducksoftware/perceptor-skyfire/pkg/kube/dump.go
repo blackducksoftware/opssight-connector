@@ -21,6 +21,7 @@ under the License.
 
 package kube
 
+// Dump .....
 type Dump struct {
 	Meta              *Meta
 	Pods              []*Pod
@@ -32,6 +33,7 @@ type Dump struct {
 	ImagesMissingSha   []*Image
 }
 
+// NewDump .....
 func NewDump(meta *Meta, pods []*Pod) *Dump {
 	dump := &Dump{
 		Meta:               meta,

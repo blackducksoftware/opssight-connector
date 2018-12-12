@@ -16,7 +16,6 @@ package hubclient
 
 import (
 	"github.com/blackducksoftware/hub-client-go/hubapi"
-	"github.com/juju/errors"
 )
 
 func (c *Client) GetExternalExtension(link hubapi.ResourceLink) (*hubapi.ExternalExtension, error) {
@@ -25,7 +24,7 @@ func (c *Client) GetExternalExtension(link hubapi.ResourceLink) (*hubapi.Externa
 	err := c.HttpGetJSON(link.Href, &extension, 200)
 
 	if err != nil {
-		return nil, errors.Annotate(err, "Error trying to retrieve an external extension")
+		return nil, AnnotateHubClientError(err, "Error trying to retrieve an external extension")
 	}
 
 	return &extension, nil
@@ -36,7 +35,7 @@ func (c *Client) UpdateExternalExtension(extension *hubapi.ExternalExtension) er
 	err := c.HttpPutJSON(extension.Meta.Href, &extension, hubapi.ContentTypeExtensionJSON, 200)
 
 	if err != nil {
-		return errors.Annotate(err, "Error trying to update an external extension")
+		return AnnotateHubClientError(err, "Error trying to update an external extension")
 	}
 
 	return nil

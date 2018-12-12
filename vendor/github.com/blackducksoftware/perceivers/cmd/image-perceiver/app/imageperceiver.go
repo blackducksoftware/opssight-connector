@@ -58,7 +58,7 @@ type ImagePerceiver struct {
 
 // NewImagePerceiver creates a new ImagePerceiver object
 func NewImagePerceiver(handler annotations.ImageAnnotatorHandler, configPath string) (*ImagePerceiver, error) {
-	config, err := GetImagePerceiverConfig(configPath)
+	config, err := GetConfig(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %v", err)
 	}
@@ -78,14 +78,14 @@ func NewImagePerceiver(handler annotations.ImageAnnotatorHandler, configPath str
 	prometheus.Unregister(prometheus.NewGoCollector())
 	http.Handle("/metrics", prometheus.Handler())
 
-	perceptorURL := fmt.Sprintf("http://%s:%d", config.PerceptorHost, config.PerceptorPort)
+	perceptorURL := fmt.Sprintf("http://%s:%d", config.Perceptor.Host, config.Perceptor.Port)
 	p := ImagePerceiver{
 		ImageController:    controller.NewImageController(imageClient, perceptorURL, handler),
 		ImageAnnotator:     annotator.NewImageAnnotator(imageClient, perceptorURL, handler),
-		annotationInterval: time.Second * time.Duration(config.AnnotationIntervalSeconds),
+		annotationInterval: time.Second * time.Duration(config.Perceiver.AnnotationIntervalSeconds),
 		ImageDumper:        dumper.NewImageDumper(imageClient, perceptorURL),
-		dumpInterval:       time.Minute * time.Duration(config.DumpIntervalMinutes),
-		metricsURL:         fmt.Sprintf(":%d", config.Port),
+		dumpInterval:       time.Minute * time.Duration(config.Perceiver.DumpIntervalMinutes),
+		metricsURL:         fmt.Sprintf(":%d", config.Perceiver.Port),
 	}
 
 	return &p, nil
