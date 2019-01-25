@@ -24,7 +24,7 @@ package imagefacade
 import (
 	"strings"
 
-	"github.com/blackducksoftware/perceptor-scanner/pkg/docker"
+	"github.com/blackducksoftware/perceptor-scanner/pkg/common"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -33,10 +33,10 @@ import (
 // ImageFacadeConfig ...
 type ImageFacadeConfig struct {
 	// These allow images to be pulled from registries that require authentication
-	PrivateDockerRegistries []docker.RegistryAuth
-
-	CreateImagesOnly bool
-	Port             int
+	PrivateDockerRegistries []common.RegistryAuth
+	ImagePullerType         string
+	CreateImagesOnly        bool
+	Port                    int
 }
 
 // Config ...

@@ -44,5 +44,8 @@ func (image *Image) DockerPullSpec() string {
 
 // DockerTarFilePath ...
 func (image *Image) DockerTarFilePath() string {
-	return fmt.Sprintf("%s/%s.tar", image.Directory, strings.Replace(image.PullSpec, "/", "_", -1))
+	imagePullSpec := strings.Replace(image.PullSpec, "/", "_", -1)
+	imagePullSpec = strings.Replace(imagePullSpec, "@", "_", -1)
+	imagePullSpec = strings.Replace(imagePullSpec, ":", "_", -1)
+	return fmt.Sprintf("%s/%s.tar", image.Directory, imagePullSpec)
 }

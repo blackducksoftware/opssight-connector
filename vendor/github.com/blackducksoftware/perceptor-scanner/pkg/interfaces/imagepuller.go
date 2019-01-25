@@ -19,15 +19,11 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package docker
+package interfaces
 
-import "strings"
-
-func needsAuthHeader(image Image, registries []RegistryAuth) *RegistryAuth {
-	for _, registry := range registries {
-		if strings.HasPrefix(image.DockerPullSpec(), registry.URL) {
-			return &registry
-		}
-	}
-	return nil
+// ImagePuller defines the interface for image puller
+type ImagePuller interface {
+	PullImage(image Image) error
+	CreateImageInLocalDocker(image Image) error
+	SaveImageToTar(image Image) error
 }

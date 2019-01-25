@@ -19,11 +19,12 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package docker
+package common
 
 import (
 	"time"
 
+	imageInterface "github.com/blackducksoftware/perceptor-scanner/pkg/interfaces"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -36,29 +37,35 @@ var eventsCounter *prometheus.CounterVec
 
 // durations
 
-func recordDockerCreateDuration(duration time.Duration) {
+// RecordDockerCreateDuration will record the Docker create duration in seconds
+func RecordDockerCreateDuration(duration time.Duration) {
 	dockerCreateDurationHistogram.Observe(duration.Seconds())
 }
 
-func recordDockerGetDuration(duration time.Duration) {
+// RecordDockerGetDuration will record the Docker get duration in seconds
+func RecordDockerGetDuration(duration time.Duration) {
 	dockerGetDurationHistogram.Observe(duration.Seconds())
 }
 
-func recordDockerTotalDuration(duration time.Duration) {
+// RecordDockerTotalDuration will record the Docker total duration in seconds
+func RecordDockerTotalDuration(duration time.Duration) {
 	dockerTotalDurationHistogram.Observe(duration.Seconds())
 }
 
-func recordEvent(event string) {
+// RecordEvent will record the events that are occuring
+func RecordEvent(event string) {
 	eventsCounter.With(prometheus.Labels{"event": event}).Inc()
 }
 
 // tar file size and docker errors
 
-func recordTarFileSize(fileSizeMBs int) {
+// RecordTarFileSize will record the Tar ball size
+func RecordTarFileSize(fileSizeMBs int) {
 	tarballSize.WithLabelValues("tarballSize").Observe(float64(fileSizeMBs))
 }
 
-func recordDockerError(errorStage string, errorName string, image Image, err error) {
+// RecordDockerError will record the Docker error messages
+func RecordDockerError(errorStage string, errorName string, image imageInterface.Image, err error) {
 	// TODO what use can be made of `image` and `err`?
 	// we might want to group the errors by image sha or something
 	errorsCounter.With(prometheus.Labels{"stage": errorStage, "errorName": errorName}).Inc()

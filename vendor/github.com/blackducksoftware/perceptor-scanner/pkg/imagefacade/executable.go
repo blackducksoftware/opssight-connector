@@ -27,7 +27,6 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -49,7 +48,7 @@ func RunImageFacade(configPath string, stop <-chan struct{}) {
 	prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
 	prometheus.Unregister(prometheus.NewGoCollector())
 
-	imageFacade := NewImageFacade(config.ImageFacade.PrivateDockerRegistries, config.ImageFacade.CreateImagesOnly, stop)
+	imageFacade := NewImageFacade(config.ImageFacade.PrivateDockerRegistries, config.ImageFacade.CreateImagesOnly, config.ImageFacade.ImagePullerType, stop)
 
 	log.Infof("successfully instantiated imagefacade -- %+v", imageFacade)
 
