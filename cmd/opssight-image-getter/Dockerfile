@@ -1,10 +1,12 @@
-FROM scratch
+FROM fedora
 
 MAINTAINER Black Duck OpsSight Team
 
 ARG LASTCOMMIT
 ARG BUILDTIME
 ARG VERSION
+
+RUN dnf install -y skopeo
 
 # Container catalog requirements
 COPY ./LICENSE /licenses/
