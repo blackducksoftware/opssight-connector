@@ -1,0 +1,57 @@
+{
+  "apiVersion": "synopsys.com/v1",
+  "kind": "Blackduck",
+  "metadata": {
+    "name": "blackduck-bdba"
+  },
+  "spec": {
+    "namespace": "blackduck-bdba",
+    "licenseKey": "<BLACKDUCK_LICENSE_KEY>",
+    "certificateName": "default",
+    "environs": [
+      "HTTPS_VERIFY_CERTS:yes",
+      "HUB_POSTGRES_ENABLE_SSL:false",
+      "HUB_VERSION:2018.12.2",
+      "IPV4_ONLY:0",
+      "RABBITMQ_DEFAULT_VHOST:protecodesc",
+      "USE_ALERT:0",
+      "CFSSL:cfssl:8888",
+      "PUBLIC_HUB_WEBSERVER_HOST:localhost",
+      "RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT:false",
+      "HUB_POSTGRES_ADMIN:blackduck",
+      "HUB_PROXY_NON_PROXY_HOSTS:solr",
+      "PUBLIC_HUB_WEBSERVER_PORT:443",
+      "DISABLE_HUB_DASHBOARD:#hub-webserver.env",
+      "HUB_LOGSTASH_HOST:logstash",
+      "RABBIT_MQ_PORT:5671",
+      "USE_BINARY_UPLOADS:1",
+      "BROKER_USE_SSL:yes",
+      "RABBIT_MQ_HOST:rabbitmq",
+      "CLIENT_CERT_CN:binaryscanner",
+      "HUB_POSTGRES_USER:blackduck_user",
+      "BLACKDUCK_REPORT_IGNORED_COMPONENTS:false",
+      "BROKER_URL:amqps://rabbitmq/protecodesc",
+      "SCANNER_CONCURRENCY:1",
+      "HUB_WEBSERVER_PORT:8443"
+    ],
+    "imageRegistries": [
+      "docker.io/blackducksoftware/blackduck-authentication:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-documentation:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-jobrunner:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-registration:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-scan:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-webapp:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-cfssl:1.0.0",
+      "docker.io/blackducksoftware/blackduck-logstash:1.0.2",
+      "docker.io/blackducksoftware/blackduck-nginx:1.0.0",
+      "docker.io/blackducksoftware/blackduck-solr:1.0.0",
+      "docker.io/blackducksoftware/blackduck-zookeeper:1.0.0",
+      "docker.io/blackducksoftware/appcheck-worker:1.0.1",
+      "docker.io/blackducksoftware/rabbitmq:1.0.0",
+      "docker.io/blackducksoftware/blackduck-upload-cache:1.0.3"
+    ],
+    "livenessProbes": false,
+    "persistentStorage": false,
+    "size": "Small"
+  }
+}

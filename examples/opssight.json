@@ -9,7 +9,7 @@
     "perceptor": {
       "name": "opssight-core",
       "port": 3001,
-      "image": "docker.io/blackducksoftware/opssight-core:2.2.1",
+      "image": "docker.io/blackducksoftware/opssight-core:2.2.2-RC",
       "checkForStalledScansPauseHours": 999999,
       "stalledScanClientTimeoutHours": 999999,
       "modelMetricsPauseSeconds": 15,
@@ -21,14 +21,14 @@
       "scanner": {
         "name": "opssight-scanner",
         "port": 3003,
-        "image": "docker.io/blackducksoftware/opssight-scanner:2.2.1",
+        "image": "docker.io/blackducksoftware/opssight-scanner:2.2.2-RC",
         "clientTimeoutSeconds": 600
       },
       "imageFacade": {
         "name": "opssight-image-getter",
         "port": 3004,
         "internalRegistries": [],
-        "image": "docker.io/blackducksoftware/opssight-image-getter:2.2.1",
+        "image": "docker.io/blackducksoftware/opssight-image-getter:2.2.2-RC",
         "serviceAccount": "opssight-scanner"
       },
       "replicaCount": 1
@@ -39,11 +39,11 @@
       "port": 3002,
       "imagePerceiver": {
         "name": "opssight-image-processor",
-        "image": "docker.io/blackducksoftware/opssight-image-processor:2.2.1"
+        "image": "docker.io/blackducksoftware/opssight-image-processor:2.2.2-RC"
       },
       "podPerceiver": {
         "name": "opssight-pod-processor",
-        "image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.1",
+        "image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.2-RC",
         "namespaceFilter": ""
       },
       "serviceAccount": "opssight-processor",
@@ -72,18 +72,19 @@
     "defaultMem": "1300Mi",
     "logLevel": "debug",
     "secretName": "blackduck",
-    "hub": {
+    "blackduck": {
       "user": "sysadmin",
       "initialCount": 0,
       "maxCount": 0,
       "concurrentScanLimit": 2,
       "totalScanLimit": 1000,
-      "hubSpec": {
+      "blackduckSpec": {
+        "licenseKey": "<BLACKDUCK_LICENSE_KEY>",
         "persistentStorage": false,
         "certificateName": "default",
         "dbPrototype": "",
         "size": "small",
-        "hubType": "worker",
+        "type": "worker",
         "imageRegistries": [
           "docker.io/blackducksoftware/blackduck-authentication:2018.12.2",
           "docker.io/blackducksoftware/blackduck-documentation:2018.12.2",

@@ -1,0 +1,94 @@
+{
+  "apiVersion": "synopsys.com/v1",
+  "kind": "Blackduck",
+  "metadata": {
+    "name": "blackduck-pvc"
+  },
+  "spec": {
+    "namespace": "blackduck-pvc",
+    "licenseKey": "<BLACKDUCK_LICENSE_KEY>",
+    "certificateName": "default",
+    "environs": [
+      "BLACKDUCK_REPORT_IGNORED_COMPONENTS:false",
+      "BROKER_URL:amqps://rabbitmq/protecodesc",
+      "HTTPS_VERIFY_CERTS:yes",
+      "HUB_POSTGRES_ADMIN:blackduck",
+      "HUB_POSTGRES_ENABLE_SSL:false",
+      "HUB_WEBSERVER_PORT:8443",
+      "IPV4_ONLY:0",
+      "USE_ALERT:0",
+      "CFSSL:cfssl:8888",
+      "PUBLIC_HUB_WEBSERVER_PORT:443",
+      "RABBITMQ_DEFAULT_VHOST:protecodesc",
+      "RABBIT_MQ_HOST:rabbitmq",
+      "RABBIT_MQ_PORT:5671",
+      "CLIENT_CERT_CN:binaryscanner",
+      "SCANNER_CONCURRENCY:1",
+      "DISABLE_HUB_DASHBOARD:#hub-webserver.env",
+      "PUBLIC_HUB_WEBSERVER_HOST:localhost",
+      "BROKER_USE_SSL:yes",
+      "HUB_PROXY_NON_PROXY_HOSTS:solr",
+      "USE_BINARY_UPLOADS:0",
+      "HUB_LOGSTASH_HOST:logstash",
+      "HUB_POSTGRES_USER:blackduck_user",
+      "HUB_VERSION:2018.12.2",
+      "RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT:false"
+    ],
+    "imageRegistries": [
+      "docker.io/blackducksoftware/blackduck-authentication:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-documentation:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-jobrunner:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-registration:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-scan:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-webapp:2018.12.2",
+      "docker.io/blackducksoftware/blackduck-cfssl:1.0.0",
+      "docker.io/blackducksoftware/blackduck-logstash:1.0.2",
+      "docker.io/blackducksoftware/blackduck-nginx:1.0.0",
+      "docker.io/blackducksoftware/blackduck-solr:1.0.0",
+      "docker.io/blackducksoftware/blackduck-zookeeper:1.0.0"
+    ],
+    "livenessProbes": false,
+    "persistentStorage": true,
+    "pvcStorageClass": "standard",
+    "pvc": [
+      {
+        "name": "blackduck-postgres",
+        "size": "200Gi"
+      },
+      {
+        "name": "blackduck-authentication",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-cfssl",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-registration",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-solr",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-webapp",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-logstash",
+        "size": "20Gi"
+      },
+      {
+        "name": "blackduck-zookeeper-data",
+        "size": "2Gi"
+      },
+      {
+        "name": "blackduck-zookeeper-datalog",
+        "size": "2Gi"
+      }
+    ],
+    "type": "Artifacts",
+    "size": "Small"
+  }
+}
