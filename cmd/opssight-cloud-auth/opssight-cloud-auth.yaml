@@ -59,14 +59,14 @@ items:
         containers:
         - env:
           - name: AWS_ACCOUNT_IDS
-            value: "419512878442"
+            value: "<<AWS_ACCOUNT_ID>>"
           - name: REFRESH_IN_MINUTES
             value: "5"
           - name: AWS_ACCESS_KEY_ID
-            value: "AKIAIJDUHZS7I4AMDVPQ"
+            value: "<<AWS_ACCESS_KEY_ID>>"
           - name: AWS_SECRET_ACCESS_KEY
-            value: "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"
-          image: msenmurugan/opssight-cloud-auth:latest
+            value: "<<AWS_SECRET_ACCESS_KEY>>"
+          image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.2-RC
           imagePullPolicy: Always
           name: opssight-cloud-auth
           command:
