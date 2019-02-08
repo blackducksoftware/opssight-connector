@@ -47,6 +47,7 @@ func main() {
 
 	validateParams()
 
+	log.Print("Using GCR URL: ", *argGCRURL)
 	log.Print("Using AWS Account: ", strings.Join(awsAccountIDs, ","))
 	log.Print("Using AWS Region: ", *argAWSRegion)
 	log.Print("Using AWS Assume Role: ", *argAWSAssumeRole)
