@@ -7,3 +7,4 @@ build/*
 install/openshift/protoform.yaml
 install/secured-registry/dockercfg.json
 .vscode/settings.json
+cmd/opssight-cloud-auth/opssight-cloud-auth
