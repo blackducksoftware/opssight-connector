@@ -66,6 +66,8 @@ items:
             value: "<<AWS_ACCESS_KEY_ID>>"
           - name: AWS_SECRET_ACCESS_KEY
             value: "<<AWS_SECRET_ACCESS_KEY>>"
+          - name: GCR_URL
+            value: "<<GCR_URL>>"
           image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.2-RC
           imagePullPolicy: Always
           name: opssight-cloud-auth
