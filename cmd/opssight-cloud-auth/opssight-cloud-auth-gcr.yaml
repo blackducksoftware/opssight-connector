@@ -39,6 +39,15 @@ items:
     kind: ClusterRole
     name: opssight-cloud-auth
     apiGroup: ""
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: opssight-cloud-auth
+    namespace: kube-system
+  data:
+    application_default_credentials.json: "<<GCR_DEFAULT_CREDENTIAL_FILE>>"
+    GCR_URL: "<<GCR_URL>>"
+  type: Opaque
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -58,16 +67,13 @@ items:
       spec:
         containers:
         - env:
-          - name: AWS_ACCOUNT_IDS
-            value: "<<AWS_ACCOUNT_ID>>"
           - name: REFRESH_IN_MINUTES
-            value: "5"
-          - name: AWS_ACCESS_KEY_ID
-            value: "<<AWS_ACCESS_KEY_ID>>"
-          - name: AWS_SECRET_ACCESS_KEY
-            value: "<<AWS_SECRET_ACCESS_KEY>>"
+            value: "60"
           - name: GCR_URL
-            value: "<<GCR_URL>>"
+            valueFrom:
+              secretKeyRef:
+                name: opssight-cloud-auth
+                key: GCR_URL
           image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.2-RC
           imagePullPolicy: Always
           name: opssight-cloud-auth
@@ -76,6 +82,14 @@ items:
           ports:
           - containerPort: 3001
             protocol: TCP
+          volumeMounts:
+          - name: gcr-creds
+            mountPath: "/root/.config/gcloud"
+            readOnly: true
+        volumes:
+        - name: gcr-creds
+          secret:
+            secretName: opssight-cloud-auth
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         serviceAccountName: opssight-cloud-auth
