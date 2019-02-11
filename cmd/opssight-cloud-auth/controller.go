@@ -158,7 +158,31 @@ func (c *controller) getTokenGenerators() []TokenGenerator {
 	return tokenGenerators
 }
 
-func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace string, name string) error {
+func (c *controller) getTokenEndpoint(tokenEndPoint string) string {
+	if strings.HasPrefix(tokenEndPoint, "https://") {
+		i := strings.Index(tokenEndPoint, "https://")
+		return tokenEndPoint[i+8:]
+	} else if strings.HasPrefix(tokenEndPoint, "http://") {
+		i := strings.Index(tokenEndPoint, "http://")
+		return tokenEndPoint[i+7:]
+	}
+	return tokenEndPoint
+}
+
+func (c *controller) getTokenPassword(tokenEndPoint string, tokenAccessToken string, tokenType string) (string, error) {
+	log.Infof("Inside for endPoint: %s and token: %s", tokenEndPoint, tokenAccessToken)
+	data, err := base64.StdEncoding.DecodeString(tokenAccessToken)
+	if err != nil {
+		return "", fmt.Errorf("unable to decode the password for token endpoint: %s", tokenEndPoint)
+	}
+	strdata := string(data)
+	if strings.EqualFold(tokenType, "ECR") {
+		return strdata[strings.Index(strdata, ":")+1:], nil
+	}
+	return strdata, nil
+}
+
+func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace string, name string, tokenType string) error {
 	cm, err := util.GetConfigMap(c.kubeClient, namespace, name)
 	if err != nil {
 		return fmt.Errorf("unable to get the %s config map in %s namespace", name, namespace)
@@ -172,26 +196,40 @@ func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace 
 	}
 
 	for _, token := range tokens {
-		var endPoint string
-		if strings.HasPrefix(token.Endpoint, "https://") {
-			i := strings.Index(token.Endpoint, "https://")
-			endPoint = token.Endpoint[i+8:]
-		} else if strings.HasPrefix(token.Endpoint, "http://") {
-			i := strings.Index(token.Endpoint, "http://")
-			endPoint = token.Endpoint[i+7:]
-		} else {
-			endPoint = token.Endpoint
-		}
-
+		endPoint := c.getTokenEndpoint(token.Endpoint)
 		for i := range opsssightData.ImageFacade.PrivateDockerRegistries {
 			if strings.EqualFold(endPoint, opsssightData.ImageFacade.PrivateDockerRegistries[i].URL) {
-				log.Infof("Inside for endPoint: %s and token: %s", endPoint, token.AccessToken)
-				data, err := base64.StdEncoding.DecodeString(token.AccessToken)
+				strdata, err := c.getTokenPassword(endPoint, token.AccessToken, tokenType)
 				if err != nil {
-					log.Errorf("unable to decode the password for token endpoint: %s", token.Endpoint)
+					log.Error(err)
 				}
-				strdata := string(data)
-				opsssightData.ImageFacade.PrivateDockerRegistries[i].Password = strdata[strings.Index(strdata, ":")+1:]
+				opsssightData.ImageFacade.PrivateDockerRegistries[i].Password = strdata
+			}
+		}
+	}
+
+	// AWS EKS specific - if the registry url that is present in OpsSight Configmap but not in AWS token list,
+	// then update the token with the 1st endpoint's password. This is because the EKS kube pods are from
+	// different account id than the used one
+
+	if strings.EqualFold(tokenType, "ECR") {
+		for i := range opsssightData.ImageFacade.PrivateDockerRegistries {
+			isRegistryExists := false
+			for _, token := range tokens {
+				endPoint := c.getTokenEndpoint(token.Endpoint)
+
+				if strings.EqualFold(endPoint, opsssightData.ImageFacade.PrivateDockerRegistries[i].URL) {
+					isRegistryExists = true
+					break
+				}
+			}
+
+			if !isRegistryExists && len(tokens) > 0 && strings.HasSuffix(opsssightData.ImageFacade.PrivateDockerRegistries[i].URL, "amazonaws.com") {
+				strdata, err := c.getTokenPassword(tokens[0].Endpoint, tokens[0].AccessToken, tokenType)
+				if err != nil {
+					log.Error(err)
+				}
+				opsssightData.ImageFacade.PrivateDockerRegistries[i].Password = strdata
 			}
 		}
 	}
@@ -247,7 +285,7 @@ func (c *controller) updateAuthTokens() error {
 		}
 		for _, opssight := range opssights.Items {
 			log.Debugf("new tokens for %s provider is %+v", tokenGenerator.Name, newTokens)
-			err = c.updateConfigMapWithAuthToken(newTokens, opssight.Spec.Namespace, "opssight")
+			err = c.updateConfigMapWithAuthToken(newTokens, opssight.Spec.Namespace, "opssight", tokenGenerator.Name)
 			if err != nil {
 				log.Error(err)
 				continue
