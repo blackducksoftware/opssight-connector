@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b68e01a015260d1206fc9069cda2deba68523e3d7dc927f2a958d6902fbad5a9"
+  digest = "1:db7d91007dbce41b795a4edbcd9cedee9edd30a2b0c4361bdbff29ca8a35db01"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -48,7 +48,7 @@
     "service/sts",
   ]
   pruneopts = "UT"
-  revision = "9b0c5bca281bb90ecc42f3292cf52bf49e521711"
+  revision = "0c443c6c01c9039101d7a8b232c9e7569fd7d69f"
 
 [[projects]]
   branch = "master"
@@ -148,7 +148,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5fc64e3f61b5a859a638f3480a6964ad9d6e799289144d997a4d0e760ddb22e7"
+  digest = "1:9e77274f6c6e5fddd21a1adce05037723f0c675e56df760ec431a10eec833924"
   name = "github.com/blackducksoftware/synopsys-operator"
   packages = [
     "pkg/api",
@@ -171,7 +171,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "2d9c8a119c917fe803286f6f038f31128694647e"
+  revision = "058577a3a2af12635691e1cebb0c097922e50f25"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -637,7 +637,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5833c61ebbd625a6bad8e5a1ada2b3e13710cf3272046953a2c8915340fe60a3"
+  digest = "1:f0bb332b39488b057a8671557f307997426e5c650ee738a634a0697a41e207c5"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -646,7 +646,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "488faf799f863e27e50c516468f76ae8f1da20a5"
+  revision = "f8d8b3f739bd91a7c0462cb55235ef63c79c9abc"
 
 [[projects]]
   digest = "1:87c2e02fb01c27060ccc5ba7c5a407cc91147726f8f40b70cceeedbc52b1f3a8"
@@ -713,7 +713,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "b8fe1690c61389d7d2a8074a507d1d40c5d30448"
+  revision = "193df9c0f06f8bb35fba505183eaf0acc0136505"
 
 [[projects]]
   branch = "master"
@@ -750,14 +750,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a1914323eabb0da3b4392fb0d34b1ae5b6b531323daf4eeddc355d8000982052"
+  digest = "1:8975c6b66d95adc1cd08820aba7ad6b60b165725a401c4177c0eaa866170bb10"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
+  revision = "3b5209105503162ded1863c307ac66fec31120dd"
 
 [[projects]]
   digest = "1:436b24586f8fee329e0dd65fd67c817681420cda1d7f934345c13fe78c212a73"
@@ -1051,7 +1051,7 @@
   name = "k8s.io/kube-openapi"
   packages = ["pkg/util/proto"]
   pruneopts = "UT"
-  revision = "a829e3aed6e2c340adb7b339d221a684e02412f9"
+  revision = "d7c86cdc46e3a4fcf892b32dd7bc3aa775e0870e"
 
 [solve-meta]
   analyzer-name = "dep"
