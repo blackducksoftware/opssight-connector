@@ -212,6 +212,22 @@ func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace 
 	return nil
 }
 
+func (c *controller) patchOpsSightReplicationController(namespace string, name string, replicas int) error {
+	// Get the replication controllers
+	rc, err := util.GetReplicationController(c.kubeClient, namespace, name)
+	if err != nil {
+		return fmt.Errorf("unable to find %s replication controller in %s namespace because %+v", name, namespace, err)
+	}
+
+	r := rc.DeepCopy()
+	r.Spec.Replicas = util.IntToInt32(replicas)
+	err = util.PatchReplicationController(c.kubeClient, *rc, *r)
+	if err != nil {
+		return fmt.Errorf("unable to patch %s replication controller with replicas %d in %s namespace because %+v", name, replicas, namespace, err)
+	}
+	return nil
+}
+
 func (c *controller) updateAuthTokens() error {
 	log.Print("Refreshing credentials...")
 	tokenGenerators := c.getTokenGenerators()
@@ -232,6 +248,18 @@ func (c *controller) updateAuthTokens() error {
 		for _, opssight := range opssights.Items {
 			log.Debugf("new tokens for %s provider is %+v", tokenGenerator.Name, newTokens)
 			err = c.updateConfigMapWithAuthToken(newTokens, opssight.Spec.Namespace, "opssight")
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, opssight.Spec.ScannerPod.ImageFacade.Name, 0)
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, opssight.Spec.ScannerPod.ImageFacade.Name, 1)
 			if err != nil {
 				log.Error(err)
 			}
