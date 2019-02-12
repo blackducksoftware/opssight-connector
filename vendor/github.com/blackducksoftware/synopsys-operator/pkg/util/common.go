@@ -505,34 +505,37 @@ func WaitForServiceEndpointReady(clientset *kubernetes.Clientset, namespace stri
 }
 
 // ValidatePodsAreRunningInNamespace will validate whether the pods are running in a given namespace
-func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string) error {
+func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string, timeoutInSeconds int64) error {
 	pods, err := GetAllPodsForNamespace(clientset, namespace)
 	if err != nil {
 		return fmt.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
 	}
 
-	allPodExist := ValidatePodsAreRunning(clientset, pods)
-	if !allPodExist {
-		ValidatePodsAreRunningInNamespace(clientset, namespace)
+	timeout := time.NewTimer(time.Duration(timeoutInSeconds) * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
+	for {
+		select {
+		case <-timeout.C:
+			ticker.Stop()
+			return fmt.Errorf("the pods weren't able to start - timing out after 10 minutes")
+		case <-ticker.C:
+			if ValidatePodsAreRunning(clientset, pods) {
+				timeout.Stop()
+				ticker.Stop()
+				return nil
+			}
+		}
 	}
-	return nil
 }
 
 // ValidatePodsAreRunning will validate whether the pods are running
 func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodList) bool {
 	// Check whether all pods are running
 	for _, podList := range pods.Items {
-		for {
-			pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
-			if strings.EqualFold(pod.Name, "") {
-				log.Infof("pod %s is restarted in %s..... checking all pod status again...", podList.Name, podList.Namespace)
-				return false
-			}
-			if strings.EqualFold(string(pod.Status.Phase), "Running") {
-				break
-			}
-			log.Infof("pod %s is in %s status... waiting 10 seconds", pod.Name, string(pod.Status.Phase))
-			time.Sleep(10 * time.Second)
+		pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
+		if !strings.EqualFold(string(pod.Status.Phase), "Running") {
+			log.Infof("pod %s is in %s status...", pod.Name, string(pod.Status.Phase))
+			return false
 		}
 	}
 	return true

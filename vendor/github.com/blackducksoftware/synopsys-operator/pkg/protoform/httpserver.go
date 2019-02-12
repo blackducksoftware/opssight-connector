@@ -22,6 +22,8 @@ under the License.
 package protoform
 
 import (
+	"os"
+
 	hubclientset "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned"
 	"github.com/gin-gonic/contrib/static"
 	gin "github.com/gin-gonic/gin"
@@ -46,7 +48,7 @@ func SetupHTTPServer(kubeClient *kubernetes.Clientset, hubClient *hubclientset.C
 		router.Use(GinRequestLogger())
 
 		// prometheus metrics
-		prometheus.Unregister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+		prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
 		prometheus.Unregister(prometheus.NewGoCollector())
 		h := promhttp.Handler()
 		router.GET("/metrics", func(c *gin.Context) {

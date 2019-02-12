@@ -8,3 +8,8 @@ install/openshift/protoform.yaml
 install/secured-registry/dockercfg.json
 .vscode/settings.json
 cmd/opssight-cloud-auth/opssight-cloud-auth
+cmd/opssight-core/opssight-core
+cmd/opssight-image-processor/opssight-image-processor
+cmd/opssight-image-getter/opssight-image-getter
+cmd/opssight-scanner/opssight-scanner
+cmd/opssight-pod-processor/opssight-pod-processor

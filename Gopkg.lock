@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:db7d91007dbce41b795a4edbcd9cedee9edd30a2b0c4361bdbff29ca8a35db01"
+  digest = "1:18a0cb3bbb4d8178f31fd859c53baaeba964481868906ad50ea7f5d3897257e8"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -48,7 +48,7 @@
     "service/sts",
   ]
   pruneopts = "UT"
-  revision = "0c443c6c01c9039101d7a8b232c9e7569fd7d69f"
+  revision = "c77f5a6aae1fb703945f7a0affa616ec14ac244a"
 
 [[projects]]
   branch = "master"
@@ -148,7 +148,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9e77274f6c6e5fddd21a1adce05037723f0c675e56df760ec431a10eec833924"
+  digest = "1:7a3ac86f1e3cbf179cf37acd01dedd23e9d2c7079210e3a3c5b4cb53e9abe6db"
   name = "github.com/blackducksoftware/synopsys-operator"
   packages = [
     "pkg/api",
@@ -171,7 +171,7 @@
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "058577a3a2af12635691e1cebb0c097922e50f25"
+  revision = "044739f6a64b588ce6a0ee1f4495dad729c51dc8"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -604,16 +604,15 @@
   version = "v2.0.1"
 
 [[projects]]
-  digest = "1:93a746f1060a8acbcf69344862b2ceced80f854170e1caae089b2834c5fbf7f4"
+  digest = "1:c968b29db5d68ec97de404b6d058d5937fa015a141b3b4f7a0d87d5f8226f04c"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
-    "prometheus/internal",
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
-  version = "v0.9.2"
+  revision = "967789050ba94deca04a5e84cce8ad472ce313c1"
+  version = "v0.9.0-pre1"
 
 [[projects]]
   branch = "master"
@@ -713,7 +712,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "193df9c0f06f8bb35fba505183eaf0acc0136505"
+  revision = "74369b46fc6756741c016591724fd1cb8e26845f"
 
 [[projects]]
   branch = "master"
@@ -736,7 +735,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:511a6232760c10dcb1ebf1ab83ef0291e2baf801f203ca6314759c5458b73a6a"
+  digest = "1:22813e08f3854ab318891fe8d27e2be7a1b0e08e59404ae0032dba4c16fb51b8"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -746,7 +745,7 @@
     "jwt",
   ]
   pruneopts = "UT"
-  revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+  revision = "5f6b76b7c9ddc07924f32b15de8f03ceec72d74b"
 
 [[projects]]
   branch = "master"
