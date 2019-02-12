@@ -3,7 +3,16 @@
 # This is a rather minimal example Argbash potential
 # Example taken from http://argbash.readthedocs.io/en/stable/example.html
 #
-# ARG_OPTIONAL_SINGLE([tag],[t],[Version of Blackduck],[4.8.2])
+# ARG_OPTIONAL_SINGLE([tag],[t],[Version of Black Duck],[2018.12.2])
+# ARG_OPTIONAL_BOOLEAN([binary-scanner],[],[Enable Binary Scanner],[off])
+# ARG_OPTIONAL_SINGLE([cfssl],[c],[Version of cfssl],[1.0.0])
+# ARG_OPTIONAL_SINGLE([logstash],[l],[Version of logstash],[1.0.2])
+# ARG_OPTIONAL_SINGLE([nginx],[n],[Version of nginx],[1.0.0])
+# ARG_OPTIONAL_SINGLE([solr],[s],[Version of solr],[1.0.0])
+# ARG_OPTIONAL_SINGLE([zookeeper],[z],[Version of zookeeper],[1.0.0])
+# ARG_OPTIONAL_SINGLE([binaryscanner],[b],[Version of binary scanner],[1.0.1])
+# ARG_OPTIONAL_SINGLE([rabbitmq],[q],[Version of rabbitmq],[1.0.0])
+# ARG_OPTIONAL_SINGLE([uploadcache],[e],[Version of upload-cache],[1.0.3])
 # ARG_OPTIONAL_BOOLEAN([push],[],[Enable Docker push],[off])
 # ARG_OPTIONAL_SINGLE([registry],[r],[Docker registry],[docker.io])
 # ARG_OPTIONAL_SINGLE([project],[p],[Docker repository/project],[])
@@ -28,7 +37,7 @@ die()
 begins_with_short_option()
 {
 	local first_option all_short_options
-	all_short_options='trpuh'
+	all_short_options='tclnszbqerpuh'
 	first_option="${1:0:1}"
 	test "$all_short_options" = "${all_short_options/$first_option/}" && return 1 || return 0
 }
@@ -36,7 +45,16 @@ begins_with_short_option()
 
 
 # THE DEFAULTS INITIALIZATION - OPTIONALS
-_arg_tag="4.8.2"
+_arg_tag="2018.12.2"
+_arg_binary_scanner="off"
+_arg_cfssl="1.0.0"
+_arg_logstash="1.0.2"
+_arg_nginx="1.0.0"
+_arg_solr="1.0.0"
+_arg_zookeeper="1.0.0"
+_arg_binaryscanner="1.0.1"
+_arg_rabbitmq="1.0.0"
+_arg_uploadcache="1.0.3"
 _arg_push="off"
 _arg_registry="docker.io"
 _arg_project=
@@ -45,8 +63,17 @@ _arg_user=
 print_help ()
 {
 	printf '%s\n' "The general script's help msg"
-	printf 'Usage: %s [-t|--tag <arg>] [--(no-)push] [-r|--registry <arg>] [-p|--project <arg>] [-u|--user <arg>] [-h|--help]\n' "$0"
-	printf '\t%s\n' "-t,--tag: Version of BlackDuck (default: '4.8.2')"
+	printf 'Usage: %s [-t|--tag <arg>] [--(no-)binary-scanner] [-c|--cfssl <arg>] [-l|--logstash <arg>] [-n|--nginx <arg>] [-s|--solr <arg>] [-z|--zookeeper <arg>] [-b|--binaryscanner <arg>] [-q|--rabbitmq <arg>] [-e|--uploadcache <arg>] [--(no-)push] [-r|--registry <arg>] [-p|--project <arg>] [-u|--user <arg>] [-h|--help]\n' "$0"
+	printf '\t%s\n' "-t,--tag: Version of Black Duck (default: '2018.12.2')"
+	printf '\t%s\n' "--binary-scanner,--no-binary-scanner: Enable Binary Scanner (off by default)"
+	printf '\t%s\n' "-c,--cfssl: Version of cfssl (default: '1.0.0')"
+	printf '\t%s\n' "-l,--logstash: Version of logstash (default: '1.0.2')"
+	printf '\t%s\n' "-n,--nginx: Version of nginx (default: '1.0.0')"
+	printf '\t%s\n' "-s,--solr: Version of solr (default: '1.0.0')"
+	printf '\t%s\n' "-z,--zookeeper: Version of zookeeper (default: '1.0.0')"
+	printf '\t%s\n' "-b,--binaryscanner: Version of binary scanner (default: '1.0.1')"
+	printf '\t%s\n' "-q,--rabbitmq: Version of rabbitmq (default: '1.0.0')"
+	printf '\t%s\n' "-e,--uploadcache: Version of upload-cache (default: '1.0.3')"
 	printf '\t%s\n' "--push,--no-push: Enable Docker push (off by default)"
 	printf '\t%s\n' "-r,--registry: Docker registry (default: 'docker.io')"
 	printf '\t%s\n' "-p,--project: Docker repository/project (no default)"
@@ -70,6 +97,98 @@ parse_commandline ()
 				;;
 			-t*)
 				_arg_tag="${_key##-t}"
+				;;
+			--no-binary-scanner|--binary-scanner)
+				_arg_binary_scanner="on"
+				test "${1:0:5}" = "--no-" && _arg_binary_scanner="off"
+				;;
+			-c|--cfssl)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_cfssl="$2"
+				shift
+				;;
+			--cfssl=*)
+				_arg_cfssl="${_key##--cfssl=}"
+				;;
+			-c*)
+				_arg_cfssl="${_key##-c}"
+				;;
+			-l|--logstash)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_logstash="$2"
+				shift
+				;;
+			--logstash=*)
+				_arg_logstash="${_key##--logstash=}"
+				;;
+			-l*)
+				_arg_logstash="${_key##-l}"
+				;;
+			-n|--nginx)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_nginx="$2"
+				shift
+				;;
+			--nginx=*)
+				_arg_nginx="${_key##--nginx=}"
+				;;
+			-n*)
+				_arg_nginx="${_key##-n}"
+				;;
+			-s|--solr)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_solr="$2"
+				shift
+				;;
+			--solr=*)
+				_arg_solr="${_key##--solr=}"
+				;;
+			-s*)
+				_arg_solr="${_key##-s}"
+				;;
+			-z|--zookeeper)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_zookeeper="$2"
+				shift
+				;;
+			--zookeeper=*)
+				_arg_zookeeper="${_key##--zookeeper=}"
+				;;
+			-z*)
+				_arg_zookeeper="${_key##-z}"
+				;;
+			-b|--binaryscanner)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_binaryscanner="$2"
+				shift
+				;;
+			--binaryscanner=*)
+				_arg_binaryscanner="${_key##--binaryscanner=}"
+				;;
+			-b*)
+				_arg_binaryscanner="${_key##-b}"
+				;;
+			-q|--rabbitmq)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_rabbitmq="$2"
+				shift
+				;;
+			--rabbitmq=*)
+				_arg_rabbitmq="${_key##--rabbitmq=}"
+				;;
+			-q*)
+				_arg_rabbitmq="${_key##-q}"
+				;;
+			-e|--uploadcache)
+				test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+				_arg_uploadcache="$2"
+				shift
+				;;
+			--uploadcache=*)
+				_arg_uploadcache="${_key##--uploadcache=}"
+				;;
+			-e*)
+				_arg_uploadcache="${_key##-e}"
 				;;
 			--no-push|--push)
 				_arg_push="on"
