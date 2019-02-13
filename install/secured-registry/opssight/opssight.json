@@ -6,90 +6,100 @@
   },
   "spec": {
     "namespace": "${NAMESPACE}",
-		"perceptor": {
-			"name": "opssight-core",
-			"port": 3001,
-			"image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-core:${TAG}",
-			"checkForStalledScansPauseHours": 999999,
-			"stalledScanClientTimeoutHours": 999999,
-			"modelMetricsPauseSeconds": 15,
-			"unknownImagePauseMilliseconds": 15000,
-			"clientTimeoutMilliseconds": 100000
-		},
-		"scannerPod": {
-			"name": "opssight-scanner",
-			"scanner": {
-				"name": "opssight-scanner",
-				"port": 3003,
-				"image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-scanner:${TAG}",
-				"clientTimeoutSeconds": 600
-			},
-			"imageFacade": {
-				"name": "opssight-image-getter",
-				"port": 3004,
-				"internalRegistries": [],
-				"image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-image-getter:${TAG}",
-				"serviceAccount": "opssight-scanner"
-			},
-			"replicaCount": 1
-		},
-		"perceiver": {
-			"enableImagePerceiver": false,
-			"enablePodPerceiver": true,
-			"port": 3002,
-			"imagePerceiver": {
-				"name": "opssight-image-processor",
-				"image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-image-processor:${TAG}"
-			},
-			"podPerceiver": {
-				"name": "opssight-pod-processor",
-				"image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-pod-processor:${TAG}"
-			},
-			"serviceAccount": "opssight-processor",
-			"annotationIntervalSeconds": 30,
-			"dumpIntervalMinutes": 30
-		},
-		"enableSkyfire": false,
-		"skyfire": {
-			"image": "gcr.io/saas-hub-stg/blackducksoftware/pyfire:master",
-			"name": "skyfire",
-			"port": 3005,
-			"prometheusPort": 3006,
-			"serviceAccount": "skyfire",
-			"hubClientTimeoutSeconds": 120,
-			"hubDumpPauseSeconds": 240,
-			"kubeDumpIntervalSeconds": 60,
-			"perceptorDumpIntervalSeconds": 60
-		},
-		"enableMetrics": true,
-		"defaultCPU": "300m",
-		"defaultMem": "1300Mi",
-		"logLevel": "debug",
-		"secretName": "blackduck",
-    "hub" : {
+    "perceptor": {
+      "name": "opssight-core",
+      "port": 3001,
+      "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-core:${TAG}",
+      "checkForStalledScansPauseHours": 999999,
+      "stalledScanClientTimeoutHours": 999999,
+      "modelMetricsPauseSeconds": 15,
+      "unknownImagePauseMilliseconds": 15000,
+      "clientTimeoutMilliseconds": 100000
+    },
+    "scannerPod": {
+      "name": "opssight-scanner",
+      "scanner": {
+        "name": "opssight-scanner",
+        "port": 3003,
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-scanner:${TAG}",
+        "clientTimeoutSeconds": 600
+      },
+      "imageFacade": {
+        "name": "opssight-image-getter",
+        "port": 3004,
+        "internalRegistries": [],
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-image-getter:${TAG}",
+        "serviceAccount": "opssight-scanner"
+      },
+      "replicaCount": 1
+    },
+    "perceiver": {
+      "enableImagePerceiver": false,
+      "enablePodPerceiver": true,
+      "port": 3002,
+      "imagePerceiver": {
+        "name": "opssight-image-processor",
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-image-processor:${TAG}"
+      },
+      "podPerceiver": {
+        "name": "opssight-pod-processor",
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-pod-processor:${TAG}",
+        "namespaceFilter": ""
+      },
+      "serviceAccount": "opssight-processor",
+      "annotationIntervalSeconds": 30,
+      "dumpIntervalMinutes": 30
+    },
+    "prometheus": {
+      "name": "prometheus",
+      "port": 9090,
+      "image": "docker.io/prom/prometheus:v2.1.0"
+    },
+    "enableSkyfire": false,
+    "skyfire": {
+      "image": "gcr.io/saas-hub-stg/blackducksoftware/pyfire:master",
+      "name": "skyfire",
+      "port": 3005,
+      "prometheusPort": 3006,
+      "serviceAccount": "skyfire",
+      "hubClientTimeoutSeconds": 120,
+      "hubDumpPauseSeconds": 240,
+      "kubeDumpIntervalSeconds": 60,
+      "perceptorDumpIntervalSeconds": 60
+    },
+    "enableMetrics": true,
+    "defaultCPU": "300m",
+    "defaultMem": "1300Mi",
+    "logLevel": "debug",
+    "secretName": "blackduck",
+    "blackduck": {
+      "user": "sysadmin",
       "initialCount": 0,
-      "maxCount": 4,
+      "maxCount": 0,
       "concurrentScanLimit": 2,
       "totalScanLimit": 1000,
-      "hubSpec": {
-        "backupSupport": "No",
+      "blackduckSpec": {
+        "licenseKey": "",
+        "persistentStorage": false,
         "certificateName": "default",
-        "dbPrototype": "empty",
-        "hubVersion": "2018.11.0",
-        "flavor": "small",
-        "hubType": "worker",
+        "dbPrototype": "",
+        "size": "small",
+        "type": "worker",
         "imageRegistries": [
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-authentication:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-documentation:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-jobrunner:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-registration:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-scan:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-webapp:2018.11.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-cfssl:1.0.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-logstash:1.0.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-nginx:1.0.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-solr:1.0.0",
-          "${DOCKER_REGISTRY}/${DOCKER_REPO}/blackduck-zookeeper:1.0.0"
+          "docker.io/blackducksoftware/blackduck-authentication:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-documentation:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-jobrunner:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-registration:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-scan:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-webapp:2018.12.2",
+          "docker.io/blackducksoftware/blackduck-cfssl:1.0.0",
+          "docker.io/blackducksoftware/blackduck-logstash:1.0.2",
+          "docker.io/blackducksoftware/blackduck-nginx:1.0.0",
+          "docker.io/blackducksoftware/blackduck-solr:1.0.0",
+          "docker.io/blackducksoftware/blackduck-zookeeper:1.0.0"
+        ],
+        "environs": [
+          "HUB_VERSION:2018.12.2"
         ]
       }
     }
