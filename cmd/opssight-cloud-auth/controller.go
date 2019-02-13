@@ -122,7 +122,6 @@ func (c *controller) getECRAuthorizationKey() ([]AuthToken, error) {
 		RegistryIds: regIds,
 	}
 
-	// log.Printf("request: %+v, output: %+v", req, out)
 	resp, err := svc.GetAuthorizationToken(params)
 
 	if err != nil {
@@ -170,7 +169,6 @@ func (c *controller) getTokenEndpoint(tokenEndPoint string) string {
 }
 
 func (c *controller) getTokenPassword(tokenEndPoint string, tokenAccessToken string, tokenType string) (string, error) {
-	log.Infof("Inside for endPoint: %s and token: %s", tokenEndPoint, tokenAccessToken)
 	data, err := base64.StdEncoding.DecodeString(tokenAccessToken)
 	if err != nil {
 		return "", fmt.Errorf("unable to decode the password for token endpoint: %s", tokenEndPoint)
@@ -199,6 +197,7 @@ func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace 
 		endPoint := c.getTokenEndpoint(token.Endpoint)
 		for i := range opsssightData.ImageFacade.PrivateDockerRegistries {
 			if strings.EqualFold(endPoint, opsssightData.ImageFacade.PrivateDockerRegistries[i].URL) {
+				log.Infof("found %s url in opssight private registries", endPoint)
 				strdata, err := c.getTokenPassword(endPoint, token.AccessToken, tokenType)
 				if err != nil {
 					log.Error(err)
@@ -257,12 +256,15 @@ func (c *controller) patchOpsSightReplicationController(namespace string, name s
 		return fmt.Errorf("unable to find %s replication controller in %s namespace because %+v", name, namespace, err)
 	}
 
+	log.Infof("found %s replication controller in %s namespace successfully", name, namespace)
+
 	r := rc.DeepCopy()
 	r.Spec.Replicas = util.IntToInt32(replicas)
 	err = util.PatchReplicationController(c.kubeClient, *rc, *r)
 	if err != nil {
 		return fmt.Errorf("unable to patch %s replication controller with replicas %d in %s namespace because %+v", name, replicas, namespace, err)
 	}
+	log.Infof("patched the %s replication controller with replicas=%d in %s namespace successfully", name, replicas, namespace)
 	return nil
 }
 
@@ -280,7 +282,7 @@ func (c *controller) updateAuthTokens() error {
 	for _, tokenGenerator := range tokenGenerators {
 		newTokens, err := tokenGenerator.TokenGenFxn()
 		if err != nil {
-			log.Printf("Error getting tokens for provider %s. Skipping cloud provider! [Err: %s]", tokenGenerator.Name, err)
+			log.Infof("error getting tokens for provider %s. Skipping cloud provider! [Err: %s]", tokenGenerator.Name, err)
 			continue
 		}
 		for _, opssight := range opssights.Items {
@@ -291,13 +293,14 @@ func (c *controller) updateAuthTokens() error {
 				continue
 			}
 
-			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, opssight.Spec.ScannerPod.ImageFacade.Name, 0)
+			imageFacadeRCName := opssight.Spec.ScannerPod.Name
+			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, imageFacadeRCName, 0)
 			if err != nil {
 				log.Error(err)
 				continue
 			}
 
-			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, opssight.Spec.ScannerPod.ImageFacade.Name, 1)
+			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, imageFacadeRCName, 1)
 			if err != nil {
 				log.Error(err)
 			}

@@ -27,6 +27,15 @@ items:
     verbs:
     - get
     - update
+  - apiGroups:
+    - ""
+    resources:
+    - replicationcontrollers
+    - replicationcontrollers/scale
+    verbs:
+    - get
+    - patch
+    - update
 - kind: ClusterRoleBinding
   apiVersion: rbac.authorization.k8s.io/v1beta1
   metadata:

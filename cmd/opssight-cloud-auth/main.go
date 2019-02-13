@@ -47,11 +47,11 @@ func main() {
 
 	validateParams()
 
-	log.Print("Using GCR URL: ", *argGCRURL)
-	log.Print("Using AWS Account: ", strings.Join(awsAccountIDs, ","))
-	log.Print("Using AWS Region: ", *argAWSRegion)
-	log.Print("Using AWS Assume Role: ", *argAWSAssumeRole)
-	log.Print("Refresh Interval (minutes): ", *argRefreshMinutes)
+	log.Infof("Using GCR URL: %s", *argGCRURL)
+	log.Infof("Using AWS Account: %s", strings.Join(awsAccountIDs, ","))
+	log.Infof("Using AWS Region: %s", *argAWSRegion)
+	log.Infof("Using AWS Assume Role: %s", *argAWSAssumeRole)
+	log.Infof("Refresh Interval (minutes): %d", *argRefreshMinutes)
 
 	kubeConfig, err := protoform.GetKubeConfig()
 	if err != nil {
