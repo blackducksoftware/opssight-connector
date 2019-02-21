@@ -54,6 +54,7 @@ func (scanner *Scanner) ScanFullDockerImage(apiImage *api.ImageSpec) error {
 	image := common.NewImage(scanner.imageDirectory, pullSpec)
 	err := scanner.ifClient.PullImage(image)
 	if err != nil {
+		cleanUpFile(image.DockerTarFilePath())
 		return errors.Trace(err)
 	}
 	defer cleanUpFile(image.DockerTarFilePath())
@@ -66,6 +67,10 @@ func (scanner *Scanner) ScanFile(host string, path string, hubProjectName string
 }
 
 func cleanUpFile(path string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Debugf("unable to find the file path %s due to %s", path, err.Error())
+		return
+	}
 	err := os.Remove(path)
 	recordCleanUpFile(err == nil)
 	if err != nil {

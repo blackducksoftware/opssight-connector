@@ -517,7 +517,7 @@ func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespac
 		select {
 		case <-timeout.C:
 			ticker.Stop()
-			return fmt.Errorf("the pods weren't able to start - timing out after 10 minutes")
+			return fmt.Errorf("the pods weren't able to start - timing out after %d seconds", timeoutInSeconds)
 		case <-ticker.C:
 			if ValidatePodsAreRunning(clientset, pods) {
 				timeout.Stop()
