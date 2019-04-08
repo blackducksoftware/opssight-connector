@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ClusterRole defines the cluster role component
@@ -129,4 +132,10 @@ func (cr *ClusterRole) RemoveAggregationRule(rule string) {
 			break
 		}
 	}
+}
+
+// ToKube returns the kubernetes version of the cluster role
+func (cr *ClusterRole) ToKube() (runtime.Object, error) {
+	wrapper := &types.ClusterRoleWrapper{ClusterRole: *cr.obj}
+	return converters.Convert_Koki_ClusterRole_to_Kube(wrapper)
 }

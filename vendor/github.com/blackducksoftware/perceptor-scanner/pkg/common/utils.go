@@ -29,10 +29,10 @@ import (
 
 // NeedsAuthHeader will verify the given image is required authentication credentials for pulling the Docker image.
 // if Yes, it will return the corresponding registration auth
-func NeedsAuthHeader(image imageInterface.Image, registries []RegistryAuth) *RegistryAuth {
+func NeedsAuthHeader(image imageInterface.Image, registries []*RegistryAuth) *RegistryAuth {
 	for _, registry := range registries {
 		if strings.HasPrefix(image.DockerPullSpec(), registry.URL) {
-			return &registry
+			return registry
 		}
 	}
 	return nil

@@ -39,29 +39,37 @@ type OpsSight struct {
 	Status OpsSightStatus `json:"status,omitempty"`
 }
 
-// RegistryAuth will store the Openshift Internal Registries
+// RegistryAuth will store the Secured Registries
 type RegistryAuth struct {
 	URL      string `json:"Url"`
 	User     string `json:"user"`
 	Password string `json:"password"`
 }
 
-// Blackduck ...
-type Blackduck struct {
-	Hosts               []string `json:"hosts"`
-	User                string   `json:"user"`
-	Port                int      `json:"port"`
-	ConcurrentScanLimit int      `json:"concurrentScanLimit"`
-	TotalScanLimit      int      `json:"totalScanLimit"`
-	PasswordEnvVar      string   `json:"passwordEnvVar"`
-	// Auto scaling parameters
-	InitialCount                 int               `json:"initialCount"`
-	MaxCount                     int               `json:"maxCount"`
-	DeleteHubThresholdPercentage int               `json:"deleteHubThresholdPercentage"`
-	BlackduckSpec                *v1.BlackduckSpec `json:"blackduckSpec"`
+// Host configures the Black Duck hosts
+type Host struct {
+	Scheme              string `json:"scheme"`
+	Domain              string `json:"domain"` // it can be domain name or ip address
+	Port                int    `json:"port"`
+	User                string `json:"user"`
+	Password            string `json:"password"`
+	ConcurrentScanLimit int    `json:"concurrentScanLimit"`
 }
 
-// Perceptor ...
+// Blackduck stores the Black Duck instance
+type Blackduck struct {
+	ExternalHosts                      []*Host `json:"externalHosts"`
+	ConnectionsEnvironmentVariableName string  `json:"connectionsEnvironmentVariableName"`
+	TLSVerification                    bool    `json:"tlsVerification"`
+
+	// Auto scaling parameters
+	InitialCount                       int               `json:"initialCount"`
+	MaxCount                           int               `json:"maxCount"`
+	DeleteBlackduckThresholdPercentage int               `json:"deleteBlackduckThresholdPercentage"`
+	BlackduckSpec                      *v1.BlackduckSpec `json:"blackduckSpec"`
+}
+
+// Perceptor stores the Perceptor configuration
 type Perceptor struct {
 	Name                           string `json:"name"`
 	Image                          string `json:"image"`
@@ -73,7 +81,7 @@ type Perceptor struct {
 	ClientTimeoutMilliseconds      int    `json:"clientTimeoutMilliseconds"`
 }
 
-// ScannerPod ...
+// ScannerPod stores the Perceptor scanner and Image Facade configuration
 type ScannerPod struct {
 	Name           string       `json:"name"`
 	Scanner        *Scanner     `json:"scanner"`
@@ -82,7 +90,7 @@ type ScannerPod struct {
 	ImageDirectory string       `json:"imageDirectory"`
 }
 
-// Scanner ...
+// Scanner stores the Perceptor scanner configuration
 type Scanner struct {
 	Name                 string `json:"name"`
 	Image                string `json:"image"`
@@ -90,30 +98,30 @@ type Scanner struct {
 	ClientTimeoutSeconds int    `json:"clientTimeoutSeconds"`
 }
 
-// ImageFacade ...
+// ImageFacade stores the Image Facade configuration
 type ImageFacade struct {
-	Name               string         `json:"name"`
-	Image              string         `json:"image"`
-	Port               int            `json:"port"`
-	InternalRegistries []RegistryAuth `json:"internalRegistries"`
-	ImagePullerType    string         `json:"imagePullerType"`
-	ServiceAccount     string         `json:"serviceAccount"`
+	Name               string          `json:"name"`
+	Image              string          `json:"image"`
+	Port               int             `json:"port"`
+	InternalRegistries []*RegistryAuth `json:"internalRegistries"`
+	ImagePullerType    string          `json:"imagePullerType"`
+	ServiceAccount     string          `json:"serviceAccount"`
 }
 
-// ImagePerceiver ...
+// ImagePerceiver stores the Image Perceiver configuration
 type ImagePerceiver struct {
 	Name  string `json:"name"`
 	Image string `json:"image"`
 }
 
-// PodPerceiver ...
+// PodPerceiver stores the Pod Perceiver configuration
 type PodPerceiver struct {
 	Name            string `json:"name"`
 	Image           string `json:"image"`
 	NamespaceFilter string `json:"namespaceFilter,omitempty"`
 }
 
-// Perceiver ...
+// Perceiver stores the Perceiver configuration
 type Perceiver struct {
 	EnableImagePerceiver      bool            `json:"enableImagePerceiver"`
 	EnablePodPerceiver        bool            `json:"enablePodPerceiver"`
@@ -125,7 +133,7 @@ type Perceiver struct {
 	Port                      int             `json:"port"`
 }
 
-// Skyfire ...
+// Skyfire stores the Skyfire configuration
 type Skyfire struct {
 	Name           string `json:"name"`
 	Image          string `json:"image"`
@@ -148,39 +156,42 @@ type Prometheus struct {
 
 // OpsSightSpec is the spec for a OpsSight resource
 type OpsSightSpec struct {
-	Namespace string `json:"namespace"`
-	State     string `json:"state"`
-
+	// OpsSight
+	Namespace     string      `json:"namespace"`
 	Perceptor     *Perceptor  `json:"perceptor"`
 	ScannerPod    *ScannerPod `json:"scannerPod"`
 	Perceiver     *Perceiver  `json:"perceiver"`
-	Prometheus    *Prometheus `json:"prometheus"`
-	EnableSkyfire bool        `json:"enableSkyfire"`
-	Skyfire       *Skyfire    `json:"skyfire"`
-
-	Blackduck *Blackduck `json:"blackduck"`
-
-	EnableMetrics bool `json:"enableMetrics"`
+	ConfigMapName string      `json:"configMapName"`
+	SecretName    string      `json:"secretName"`
 
 	// CPU and memory configurations
-	// Example: "300m"
-	DefaultCPU string `json:"defaultCpu,omitempty"`
-	// Example: "1300Mi"
-	DefaultMem string `json:"defaultMem,omitempty"`
+	DefaultCPU string `json:"defaultCpu,omitempty"` // Example: "300m"
+	DefaultMem string `json:"defaultMem,omitempty"` // Example: "1300Mi"
+	ScannerCPU string `json:"scannerCpu,omitempty"` // Example: "300m"
+	ScannerMem string `json:"scannerMem,omitempty"` // Example: "1300Mi"
 
 	// Log level
 	LogLevel string `json:"logLevel,omitempty"`
 
-	ConfigMapName string `json:"configMapName"`
+	// Metrics
+	EnableMetrics bool        `json:"enableMetrics"`
+	Prometheus    *Prometheus `json:"prometheus"`
 
-	// Configuration secret
-	SecretName string `json:"secretName"`
+	// Skyfire
+	EnableSkyfire bool     `json:"enableSkyfire"`
+	Skyfire       *Skyfire `json:"skyfire"`
+
+	// Black Duck
+	Blackduck *Blackduck `json:"blackduck"`
+
+	DesiredState string `json:"desiredState"`
 }
 
 // OpsSightStatus is the status for a OpsSight resource
 type OpsSightStatus struct {
-	State        string `json:"state"`
-	ErrorMessage string `json:"errorMessage"`
+	State         string  `json:"state"`
+	ErrorMessage  string  `json:"errorMessage"`
+	InternalHosts []*Host `json:"internalHosts"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -29,7 +29,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // StatefulSet defines the stateful set component
@@ -167,4 +170,10 @@ func (s *StatefulSet) RemoveVolumeClaimTemplate(claim PersistentVolumeClaim) {
 			break
 		}
 	}
+}
+
+// ToKube returns the kubernetes version of the stateful set
+func (s *StatefulSet) ToKube() (runtime.Object, error) {
+	wrapper := &types.StatefulSetWrapper{StatefulSet: *s.obj}
+	return converters.Convert_Koki_StatefulSet_to_Kube_apps_v1beta2_StatefulSet(wrapper)
 }

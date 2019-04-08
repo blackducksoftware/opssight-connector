@@ -26,7 +26,7 @@ import (
 
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
-
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
 
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -160,4 +160,10 @@ func (p *PersistentVolumeClaim) convertType(mode api.PVCAccessModeType) types.Pe
 	}
 
 	return m
+}
+
+// ToKube returns the kubernetes version of the persistent volume claim
+func (p *PersistentVolumeClaim) ToKube() (interface{}, error) {
+	wrapper := &types.PersistentVolumeClaimWrapper{PersistentVolumeClaim: *p.obj}
+	return converters.Convert_Koki_PVC_to_Kube_PVC(wrapper)
 }

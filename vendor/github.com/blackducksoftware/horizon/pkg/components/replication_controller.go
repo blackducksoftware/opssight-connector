@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ReplicationController defines the replication controller component
@@ -113,4 +116,10 @@ func (rc *ReplicationController) RemoveLabelSelectors(remove []string) {
 	for _, k := range remove {
 		rc.obj.Selector = util.RemoveElement(rc.obj.Selector, k)
 	}
+}
+
+// ToKube returns the kubernetes version of the replication controller
+func (rc *ReplicationController) ToKube() (runtime.Object, error) {
+	wrapper := &types.ReplicationControllerWrapper{ReplicationController: *rc.obj}
+	return converters.Convert_Koki_ReplicationController_to_Kube_v1_ReplicationController(wrapper)
 }

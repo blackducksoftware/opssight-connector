@@ -29,20 +29,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-// HubConfig ...
-type HubConfig struct {
-	User           string
-	PasswordEnvVar string
-	Port           int
+// BlackDuckConfig stores the Black Duck configuration
+type BlackDuckConfig struct {
+	ConnectionsEnvironmentVariableName string
+	TLSVerification                    bool
 }
 
-// ImageFacadeConfig ...
+// ImageFacadeConfig stores the image facade configuration
 type ImageFacadeConfig struct {
 	Host string
 	Port int
 }
 
-// GetHost ...
+// GetHost return the image facade host
 func (ifc *ImageFacadeConfig) GetHost() string {
 	if ifc.Host == "" {
 		return "localhost"
@@ -50,30 +49,30 @@ func (ifc *ImageFacadeConfig) GetHost() string {
 	return ifc.Host
 }
 
-// PerceptorConfig ...
+// PerceptorConfig stores the perceptor client configuration
 type PerceptorConfig struct {
 	Host string
 	Port int
 }
 
-// ScannerConfig ...
+// ScannerConfig stores the scanner configuration
 type ScannerConfig struct {
-	ImageDirectory          string
-	Port                    int
-	HubClientTimeoutSeconds int
+	ImageDirectory       string
+	Port                 int
+	ClientTimeoutSeconds int
 }
 
-// Config ...
+// Config stores the input scanner configurqtion
 type Config struct {
-	Hub         HubConfig
-	ImageFacade ImageFacadeConfig
-	Perceptor   PerceptorConfig
-	Scanner     ScannerConfig
+	BlackDuck   *BlackDuckConfig
+	ImageFacade *ImageFacadeConfig
+	Perceptor   *PerceptorConfig
+	Scanner     *ScannerConfig
 
 	LogLevel string
 }
 
-// GetImageDirectory ...
+// GetImageDirectory return the image directory to store the pulled artifactory
 func (config *ScannerConfig) GetImageDirectory() string {
 	if config.ImageDirectory == "" {
 		return "/var/images"
@@ -81,12 +80,12 @@ func (config *ScannerConfig) GetImageDirectory() string {
 	return config.ImageDirectory
 }
 
-// GetLogLevel ...
+// GetLogLevel return the log level
 func (config *Config) GetLogLevel() (log.Level, error) {
 	return log.ParseLevel(config.LogLevel)
 }
 
-// GetConfig ...
+// GetConfig returns the input configuration for Scanner pod
 func GetConfig(configPath string) (*Config, error) {
 	var config *Config
 
@@ -106,9 +105,8 @@ func GetConfig(configPath string) (*Config, error) {
 		viper.BindEnv("Perceptor.Host")
 		viper.BindEnv("Perceptor.Port")
 
-		viper.BindEnv("Hub.User")
-		viper.BindEnv("Hub.Port")
-		viper.BindEnv("Hub.PasswordEnvVar")
+		viper.BindEnv("BlackDuck.ConnectionsEnvironmentVariableName")
+		viper.BindEnv("BlackDuck.TLSVerification")
 
 		viper.BindEnv("Scanner.Port")
 		viper.BindEnv("Scanner.ImageDirectory")

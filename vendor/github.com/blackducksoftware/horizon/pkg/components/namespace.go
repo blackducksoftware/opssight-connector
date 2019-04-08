@@ -27,7 +27,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Namespace defines the namespace component
@@ -108,4 +111,10 @@ func (n *Namespace) appendFinalizerIfMissing(new string, list []types.FinalizerN
 		}
 	}
 	return append(list, types.FinalizerName(new))
+}
+
+// ToKube returns the kubernetes version of the namespace
+func (n *Namespace) ToKube() (runtime.Object, error) {
+	wrapper := &types.NamespaceWrapper{Namespace: *n.obj}
+	return converters.Convert_Koki_Namespace_to_Kube_Namespace(wrapper)
 }

@@ -31,13 +31,15 @@ import (
 
 // Config type will be used for protoform config that bootstraps everything
 type Config struct {
-	DryRun                bool
-	LogLevel              string
-	Namespace             string
-	Threadiness           int
-	PostgresRestartInMins int
-	HubFederatorConfig    *HubFederatorConfig
-	PodWaitTimeoutSeconds int64
+	DryRun                        bool
+	LogLevel                      string
+	Namespace                     string
+	Threadiness                   int
+	PostgresRestartInMins         int
+	HubFederatorConfig            *HubFederatorConfig
+	PodWaitTimeoutSeconds         int64
+	ResyncIntervalInSeconds       int64
+	TerminationGracePeriodSeconds int64
 
 	// Not recommended production, just for testing, QA, resiliency, and CI/CD.
 	OperatorTimeBombInSeconds int64

@@ -34,4 +34,5 @@ type Container struct {
 	ActionConfig          *horizonapi.ActionConfig
 	ReadinessProbeConfigs []*horizonapi.ProbeConfig
 	LivenessProbeConfigs  []*horizonapi.ProbeConfig
+	PreStopConfig         *horizonapi.ActionConfig
 }

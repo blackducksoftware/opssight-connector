@@ -32,16 +32,14 @@ import (
 
 // PerceptorMetricsDeployment creates a deployment for perceptor metrics
 func (p *SpecConfig) PerceptorMetricsDeployment() (*components.Deployment, error) {
-	replicas := int32(0)
-	if p.config.EnableMetrics {
-		replicas = 1
-	}
+	replicas := int32(1)
 	deployment := components.NewDeployment(horizonapi.DeploymentConfig{
 		Replicas:  &replicas,
 		Name:      "prometheus",
-		Namespace: p.config.Namespace,
+		Namespace: p.opssight.Spec.Namespace,
 	})
-	deployment.AddMatchLabelsSelectors(map[string]string{"app": "prometheus"})
+	deployment.AddLabels(map[string]string{"name": "prometheus", "app": "opssight"})
+	deployment.AddMatchLabelsSelectors(map[string]string{"app": "opssight"})
 
 	pod, err := p.perceptorMetricsPod()
 	if err != nil {
@@ -56,7 +54,7 @@ func (p *SpecConfig) perceptorMetricsPod() (*components.Pod, error) {
 	pod := components.NewPod(horizonapi.PodConfig{
 		Name: "prometheus",
 	})
-	pod.AddLabels(map[string]string{"app": "prometheus"})
+	pod.AddLabels(map[string]string{"name": "prometheus", "app": "opssight"})
 
 	pod.AddContainer(p.perceptorMetricsContainer())
 
@@ -73,13 +71,13 @@ func (p *SpecConfig) perceptorMetricsPod() (*components.Pod, error) {
 
 func (p *SpecConfig) perceptorMetricsContainer() *components.Container {
 	container := components.NewContainer(horizonapi.ContainerConfig{
-		Name:  p.config.Prometheus.Name,
-		Image: p.config.Prometheus.Image,
+		Name:  p.opssight.Spec.Prometheus.Name,
+		Image: p.opssight.Spec.Prometheus.Image,
 		Args:  []string{"--log.level=debug", "--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/tmp/data/", "--storage.tsdb.retention=120d"},
 	})
 
 	container.AddPort(horizonapi.PortConfig{
-		ContainerPort: fmt.Sprintf("%d", p.config.Prometheus.Port),
+		ContainerPort: fmt.Sprintf("%d", p.opssight.Spec.Prometheus.Port),
 		Protocol:      horizonapi.ProtocolTCP,
 		Name:          "web",
 	})
@@ -119,7 +117,7 @@ func (p *SpecConfig) perceptorMetricsVolumes() ([]*components.Volume, error) {
 func (p *SpecConfig) PerceptorMetricsService() *components.Service {
 	service := components.NewService(horizonapi.ServiceConfig{
 		Name:          "prometheus",
-		Namespace:     p.config.Namespace,
+		Namespace:     p.opssight.Spec.Namespace,
 		IPServiceType: horizonapi.ClusterIPServiceTypeNodePort,
 	})
 
@@ -130,8 +128,8 @@ func (p *SpecConfig) PerceptorMetricsService() *components.Service {
 	})
 
 	service.AddAnnotations(map[string]string{"prometheus.io/scrape": "true"})
-	service.AddLabels(map[string]string{"name": "prometheus"})
-	service.AddSelectors(map[string]string{"app": "prometheus"})
+	service.AddLabels(map[string]string{"name": "prometheus", "app": "opssight"})
+	service.AddSelectors(map[string]string{"app": "opssight"})
 
 	return service
 }
@@ -140,7 +138,7 @@ func (p *SpecConfig) PerceptorMetricsService() *components.Service {
 func (p *SpecConfig) PerceptorMetricsConfigMap() (*components.ConfigMap, error) {
 	configMap := components.NewConfigMap(horizonapi.ConfigMapConfig{
 		Name:      "prometheus",
-		Namespace: p.config.Namespace,
+		Namespace: p.opssight.Spec.Namespace,
 	})
 
 	/*
@@ -169,18 +167,18 @@ func (p *SpecConfig) PerceptorMetricsConfigMap() (*components.ConfigMap, error) 
 		}
 	*/
 	targets := []string{
-		fmt.Sprintf("%s:%d", p.config.Perceptor.Name, p.config.Perceptor.Port),
-		fmt.Sprintf("%s:%d", p.config.ScannerPod.Scanner.Name, p.config.ScannerPod.Scanner.Port),
-		fmt.Sprintf("%s:%d", p.config.ScannerPod.ImageFacade.Name, p.config.ScannerPod.ImageFacade.Port),
+		fmt.Sprintf("%s:%d", p.opssight.Spec.Perceptor.Name, p.opssight.Spec.Perceptor.Port),
+		fmt.Sprintf("%s:%d", p.opssight.Spec.ScannerPod.Scanner.Name, p.opssight.Spec.ScannerPod.Scanner.Port),
+		fmt.Sprintf("%s:%d", p.opssight.Spec.ScannerPod.ImageFacade.Name, p.opssight.Spec.ScannerPod.ImageFacade.Port),
 	}
-	if p.config.Perceiver.EnableImagePerceiver {
-		targets = append(targets, fmt.Sprintf("%s:%d", p.config.Perceiver.ImagePerceiver.Name, p.config.Perceiver.Port))
+	if p.opssight.Spec.Perceiver.EnableImagePerceiver {
+		targets = append(targets, fmt.Sprintf("%s:%d", p.opssight.Spec.Perceiver.ImagePerceiver.Name, p.opssight.Spec.Perceiver.Port))
 	}
-	if p.config.Perceiver.EnablePodPerceiver {
-		targets = append(targets, fmt.Sprintf("%s:%d", p.config.Perceiver.PodPerceiver.Name, p.config.Perceiver.Port))
+	if p.opssight.Spec.Perceiver.EnablePodPerceiver {
+		targets = append(targets, fmt.Sprintf("%s:%d", p.opssight.Spec.Perceiver.PodPerceiver.Name, p.opssight.Spec.Perceiver.Port))
 	}
-	if p.config.EnableSkyfire {
-		targets = append(targets, fmt.Sprintf("%s:%d", p.config.Skyfire.Name, p.config.Skyfire.PrometheusPort))
+	if p.opssight.Spec.EnableSkyfire {
+		targets = append(targets, fmt.Sprintf("%s:%d", p.opssight.Spec.Skyfire.Name, p.opssight.Spec.Skyfire.PrometheusPort))
 	}
 	data := map[string]interface{}{
 		"global": map[string]interface{}{
@@ -202,6 +200,7 @@ func (p *SpecConfig) PerceptorMetricsConfigMap() (*components.ConfigMap, error) 
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	configMap.AddLabels(map[string]string{"name": "prometheus", "app": "opssight"})
 	configMap.AddData(map[string]string{"prometheus.yml": string(bytes)})
 
 	return configMap, nil

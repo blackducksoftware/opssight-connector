@@ -25,7 +25,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CustomResourceDefinition defines a custom resource
@@ -98,4 +101,10 @@ func (crd *CustomResourceDefinition) RemoveLabels(remove []string) {
 	for _, k := range remove {
 		crd.obj.Labels = util.RemoveElement(crd.obj.Labels, k)
 	}
+}
+
+// ToKube returns the kubernetes version of the custom resource definition
+func (crd *CustomResourceDefinition) ToKube() (runtime.Object, error) {
+	wrapper := &types.CRDWrapper{CRD: *crd.obj}
+	return converters.Convert_Koki_CRD_to_Kube(wrapper)
 }

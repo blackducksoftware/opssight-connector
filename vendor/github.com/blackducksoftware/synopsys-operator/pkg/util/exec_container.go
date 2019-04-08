@@ -27,12 +27,33 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// CreateExecContainerRequest will create the request to exec into kubernetes pod
+func CreateExecContainerRequest(clientset *kubernetes.Clientset, pod *corev1.Pod, command string) *rest.Request {
+	return clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(pod.Name).
+		Namespace(pod.Namespace).
+		SubResource("exec").
+		Param("container", pod.Spec.Containers[0].Name).
+		VersionedParams(&corev1.PodExecOptions{
+			Container: pod.Spec.Containers[0].Name,
+			Command:   []string{command},
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       false,
+		}, scheme.ParameterCodec)
+}
+
 // ExecContainer will exec into the container and run the commands provided in the input
-func ExecContainer(kubeConfig *rest.Config, request *rest.Request, command []string) error {
+func ExecContainer(kubeConfig *rest.Config, request *rest.Request, command []string) (string, error) {
 	var stdin io.Reader
 	stdin = NewStringReader(command)
 
@@ -53,5 +74,5 @@ func ExecContainer(kubeConfig *rest.Config, request *rest.Request, command []str
 	})
 
 	log.Debugf("stdout: %s, stderr: %s", stdout.String(), stderr.String())
-	return err
+	return stdout.String(), err
 }

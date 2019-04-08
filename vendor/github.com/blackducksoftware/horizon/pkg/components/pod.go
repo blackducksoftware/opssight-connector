@@ -29,7 +29,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Pod defines the pod component
@@ -247,6 +250,7 @@ func (p *Pod) RemoveAffinity(config api.AffinityConfig) {
 	}
 }
 
+// AddHostModes will add a networking host mode to the pod
 func (p *Pod) AddHostModes(config []api.HostModeType) {
 	var mode types.HostMode
 
@@ -365,4 +369,10 @@ func (p *Pod) createToleration(config api.TolerationConfig) types.Selector {
 	}
 
 	return types.Selector(selector)
+}
+
+// ToKube returns the kubernetes version of the pod
+func (p *Pod) ToKube() (runtime.Object, error) {
+	wrapper := &types.PodWrapper{Pod: *p.obj}
+	return converters.Convert_Koki_Pod_to_Kube_v1_Pod(wrapper)
 }

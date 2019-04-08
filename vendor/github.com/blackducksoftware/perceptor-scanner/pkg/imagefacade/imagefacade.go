@@ -35,15 +35,15 @@ const (
 	diskMetricsPause = 15 * time.Second
 )
 
-// ImageFacade ...
+// ImageFacade return the image facade configurations
 type ImageFacade struct {
 	model            *Model
 	imagePuller      imagepullerinterface.ImagePuller
 	createImagesOnly bool
 }
 
-// NewImageFacade ...
-func NewImageFacade(dockerRegistries []common.RegistryAuth, createImagesOnly bool, imagePullerType string, stop <-chan struct{}) *ImageFacade {
+// NewImageFacade return the image puller that will used to pull the artifacts
+func NewImageFacade(dockerRegistries []*common.RegistryAuth, createImagesOnly bool, imagePullerType string, stop <-chan struct{}) *ImageFacade {
 	model := NewModel(stop)
 	var imagePuller imagepullerinterface.ImagePuller
 
@@ -75,6 +75,7 @@ func NewImageFacade(dockerRegistries []common.RegistryAuth, createImagesOnly boo
 	return imageFacade
 }
 
+// pullImage is used to pull the artifacts into local for scanning
 func (imf *ImageFacade) pullImage(image *common.Image) error {
 	var err error
 	if imf.createImagesOnly {
@@ -86,6 +87,7 @@ func (imf *ImageFacade) pullImage(image *common.Image) error {
 	return err
 }
 
+// pullDiskMetrics is to print the host disk metrics
 func (imf *ImageFacade) pullDiskMetrics() {
 	log.Debugf("getting disk metrics")
 	diskMetrics, err := getDiskMetrics()
@@ -99,7 +101,7 @@ func (imf *ImageFacade) pullDiskMetrics() {
 
 // HTTPResponder implementation
 
-// PullImage ...
+// PullImage is used to pull the artifacts into local for scanning
 func (imf *ImageFacade) PullImage(image *common.Image) error {
 	err := imf.model.StartImagePull(image)
 	if err != nil {
@@ -118,12 +120,12 @@ func (imf *ImageFacade) PullImage(image *common.Image) error {
 	return nil
 }
 
-// GetImage ...
+// GetImage is used to get to the image status
 func (imf *ImageFacade) GetImage(image *common.Image) common.ImageStatus {
 	return imf.model.GetImageStatus(image)
 }
 
-// GetModel ...
+// GetModel returns the api model
 func (imf *ImageFacade) GetModel() map[string]interface{} {
 	return imf.model.GetAPIModel()
 }

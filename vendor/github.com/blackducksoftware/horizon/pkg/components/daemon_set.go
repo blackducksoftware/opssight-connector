@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // DaemonSet defines the daemon set component
@@ -144,4 +147,10 @@ func (d *DaemonSet) AddMatchExpressionsSelector(add string) {
 // RemoveMatchExpressionsSelector removes the match expressions selector from the daemon set
 func (d *DaemonSet) RemoveMatchExpressionsSelector() {
 	d.obj.Selector.Shorthand = ""
+}
+
+// ToKube returns the kubernetes version of the daemon set
+func (d *DaemonSet) ToKube() (runtime.Object, error) {
+	wrapper := &types.DaemonSetWrapper{DaemonSet: *d.obj}
+	return converters.Convert_Koki_DaemonSet_to_Kube_apps_v1beta2_DaemonSet(wrapper)
 }

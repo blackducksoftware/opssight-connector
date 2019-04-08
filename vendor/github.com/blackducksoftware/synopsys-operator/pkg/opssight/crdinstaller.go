@@ -22,19 +22,19 @@ under the License.
 package opssight
 
 import (
+	"reflect"
 	"strings"
 	"time"
 
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	horizon "github.com/blackducksoftware/horizon/pkg/deployer"
-	"github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
+	opssightapi "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
 	hubclient "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned"
 	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
-	opssightinformerv1 "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/informers/externalversions/opssight/v1"
+	opssightinformer "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/informers/externalversions/opssight/v1"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
-	routeclient "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/tools/cache"
@@ -54,7 +54,8 @@ func NewCRDInstaller(config interface{}) (*CRDInstaller, error) {
 	}
 	c := &CRDInstaller{config: dependentConfig}
 
-	c.config.resyncPeriod = 0
+	log.Debugf("resync period: %d", c.config.Config.ResyncIntervalInSeconds)
+	c.config.resyncPeriod = time.Duration(c.config.Config.ResyncIntervalInSeconds) * time.Second
 	c.config.indexers = cache.Indexers{}
 
 	return c, nil
@@ -103,7 +104,7 @@ func (c *CRDInstaller) Deploy() error {
 	if err != nil {
 		return errors.Trace(err)
 	}
-	configMapEditor := NewConfigMapUpdater(c.config.Config, c.config.KubeClientSet, hubClientset, c.config.customClientSet)
+	configMapEditor := NewUpdater(c.config.Config, c.config.KubeClientSet, hubClientset, c.config.customClientSet)
 	configMapEditor.Run(c.config.StopCh)
 
 	return nil
@@ -115,7 +116,7 @@ func (c *CRDInstaller) PostDeploy() {
 
 // CreateInformer will create a informer for the CRD
 func (c *CRDInstaller) CreateInformer() {
-	c.config.informer = opssightinformerv1.NewOpsSightInformer(
+	c.config.informer = opssightinformer.NewOpsSightInformer(
 		c.config.customClientSet,
 		c.config.Config.Namespace,
 		c.config.resyncPeriod,
@@ -133,6 +134,7 @@ func (c *CRDInstaller) CreateQueue() {
 
 // AddInformerEventHandler will add the event handlers for the informers
 func (c *CRDInstaller) AddInformerEventHandler() {
+	log.Debugf("adding informer event handler for opssight")
 	c.config.informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			// convert the resource object into a key (in this case
@@ -147,12 +149,16 @@ func (c *CRDInstaller) AddInformerEventHandler() {
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			key, err := cache.MetaNamespaceKeyFunc(newObj)
-			log.Infof("update opssight: %s", key)
-			if err == nil {
-				c.config.queue.Add(key)
-			} else {
-				log.Errorf("unable to update OpsSight: %v", err)
+			old := oldObj.(*opssightapi.OpsSight)
+			new := newObj.(*opssightapi.OpsSight)
+			if strings.EqualFold(old.Status.State, string(Running)) || !reflect.DeepEqual(old.Spec, new.Spec) || !reflect.DeepEqual(old.Status.InternalHosts, new.Status.InternalHosts) {
+				key, err := cache.MetaNamespaceKeyFunc(newObj)
+				log.Infof("update opssight: %s", key)
+				if err == nil {
+					c.config.queue.Add(key)
+				} else {
+					log.Errorf("unable to update OpsSight: %v", err)
+				}
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
@@ -186,16 +192,7 @@ func (c *CRDInstaller) CreateHandler() {
 		}
 	}
 
-	routeClient, err := routeclient.NewForConfig(c.config.KubeConfig)
-	if err != nil {
-		routeClient = nil
-	} else {
-		_, err := util.GetOpenShiftRoutes(routeClient, "default", "docker-registry")
-		if err != nil && strings.Contains(err.Error(), "could not find the requested resource") && strings.Contains(err.Error(), "openshift.io") {
-			log.Debugf("Ignoring routes for kubernetes cluster")
-			routeClient = nil
-		}
-	}
+	routeClient := util.GetRouteClient(c.config.KubeConfig)
 
 	hubClient, err := hubclient.NewForConfig(c.config.KubeConfig)
 	if err != nil {
@@ -204,15 +201,15 @@ func (c *CRDInstaller) CreateHandler() {
 	}
 
 	c.config.handler = &Handler{
-		Config:            c.config.Config,
-		KubeConfig:        c.config.KubeConfig,
-		Clientset:         c.config.KubeClientSet,
-		OpsSightClientset: c.config.customClientSet,
-		Namespace:         c.config.Config.Namespace,
-		OSSecurityClient:  osClient,
-		RouteClient:       routeClient,
-		Defaults:          c.config.Defaults.(*v1.OpsSightSpec),
-		HubClient:         hubClient,
+		Config:           c.config.Config,
+		KubeConfig:       c.config.KubeConfig,
+		KubeClient:       c.config.KubeClientSet,
+		OpsSightClient:   c.config.customClientSet,
+		Namespace:        c.config.Config.Namespace,
+		OSSecurityClient: osClient,
+		RouteClient:      routeClient,
+		Defaults:         c.config.Defaults.(*opssightapi.OpsSightSpec),
+		HubClient:        hubClient,
 	}
 }
 

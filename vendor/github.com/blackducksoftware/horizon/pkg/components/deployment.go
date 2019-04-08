@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Deployment defines the deployment component
@@ -146,4 +149,10 @@ func (d *Deployment) AddMatchExpressionsSelector(add string) {
 // RemoveMatchExpressionsSelector removes the match expressions selector from the deployment
 func (d *Deployment) RemoveMatchExpressionsSelector() {
 	d.obj.Selector.Shorthand = ""
+}
+
+// ToKube returns the kubernetes version of the deployment
+func (d *Deployment) ToKube() (runtime.Object, error) {
+	wrapper := &types.DeploymentWrapper{Deployment: *d.obj}
+	return converters.Convert_Koki_Deployment_to_Kube_apps_v1beta2_Deployment(wrapper)
 }

@@ -35,4 +35,5 @@ type ComponentList struct {
 	ClusterRoles           []*components.ClusterRole
 	Deployments            []*components.Deployment
 	Secrets                []*components.Secret
+	PersistentVolumeClaims []*components.PersistentVolumeClaim
 }

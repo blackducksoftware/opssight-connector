@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Ingress defines the Ingress component
@@ -138,4 +141,10 @@ func (i *Ingress) createHostRule(config api.IngressRuleConfig) types.IngressRule
 	}
 
 	return rule
+}
+
+// ToKube returns the kubernetes version of the ingress
+func (i *Ingress) ToKube() (runtime.Object, error) {
+	wrapper := &types.IngressWrapper{Ingress: *i.obj}
+	return converters.Convert_Koki_Ingress_to_Kube_Ingress(wrapper)
 }

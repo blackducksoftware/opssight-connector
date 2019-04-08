@@ -43,14 +43,14 @@ const (
 	getStage    = "get docker image"
 )
 
-// ImagePuller ...
+// ImagePuller contains the http Docker client and the secured Docker registry credentials
 type ImagePuller struct {
 	client     *http.Client
-	registries []common.RegistryAuth
+	registries []*common.RegistryAuth
 }
 
-// NewImagePuller ...
-func NewImagePuller(registries []common.RegistryAuth) *ImagePuller {
+// NewImagePuller returns the Image puller type
+func NewImagePuller(registries []*common.RegistryAuth) *ImagePuller {
 	log.Infof("creating docker image puller")
 	fd := func(proto, addr string) (conn net.Conn, err error) {
 		return net.Dial("unix", dockerSocketPath)

@@ -26,10 +26,8 @@ import (
 	"time"
 
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
-
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	log "github.com/sirupsen/logrus"
+	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PodListController defines a controller that will list pods
@@ -45,13 +43,14 @@ func NewPodListController(ns string) *PodListController {
 // Run will print to debug output the status of the pods that were started
 func (l *PodListController) Run(resources horizonapi.ControllerResources, stopCh chan struct{}) error {
 	client := resources.KubeClient
-	for cnt := 0; cnt < 10; cnt++ {
+	for cnt := 0; cnt < 20; cnt++ {
 		pods, _ := client.Core().Pods(l.namespace).List(v1meta.ListOptions{})
 		var isPodNotRunning bool
 		for _, pod := range pods.Items {
 			log.Debugf("Pod = %v -> %v", pod.Name, pod.Status.Phase)
 			if !strings.EqualFold(string(pod.Status.Phase), "Running") && !isPodNotRunning {
 				isPodNotRunning = true
+				break
 			}
 		}
 		log.Debug("***************")

@@ -25,7 +25,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Secret defines the secret component
@@ -128,4 +131,10 @@ func (s *Secret) RemoveData(remove []string) {
 			delete(s.obj.Data, k)
 		}
 	}
+}
+
+// ToKube returns the kubernetes version of the secret
+func (s *Secret) ToKube() (runtime.Object, error) {
+	wrapper := &types.SecretWrapper{Secret: *s.obj}
+	return converters.Convert_Koki_Secret_to_Kube_v1_Secret(wrapper)
 }

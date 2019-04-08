@@ -31,7 +31,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Scanner ...
+// Scanner stores the scanner configurations
 type Scanner struct {
 	ifClient       ImageFacadeClientInterface
 	scanClient     ScanClientInterface
@@ -39,7 +39,7 @@ type Scanner struct {
 	stop           <-chan struct{}
 }
 
-// NewScanner ...
+// NewScanner return the Scanner configurations
 func NewScanner(ifClient ImageFacadeClientInterface, scanClient ScanClientInterface, imageDirectory string, stop <-chan struct{}) *Scanner {
 	return &Scanner{
 		ifClient:       ifClient,
@@ -58,14 +58,15 @@ func (scanner *Scanner) ScanFullDockerImage(apiImage *api.ImageSpec) error {
 		return errors.Trace(err)
 	}
 	defer cleanUpFile(image.DockerTarFilePath())
-	return scanner.ScanFile(apiImage.HubURL, image.DockerTarFilePath(), apiImage.HubProjectName, apiImage.HubProjectVersionName, apiImage.HubScanName)
+	return scanner.ScanFile(apiImage.Scheme, apiImage.Domain, apiImage.Port, apiImage.User, apiImage.Password, image.DockerTarFilePath(), apiImage.BlackDuckProjectName, apiImage.BlackDuckProjectVersionName, apiImage.BlackDuckScanName)
 }
 
 // ScanFile runs the scan client against a single file
-func (scanner *Scanner) ScanFile(host string, path string, hubProjectName string, hubVersionName string, hubScanName string) error {
-	return scanner.scanClient.Scan(host, path, hubProjectName, hubVersionName, hubScanName)
+func (scanner *Scanner) ScanFile(scheme string, host string, port int, username string, password string, path string, blackDuckProjectName string, blackDuckVersionName string, blackDuckScanName string) error {
+	return scanner.scanClient.Scan(scheme, host, port, username, password, path, blackDuckProjectName, blackDuckVersionName, blackDuckScanName)
 }
 
+// cleanUpFile cleans up the file that is locally pulled for scanning
 func cleanUpFile(path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		log.Debugf("unable to find the file path %s due to %s", path, err.Error())

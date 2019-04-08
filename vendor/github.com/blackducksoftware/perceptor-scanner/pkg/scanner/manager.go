@@ -22,8 +22,6 @@ under the License.
 package scanner
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/blackducksoftware/perceptor/pkg/api"
@@ -42,20 +40,21 @@ type Manager struct {
 	stop            <-chan struct{}
 }
 
-// NewManager ...
+// Host configures the Black Duck hosts
+type Host struct {
+	Scheme   string `json:"scheme"`
+	Domain   string `json:"domain"` // it can be domain name or ip address
+	Port     int    `json:"port"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+// NewManager return the manager type
 func NewManager(config *Config, stop <-chan struct{}) (*Manager, error) {
 	log.Infof("instantiating Manager with config %+v", config)
 
-	hubPassword, ok := os.LookupEnv(config.Hub.PasswordEnvVar)
-	if !ok {
-		return nil, fmt.Errorf("unable to get Hub password: environment variable %s not set", config.Hub.PasswordEnvVar)
-	}
-
 	imagePuller := NewImageFacadeClient(config.ImageFacade.GetHost(), config.ImageFacade.Port)
-	scanClient, err := NewScanClient(
-		config.Hub.User,
-		hubPassword,
-		config.Hub.Port)
+	scanClient, err := NewScanClient(config.BlackDuck.TLSVerification)
 	if err != nil {
 		return nil, errors.Annotatef(err, "unable to instantiate hub scan client")
 	}
@@ -81,6 +80,7 @@ func (sm *Manager) StartRequestingScanJobs() {
 	}()
 }
 
+// requestAndRunScanJob will request for scan jobs from the Perceptor
 func (sm *Manager) requestAndRunScanJob() {
 	log.Debug("requesting scan job")
 	nextImage, err := sm.perceptorClient.GetNextImage()
@@ -102,7 +102,7 @@ func (sm *Manager) requestAndRunScanJob() {
 		errorString = err.Error()
 	}
 
-	finishedJob := api.FinishedScanClientJob{Err: errorString, ImageSpec: *nextImage.ImageSpec}
+	finishedJob := api.FinishedScanClientJob{Err: errorString, ImageSpec: nextImage.ImageSpec}
 	log.Infof("about to finish job, going to send over %+v", finishedJob)
 	sm.perceptorClient.PostFinishedScan(&finishedJob)
 	if err != nil {

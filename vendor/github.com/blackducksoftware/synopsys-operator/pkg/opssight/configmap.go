@@ -29,92 +29,80 @@ import (
 	"github.com/juju/errors"
 )
 
-// PerceiverConfig ...
+// PerceiverConfig stores the Perceiver configuration
 type PerceiverConfig struct {
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
-	Pod                       PodPerceiverConfig
-	Image                     ImagePerceiverConfig
+	Pod                       *PodPerceiverConfig
+	Image                     *ImagePerceiverConfig
 }
 
-// ImagePerceiverConfig ...
+// ImagePerceiverConfig stores the Image Perceiver configuration
 type ImagePerceiverConfig struct{}
 
-// PodPerceiverConfig ...
+// PodPerceiverConfig stores the Pod Perceiver configuration
 type PodPerceiverConfig struct {
 	NamespaceFilter string
 }
 
-// HubConfig ...
-type HubConfig struct {
-	Hosts               []string
-	User                string
-	PasswordEnvVar      string
-	Port                int
-	ConcurrentScanLimit int
-	TotalScanLimit      int
+// BlackDuckConfig stores the Black Duck configuration
+type BlackDuckConfig struct {
+	ConnectionsEnvironmentVariableName string
+	TLSVerification                    bool
 }
 
-// PerceptorTimingsConfig ...
+// PerceptorTimingsConfig stores the Perceptor configuration
 type PerceptorTimingsConfig struct {
 	CheckForStalledScansPauseHours int
 	StalledScanClientTimeoutHours  int
 	ModelMetricsPauseSeconds       int
 	UnknownImagePauseMilliseconds  int
-	HubClientTimeoutMilliseconds   int
+	ClientTimeoutMilliseconds      int
 }
 
-// PerceptorConfig ...
+// PerceptorConfig stores the Perceptor configuration
 type PerceptorConfig struct {
-	Timings     PerceptorTimingsConfig
+	Timings     *PerceptorTimingsConfig
 	UseMockMode bool
 	Host        string
 	Port        int
 }
 
-// ScannerConfig ...
+// ScannerConfig stores the Perceptor Scanner configuration
 type ScannerConfig struct {
-	Port                    int
-	ImageDirectory          string
-	HubClientTimeoutSeconds int
+	Port                          int
+	ImageDirectory                string
+	BlackDuckClientTimeoutSeconds int
 }
 
-// RegistryAuth ...
-type RegistryAuth struct {
-	URL      string
-	User     string
-	Password string
-}
-
-// ImageFacadeConfig ...
+// ImageFacadeConfig stores the Perceptor Image Facade configuration
 type ImageFacadeConfig struct {
-	Host                    string
-	Port                    int
-	PrivateDockerRegistries []RegistryAuth
-	ImagePullerType         string
-	CreateImagesOnly        bool
+	Host             string
+	Port             int
+	ImagePullerType  string
+	CreateImagesOnly bool
 }
 
-// SkyfireConfig ...
+// SkyfireConfig stores the Skyfire configuration
 type SkyfireConfig struct {
-	UseInClusterConfig           bool
-	Port                         int
-	PrometheusPort               int
-	HubClientTimeoutSeconds      int
-	KubeDumpIntervalSeconds      int
-	PerceptorDumpIntervalSeconds int
-	HubDumpPauseSeconds          int
+	UseInClusterConfig            bool
+	Port                          int
+	PrometheusPort                int
+	BlackDuckClientTimeoutSeconds int
+	KubeDumpIntervalSeconds       int
+	PerceptorDumpIntervalSeconds  int
+	BlackDuckDumpPauseSeconds     int
 }
 
-// MainOpssightConfigMap ...
+// MainOpssightConfigMap stores the opssight configmap
 type MainOpssightConfigMap struct {
-	Perceiver   PerceiverConfig
-	Hub         HubConfig
-	Perceptor   PerceptorConfig
-	Scanner     ScannerConfig
-	ImageFacade ImageFacadeConfig
-	Skyfire     SkyfireConfig
+	Perceiver   *PerceiverConfig
+	BlackDuck   *BlackDuckConfig
+	Perceptor   *PerceptorConfig
+	Scanner     *ScannerConfig
+	ImageFacade *ImageFacadeConfig
+	Skyfire     *SkyfireConfig
 	LogLevel    string
 }
 
@@ -135,6 +123,7 @@ func (cm *MainOpssightConfigMap) horizonConfigMap(name string, namespace string,
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
+	configMap.AddLabels(map[string]string{"name": name, "app": "opssight"})
 	configMap.AddData(map[string]string{filename: configMapString})
 
 	return configMap, nil

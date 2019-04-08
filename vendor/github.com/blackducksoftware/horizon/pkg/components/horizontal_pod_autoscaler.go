@@ -25,7 +25,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // HorizontalPodAutoscaler defines the HorizontalPodAutoscaler component
@@ -88,4 +91,10 @@ func (hpa *HorizontalPodAutoscaler) RemoveLabels(remove []string) {
 	for _, k := range remove {
 		hpa.obj.Labels = util.RemoveElement(hpa.obj.Labels, k)
 	}
+}
+
+// ToKube returns the kubernetes version of the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) ToKube() (runtime.Object, error) {
+	wrapper := &types.HorizontalPodAutoscalerWrapper{HPA: *hpa.obj}
+	return converters.Convert_Koki_HPA_to_Kube(wrapper)
 }

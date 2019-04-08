@@ -27,7 +27,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ClusterRoleBinding defines the cluster role binding component
@@ -121,4 +124,10 @@ func (crb *ClusterRoleBinding) AddRoleRef(config api.RoleRefConfig) {
 		Kind:     config.Kind,
 		Name:     types.Name(config.Name),
 	}
+}
+
+// ToKube returns the kubernetes version of the cluster role binding
+func (crb *ClusterRoleBinding) ToKube() (runtime.Object, error) {
+	wrapper := &types.ClusterRoleBindingWrapper{ClusterRoleBinding: *crb.obj}
+	return converters.Convert_Koki_ClusterRoleBinding_to_Kube(wrapper)
 }

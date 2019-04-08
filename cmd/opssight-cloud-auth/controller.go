@@ -23,7 +23,6 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -31,7 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/blackducksoftware/synopsys-operator/pkg/opssight"
+	opssightapi "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
 	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -180,29 +179,18 @@ func (c *controller) getTokenPassword(tokenEndPoint string, tokenAccessToken str
 	return strdata, nil
 }
 
-func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace string, name string, tokenType string) error {
-	cm, err := util.GetConfigMap(c.kubeClient, namespace, name)
-	if err != nil {
-		return fmt.Errorf("unable to get the %s config map in %s namespace", name, namespace)
-	}
-
-	opsssightData := opssight.MainOpssightConfigMap{}
-
-	err = json.Unmarshal([]byte(cm.Data["opssight.json"]), &opsssightData)
-	if err != nil {
-		return fmt.Errorf("unable to unmarshal config map json: %s", err.Error())
-	}
-
+func (c *controller) updateOpsSightWithAuthToken(opssightClient *opssightclientset.Clientset, opssight *opssightapi.OpsSight, tokens []AuthToken, tokenType string) error {
 	for _, token := range tokens {
 		endPoint := c.getTokenEndpoint(token.Endpoint)
-		for i := range opsssightData.ImageFacade.PrivateDockerRegistries {
-			if strings.EqualFold(endPoint, opsssightData.ImageFacade.PrivateDockerRegistries[i].URL) {
+		for i := range opssight.Spec.ScannerPod.ImageFacade.InternalRegistries {
+			if strings.EqualFold(endPoint, opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL) {
 				log.Infof("found %s url in opssight private registries", endPoint)
 				strdata, err := c.getTokenPassword(endPoint, token.AccessToken, tokenType)
 				if err != nil {
-					log.Error(err)
+					log.Errorf("unable to get the token password for %s because %+v", endPoint, err)
+					continue
 				}
-				opsssightData.ImageFacade.PrivateDockerRegistries[i].Password = strdata
+				opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].Password = strdata
 			}
 		}
 	}
@@ -212,60 +200,30 @@ func (c *controller) updateConfigMapWithAuthToken(tokens []AuthToken, namespace 
 	// different account id than the used one
 
 	if strings.EqualFold(tokenType, "ECR") {
-		for i := range opsssightData.ImageFacade.PrivateDockerRegistries {
+		for i := range opssight.Spec.ScannerPod.ImageFacade.InternalRegistries {
 			isRegistryExists := false
 			for _, token := range tokens {
 				endPoint := c.getTokenEndpoint(token.Endpoint)
 
-				if strings.EqualFold(endPoint, opsssightData.ImageFacade.PrivateDockerRegistries[i].URL) {
+				if strings.EqualFold(endPoint, opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL) {
 					isRegistryExists = true
 					break
 				}
 			}
 
-			if !isRegistryExists && len(tokens) > 0 && strings.HasSuffix(opsssightData.ImageFacade.PrivateDockerRegistries[i].URL, "amazonaws.com") {
+			if !isRegistryExists && len(tokens) > 0 && strings.HasSuffix(opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL, "amazonaws.com") {
 				strdata, err := c.getTokenPassword(tokens[0].Endpoint, tokens[0].AccessToken, tokenType)
 				if err != nil {
-					log.Error(err)
+					log.Errorf("unable to get the token password for %s because %+v", tokens[0].Endpoint, err)
+					continue
 				}
-				opsssightData.ImageFacade.PrivateDockerRegistries[i].Password = strdata
+				opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].Password = strdata
 			}
 		}
 	}
 
-	log.Infof("opsssightData: %+v", opsssightData)
-	jsonBytes, err := json.Marshal(opsssightData)
-	if err != nil {
-		return fmt.Errorf("unable to marshal json: %s", err.Error())
-	}
-
-	cm.Data["opssight.json"] = string(jsonBytes)
-
-	err = util.UpdateConfigMap(c.kubeClient, namespace, cm)
-	if err != nil {
-		return fmt.Errorf("unable to update the %s config map in %s namespace", name, namespace)
-	}
-	log.Infof("updated the %s config map in %s namespace successfully", name, namespace)
-	return nil
-}
-
-func (c *controller) patchOpsSightReplicationController(namespace string, name string, replicas int) error {
-	// Get the replication controllers
-	rc, err := util.GetReplicationController(c.kubeClient, namespace, name)
-	if err != nil {
-		return fmt.Errorf("unable to find %s replication controller in %s namespace because %+v", name, namespace, err)
-	}
-
-	log.Infof("found %s replication controller in %s namespace successfully", name, namespace)
-
-	r := rc.DeepCopy()
-	r.Spec.Replicas = util.IntToInt32(replicas)
-	err = util.PatchReplicationController(c.kubeClient, *rc, *r)
-	if err != nil {
-		return fmt.Errorf("unable to patch %s replication controller with replicas %d in %s namespace because %+v", name, replicas, namespace, err)
-	}
-	log.Infof("patched the %s replication controller with replicas=%d in %s namespace successfully", name, replicas, namespace)
-	return nil
+	_, err := util.UpdateOpsSight(opssightClient, opssight.Spec.Namespace, opssight)
+	return err
 }
 
 func (c *controller) updateAuthTokens() error {
@@ -287,22 +245,10 @@ func (c *controller) updateAuthTokens() error {
 		}
 		for _, opssight := range opssights.Items {
 			log.Debugf("new tokens for %s provider is %+v", tokenGenerator.Name, newTokens)
-			err = c.updateConfigMapWithAuthToken(newTokens, opssight.Spec.Namespace, "opssight", tokenGenerator.Name)
+			err = c.updateOpsSightWithAuthToken(opsSightClient, &opssight, newTokens, tokenGenerator.Name)
 			if err != nil {
 				log.Error(err)
 				continue
-			}
-
-			imageFacadeRCName := opssight.Spec.ScannerPod.Name
-			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, imageFacadeRCName, 0)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-
-			err = c.patchOpsSightReplicationController(opssight.Spec.Namespace, imageFacadeRCName, 1)
-			if err != nil {
-				log.Error(err)
 			}
 		}
 	}

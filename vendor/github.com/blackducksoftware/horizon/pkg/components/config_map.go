@@ -25,7 +25,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ConfigMap defines the config map component
@@ -36,8 +39,8 @@ type ConfigMap struct {
 // NewConfigMap creates a ConfigMap object
 func NewConfigMap(config api.ConfigMapConfig) *ConfigMap {
 	c := &types.ConfigMap{
-		Version: config.APIVersion,
-		Cluster: config.ClusterName,
+		Version:   config.APIVersion,
+		Cluster:   config.ClusterName,
 		Name:      config.Name,
 		Namespace: config.Namespace,
 	}
@@ -90,4 +93,10 @@ func (c *ConfigMap) RemoveData(remove []string) {
 	for _, k := range remove {
 		c.obj.Data = util.RemoveElement(c.obj.Data, k)
 	}
+}
+
+// ToKube returns the kubernetes version of the config map
+func (c *ConfigMap) ToKube() (runtime.Object, error) {
+	wrapper := &types.ConfigMapWrapper{ConfigMap: *c.obj}
+	return converters.Convert_Koki_ConfigMap_to_Kube_v1_ConfigMap(wrapper)
 }

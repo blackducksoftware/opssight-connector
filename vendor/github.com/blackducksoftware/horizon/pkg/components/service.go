@@ -29,9 +29,11 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
 	"github.com/koki/short/util/intbool"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -248,4 +250,10 @@ func (s *Service) RemoveLoadBalancer() {
 	}
 
 	s.obj.SetLoadBalancer(&ingress)
+}
+
+// ToKube returns the kubernetes version of the service
+func (s *Service) ToKube() (runtime.Object, error) {
+	wrapper := &types.ServiceWrapper{Service: *s.obj}
+	return converters.Convert_Koki_Service_To_Kube_v1_Service(wrapper)
 }

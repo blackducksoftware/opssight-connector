@@ -21,7 +21,7 @@ package v1
 import (
 	v1 "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
 	scheme "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned/scheme"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -37,11 +37,11 @@ type OpsSightsGetter interface {
 type OpsSightInterface interface {
 	Create(*v1.OpsSight) (*v1.OpsSight, error)
 	Update(*v1.OpsSight) (*v1.OpsSight, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.OpsSight, error)
-	List(opts meta_v1.ListOptions) (*v1.OpsSightList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.OpsSight, error)
+	List(opts metav1.ListOptions) (*v1.OpsSightList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.OpsSight, err error)
 	OpsSightExpansion
 }
@@ -61,7 +61,7 @@ func newOpsSights(c *SynopsysV1Client, namespace string) *opsSights {
 }
 
 // Get takes name of the opsSight, and returns the corresponding opsSight object, and an error if there is any.
-func (c *opsSights) Get(name string, options meta_v1.GetOptions) (result *v1.OpsSight, err error) {
+func (c *opsSights) Get(name string, options metav1.GetOptions) (result *v1.OpsSight, err error) {
 	result = &v1.OpsSight{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -74,7 +74,7 @@ func (c *opsSights) Get(name string, options meta_v1.GetOptions) (result *v1.Ops
 }
 
 // List takes label and field selectors, and returns the list of OpsSights that match those selectors.
-func (c *opsSights) List(opts meta_v1.ListOptions) (result *v1.OpsSightList, err error) {
+func (c *opsSights) List(opts metav1.ListOptions) (result *v1.OpsSightList, err error) {
 	result = &v1.OpsSightList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -86,7 +86,7 @@ func (c *opsSights) List(opts meta_v1.ListOptions) (result *v1.OpsSightList, err
 }
 
 // Watch returns a watch.Interface that watches the requested opsSights.
-func (c *opsSights) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *opsSights) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -121,7 +121,7 @@ func (c *opsSights) Update(opsSight *v1.OpsSight) (result *v1.OpsSight, err erro
 }
 
 // Delete takes name of the opsSight and deletes it. Returns an error if one occurs.
-func (c *opsSights) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *opsSights) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("opssights").
@@ -132,7 +132,7 @@ func (c *opsSights) Delete(name string, options *meta_v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *opsSights) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *opsSights) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("opssights").

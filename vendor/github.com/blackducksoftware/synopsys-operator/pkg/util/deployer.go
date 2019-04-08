@@ -118,6 +118,14 @@ func (i *DeployerHelper) addSecrets(list []*components.Secret) {
 	}
 }
 
+func (i *DeployerHelper) addPVCs(list []*components.PersistentVolumeClaim) {
+	if len(list) > 0 {
+		for _, p := range list {
+			i.Deployer.AddPVC(p)
+		}
+	}
+}
+
 func (i *DeployerHelper) addDefaultController(namespace string) {
 	i.Deployer.AddController("Pod List Controller", NewPodListController(namespace))
 }
@@ -139,6 +147,7 @@ func (i *DeployerHelper) PreDeploy(components *api.ComponentList, namespace stri
 		i.addCRBs(components.ClusterRoleBindings)
 		i.addDeploys(components.Deployments)
 		i.addSecrets(components.Secrets)
+		i.addPVCs(components.PersistentVolumeClaims)
 		i.addDefaultController(namespace)
 	}
 }

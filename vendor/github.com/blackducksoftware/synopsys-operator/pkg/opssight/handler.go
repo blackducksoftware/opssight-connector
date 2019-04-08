@@ -23,9 +23,10 @@ package opssight
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
-	opssight_v1 "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
+	opssightapi "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
 	hubclientset "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned"
 	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
 	"github.com/blackducksoftware/synopsys-operator/pkg/protoform"
@@ -47,70 +48,94 @@ type HandlerInterface interface {
 	ObjectUpdated(objOld, objNew interface{})
 }
 
+// State contains the state of the OpsSight
+type State string
+
+// DesiredState contains the desired state of the OpsSight
+type DesiredState string
+
+const (
+	// Creating is used when OpsSight is installing or deploying
+	Creating State = "Creating"
+	// Running is used when OpsSight is running
+	Running State = "Running"
+	// Stopping is used when OpsSight is about to stip
+	Stopping State = "Stopping"
+	// Stopped is used when OpsSight to be stopped
+	Stopped State = "Stopped"
+	// Updating is used when OpsSight is about to updating
+	Updating State = "Updating"
+	// Error is used when OpsSight deployment errored out
+	Error State = "Error"
+
+	// Start is used when OpsSight deployment to be created or updated
+	Start DesiredState = "Start"
+	// Stop is used when OpsSight deployment to be stopped
+	Stop DesiredState = "Stop"
+)
+
 // Handler will store the configuration that is required to initiantiate the informers callback
 type Handler struct {
-	Config            *protoform.Config
-	KubeConfig        *rest.Config
-	Clientset         *kubernetes.Clientset
-	OpsSightClientset *opssightclientset.Clientset
-	Defaults          *opssight_v1.OpsSightSpec
-	Namespace         string
-	OSSecurityClient  *securityclient.SecurityV1Client
-	RouteClient       *routeclient.RouteV1Client
-	HubClient         *hubclientset.Clientset
+	Config           *protoform.Config
+	KubeConfig       *rest.Config
+	KubeClient       *kubernetes.Clientset
+	OpsSightClient   *opssightclientset.Clientset
+	Defaults         *opssightapi.OpsSightSpec
+	Namespace        string
+	OSSecurityClient *securityclient.SecurityV1Client
+	RouteClient      *routeclient.RouteV1Client
+	HubClient        *hubclientset.Clientset
 }
 
 // ObjectCreated will be called for create opssight events
 func (h *Handler) ObjectCreated(obj interface{}) {
 	if err := h.handleObjectCreated(obj); err != nil {
-		log.Errorf("unable to handle object created: %s", err.Error())
+		log.Errorf("handle object created: %s", err.Error())
 	}
 }
 
 func (h *Handler) handleObjectCreated(obj interface{}) error {
 	recordEvent("objectCreated")
-	log.Debugf("objectCreated: %+v", obj)
-	opssightv1, ok := obj.(*opssight_v1.OpsSight)
+	// log.Debugf("objectCreated: %+v", obj)
+	opssight, ok := obj.(*opssightapi.OpsSight)
 	if !ok {
-		return errors.Errorf("unable to cast")
-	}
-	if !strings.EqualFold(opssightv1.Spec.State, "") {
-		return nil // ??? why nil?
-	}
-	newSpec := opssightv1.Spec
-	defaultSpec := h.Defaults
-	err := mergo.Merge(&newSpec, defaultSpec)
-	if err != nil {
-		recordError("unable to merge objects")
-		h.updateState("error", "error", err.Error(), opssightv1)
-		return errors.Annotate(err, "unable to merge objects")
-	}
-	bytes, err := json.Marshal(newSpec)
-	log.Debugf("merged opssight details: %+v", newSpec)
-	log.Debugf("opssight json (%+v): %s", err, string(bytes))
-
-	opssightv1.Spec = newSpec
-	opssightv1, err = h.updateState("pending", "creating", "", opssightv1)
-	if err != nil {
-		recordError("unable to update state")
-		return errors.Annotate(err, "unable to update state")
-	}
-	opssightCreator := NewCreater(h.Config, h.KubeConfig, h.Clientset, h.OpsSightClientset, h.OSSecurityClient, h.RouteClient, h.HubClient)
-
-	err = opssightCreator.CreateOpsSight(&opssightv1.Spec)
-	if err != nil {
-		recordError("unable to create opssight")
-		h.updateState("error", "error", err.Error(), opssightv1)
-		return errors.Annotatef(err, "unable to create opssight %s", opssightv1.Name)
+		recordError("unable to cast opssight object")
+		return errors.Errorf("unable to cast opssight object")
 	}
 
-	opssightv1, err = util.GetOpsSight(h.OpsSightClientset, opssightv1.Name, opssightv1.Name)
-	if err != nil {
-		recordError("unable to get opssight")
-		return errors.Annotatef(err, "unable to get the opssight %s", opssightv1.Name)
-	}
+	if strings.EqualFold(opssight.Spec.DesiredState, string(Start)) && strings.EqualFold(opssight.Status.State, "") {
+		log.Debugf("inside creation event of opssight %s", opssight.Spec.Namespace)
+		newSpec := opssight.Spec
+		defaultSpec := h.Defaults
+		err := mergo.Merge(&newSpec, defaultSpec)
+		if err != nil {
+			recordError("unable to merge default and new objects")
+			h.updateState(Error, err.Error(), opssight)
+			return errors.Annotate(err, "unable to merge default and new objects")
+		}
 
-	h.updateState("running", "running", "", opssightv1)
+		bytes, err := json.Marshal(newSpec)
+		log.Debugf("merged opssight details: %+v", newSpec)
+		log.Debugf("opssight json (%+v): %s", err, string(bytes))
+
+		opssight.Spec = newSpec
+		opssight, err = h.updateState(Creating, "", opssight)
+		if err != nil {
+			recordError("unable to update state")
+			return errors.Annotate(err, "unable to update state")
+		}
+
+		opssightCreator := NewCreater(h.Config, h.KubeConfig, h.KubeClient, h.OpsSightClient, h.OSSecurityClient, h.RouteClient, h.HubClient)
+		err = opssightCreator.CreateOpsSight(opssight)
+		if err != nil {
+			recordError("unable to create opssight")
+			h.updateState(Error, err.Error(), opssight)
+			return errors.Annotatef(err, "create opssight %s", opssight.Name)
+		}
+		h.updateState(Running, "", opssight)
+	} else {
+		h.ObjectUpdated(nil, obj)
+	}
 	return nil
 }
 
@@ -118,7 +143,7 @@ func (h *Handler) handleObjectCreated(obj interface{}) error {
 func (h *Handler) ObjectDeleted(name string) {
 	recordEvent("objectDeleted")
 	log.Debugf("objectDeleted: %+v", name)
-	opssightCreator := NewCreater(h.Config, h.KubeConfig, h.Clientset, h.OpsSightClientset, h.OSSecurityClient, h.RouteClient, h.HubClient)
+	opssightCreator := NewCreater(h.Config, h.KubeConfig, h.KubeClient, h.OpsSightClient, h.OSSecurityClient, h.RouteClient, h.HubClient)
 	err := opssightCreator.DeleteOpsSight(name)
 	if err != nil {
 		log.Errorf("unable to delete opssight: %v", err)
@@ -129,17 +154,86 @@ func (h *Handler) ObjectDeleted(name string) {
 // ObjectUpdated will be called for update opssight events
 func (h *Handler) ObjectUpdated(objOld, objNew interface{}) {
 	recordEvent("objectUpdated")
-	log.Debugf("objectUpdated: %+v", objNew)
+	// log.Debugf("objectUpdated: %+v", objNew)
+	opssight, ok := objNew.(*opssightapi.OpsSight)
+	if !ok {
+		recordError("unable to cast opssight object")
+		log.Error("Unable to cast OpsSight object")
+		return
+	}
+
+	switch strings.ToUpper(opssight.Spec.DesiredState) {
+	case "STOP":
+		opssightCreator := NewCreater(h.Config, h.KubeConfig, h.KubeClient, h.OpsSightClient, h.OSSecurityClient, h.RouteClient, h.HubClient)
+		opssight, err := h.updateState(Stopping, "", opssight)
+		if err != nil {
+			recordError("unable to update state")
+			log.Error(errors.Annotate(err, "unable to update stopping state"))
+			return
+		}
+		err = opssightCreator.StopOpsSight(&opssight.Spec)
+		if err != nil {
+			recordError("unable to stop opssight")
+			h.updateState(Error, err.Error(), opssight)
+			log.Errorf("handle object stop: %s", err.Error())
+			return
+		}
+		opssight, err = util.GetOpsSight(h.OpsSightClient, opssight.Spec.Namespace, opssight.Spec.Namespace)
+		if err != nil {
+			recordError("unable to get opssight")
+			log.Error(errors.Annotate(err, "unable to get opssight"))
+			return
+		}
+		_, err = h.updateState(Stopped, "", opssight)
+		if err != nil {
+			recordError("unable to update state")
+			log.Error(errors.Annotate(err, "unable to update stopped state"))
+			return
+		}
+	case "START":
+		opssightCreator := NewCreater(h.Config, h.KubeConfig, h.KubeClient, h.OpsSightClient, h.OSSecurityClient, h.RouteClient, h.HubClient)
+		opssight, err := h.updateState(Updating, "", opssight)
+		if err != nil {
+			recordError("unable to update state")
+			log.Error(errors.Annotate(err, "unable to update updating state"))
+			return
+		}
+		err = opssightCreator.UpdateOpsSight(opssight)
+		if err != nil {
+			recordError("unable to update opssight")
+			h.updateState(Error, err.Error(), opssight)
+			log.Errorf("handle object update: %s", err.Error())
+			return
+		}
+		opssight, err = util.GetOpsSight(h.OpsSightClient, opssight.Spec.Namespace, opssight.Spec.Namespace)
+		if err != nil {
+			recordError("unable to get opssight")
+			log.Error(errors.Annotate(err, "unable to get opssight"))
+			return
+		}
+		_, err = h.updateState(Running, "", opssight)
+		if err != nil {
+			recordError("unable to update state")
+			log.Error(errors.Annotate(err, "unable to update running state"))
+			return
+		}
+	default:
+		recordError("unable to find the desired state value")
+		log.Errorf("unable to handle object update due to %+v", fmt.Errorf("desired state value is not expected"))
+		return
+	}
 }
 
-func (h *Handler) updateState(specState string, statusState string, errorMessage string, opssight *opssight_v1.OpsSight) (*opssight_v1.OpsSight, error) {
-	opssight.Spec.State = specState
-	opssight.Status.State = statusState
+func (h *Handler) updateState(state State, errorMessage string, opssight *opssightapi.OpsSight) (*opssightapi.OpsSight, error) {
+	opssight.Status.State = string(state)
 	opssight.Status.ErrorMessage = errorMessage
 	opssight, err := h.updateOpsSightObject(opssight)
-	return opssight, errors.Annotate(err, "unable to update the state of opssight object")
+	if err != nil {
+		return nil, errors.Annotate(err, "unable to update the state of opssight object")
+	}
+	return opssight, nil
 }
 
-func (h *Handler) updateOpsSightObject(obj *opssight_v1.OpsSight) (*opssight_v1.OpsSight, error) {
-	return h.OpsSightClientset.SynopsysV1().OpsSights(h.Namespace).Update(obj)
+func (h *Handler) updateOpsSightObject(obj *opssightapi.OpsSight) (*opssightapi.OpsSight, error) {
+	return h.OpsSightClient.SynopsysV1().OpsSights(h.Namespace).Update(obj)
 }

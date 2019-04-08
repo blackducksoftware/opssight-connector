@@ -31,10 +31,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DownloadScanClient ...
-func DownloadScanClient(osType OSType, cliRootPath string, hubHost string, hubUser string, hubPassword string, hubPort int, timeout time.Duration) (*ScanClientInfo, error) {
+// DownloadScanClient downloads the Black Duck scan client
+func DownloadScanClient(osType OSType, cliRootPath string, hubScheme string, hubHost string, hubUser string, hubPassword string, hubPort int, timeout time.Duration) (*ScanClientInfo, error) {
 	// 1. instantiate hub client
-	hubBaseURL := fmt.Sprintf("https://%s:%d", hubHost, hubPort)
+	hubBaseURL := fmt.Sprintf("%s://%s:%d", hubScheme, hubHost, hubPort)
 	hubClient, err := hubclient.NewWithSession(hubBaseURL, hubclient.HubClientDebugTimings, timeout)
 	if err != nil {
 		return nil, errors.Annotatef(err, "unable to instantiate hub client")

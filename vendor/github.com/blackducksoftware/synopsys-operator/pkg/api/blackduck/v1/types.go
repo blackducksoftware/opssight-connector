@@ -39,18 +39,21 @@ type Blackduck struct {
 
 // BlackduckView will be used to populate information for the Blackduck UI.
 type BlackduckView struct {
-	Clones           map[string]string `json:"clones"`
-	StorageClasses   map[string]string `json:"storageClasses"`
-	CertificateNames []string          `json:"certificateNames"`
-	Environs         []string          `json:"environs"`
-	ContainerTags    []string          `json:"containerTags"`
-	Version          string            `json:"version"`
+	Clones            map[string]string `json:"clones"`
+	StorageClasses    map[string]string `json:"storageClasses"`
+	CertificateNames  []string          `json:"certificateNames"`
+	Environs          []string          `json:"environs"`
+	ContainerTags     []string          `json:"containerTags"`
+	Version           string            `json:"version"`
+	SupportedVersions []string          `json:"supportedVersions"`
 }
 
 // BlackduckSpec will be CRD Blackduck definition's Spec
 type BlackduckSpec struct {
 	Namespace         string                    `json:"namespace"`
 	Size              string                    `json:"size"`
+	Version           string                    `json:"version"`
+	ExposeService     string                    `json:"exposeService"`
 	DbPrototype       string                    `json:"dbPrototype,omitempty"`
 	ExternalPostgres  *PostgresExternalDBConfig `json:"externalPostgres,omitempty"`
 	PVCStorageClass   string                    `json:"pvcStorageClass,omitempty"`

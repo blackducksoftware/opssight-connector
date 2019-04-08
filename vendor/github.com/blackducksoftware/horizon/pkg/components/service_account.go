@@ -28,7 +28,10 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ServiceAccount defines the service account component
@@ -129,4 +132,10 @@ func (sa *ServiceAccount) RemoveObjectReference(config api.ObjectReferenceConfig
 			break
 		}
 	}
+}
+
+// ToKube returns the kubernetes version of the service account
+func (sa *ServiceAccount) ToKube() (runtime.Object, error) {
+	wrapper := &types.ServiceAccountWrapper{ServiceAccount: *sa.obj}
+	return converters.Convert_Koki_ServiceAccount_to_Kube_ServiceAccount(wrapper)
 }

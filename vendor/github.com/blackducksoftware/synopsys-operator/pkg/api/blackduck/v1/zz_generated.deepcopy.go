@@ -91,12 +91,8 @@ func (in *BlackduckSpec) DeepCopyInto(out *BlackduckSpec) {
 	*out = *in
 	if in.ExternalPostgres != nil {
 		in, out := &in.ExternalPostgres, &out.ExternalPostgres
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(PostgresExternalDBConfig)
-			**out = **in
-		}
+		*out = new(PostgresExternalDBConfig)
+		**out = **in
 	}
 	if in.PVC != nil {
 		in, out := &in.PVC, &out.PVC

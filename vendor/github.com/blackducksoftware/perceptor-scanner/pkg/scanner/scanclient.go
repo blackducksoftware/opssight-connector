@@ -30,13 +30,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	hubScheme = "https"
-)
-
 // ScanClientInterface ...
 type ScanClientInterface interface {
-	Scan(host string, path string, projectName string, versionName string, scanName string) error
+	Scan(scheme string, host string, port int, username string, password string, path string, projectName string, versionName string, scanName string) error
 	//ScanCliSh(job ScanJob) error
 	//ScanDockerSh(job ScanJob) error
 }
@@ -44,23 +40,18 @@ type ScanClientInterface interface {
 // ScanClient implements ScanClientInterface using
 // the Black Duck hub and scan client programs.
 type ScanClient struct {
-	username       string
-	password       string
-	port           int
-	scanClientInfo *ScanClientInfo
+	tlsVerification bool
+	scanClientInfo  *ScanClientInfo
 }
 
 // NewScanClient requires hub login credentials
-func NewScanClient(username string, password string, port int) (*ScanClient, error) {
-	sc := ScanClient{
-		username:       username,
-		password:       password,
-		port:           port,
-		scanClientInfo: nil}
+func NewScanClient(tlsVerification bool) (*ScanClient, error) {
+	sc := ScanClient{tlsVerification: tlsVerification}
 	return &sc, nil
 }
 
-func (sc *ScanClient) ensureScanClientIsDownloaded(host string) error {
+// ensureScanClientIsDownloaded will make sure that the Black Duck scan client is Downloaded for scanning
+func (sc *ScanClient) ensureScanClientIsDownloaded(scheme string, host string, port int, username string, password string) error {
 	if sc.scanClientInfo != nil {
 		return nil
 	}
@@ -68,10 +59,11 @@ func (sc *ScanClient) ensureScanClientIsDownloaded(host string) error {
 	scanClientInfo, err := DownloadScanClient(
 		OSTypeLinux,
 		cliRootPath,
+		scheme,
 		host,
-		sc.username,
-		sc.password,
-		sc.port,
+		username,
+		password,
+		port,
 		time.Duration(300)*time.Second)
 	if err != nil {
 		return errors.Annotate(err, "unable to download scan client")
@@ -80,9 +72,17 @@ func (sc *ScanClient) ensureScanClientIsDownloaded(host string) error {
 	return nil
 }
 
-// Scan ...
-func (sc *ScanClient) Scan(host string, path string, projectName string, versionName string, scanName string) error {
-	if err := sc.ensureScanClientIsDownloaded(host); err != nil {
+// getTLSVerification return the TLS verfiication of the Black Duck host
+func (sc *ScanClient) getTLSVerification() string {
+	if sc.tlsVerification {
+		return ""
+	}
+	return "--insecure"
+}
+
+// Scan executes the Black Duck scan for the input artifact
+func (sc *ScanClient) Scan(scheme string, host string, port int, username string, password string, path string, projectName string, versionName string, scanName string) error {
+	if err := sc.ensureScanClientIsDownloaded(scheme, host, port, username, password); err != nil {
 		return errors.Annotate(err, "cannot run scan cli")
 	}
 	startTotal := time.Now()
@@ -99,18 +99,18 @@ func (sc *ScanClient) Scan(host string, path string, projectName string, version
 		"-Done-jar.jar.path="+scanCliImplJarPath,
 		"-jar", scanCliJarPath,
 		"--host", host,
-		"--port", fmt.Sprintf("%d", sc.port),
-		"--scheme", hubScheme,
+		"--port", fmt.Sprintf("%d", port),
+		"--scheme", scheme,
 		"--project", projectName,
 		"--release", versionName,
-		"--username", sc.username,
+		"--username", username,
 		"--name", scanName,
-		"--insecure",
+		sc.getTLSVerification(),
 		"-v",
 		path)
-	cmd.Env = append(cmd.Env, fmt.Sprintf("BD_HUB_PASSWORD=%s", sc.password))
-
 	log.Infof("running command %+v for path %s\n", cmd, path)
+	cmd.Env = append(cmd.Env, fmt.Sprintf("BD_HUB_PASSWORD=%s", password))
+
 	startScanClient := time.Now()
 	stdoutStderr, err := cmd.CombinedOutput()
 
@@ -130,8 +130,8 @@ func (sc *ScanClient) Scan(host string, path string, projectName string, version
 // ScanSh invokes scan.cli.sh
 // example:
 // 	BD_HUB_PASSWORD=??? ./bin/scan.cli.sh --host ??? --port 443 --scheme https --username sysadmin --insecure --name ??? --release ??? --project ??? ???.tar
-func (sc *ScanClient) ScanSh(host string, path string, projectName string, versionName string, scanName string) error {
-	if err := sc.ensureScanClientIsDownloaded(host); err != nil {
+func (sc *ScanClient) ScanSh(hubScheme string, host string, port int, username string, password string, path string, projectName string, versionName string, scanName string) error {
+	if err := sc.ensureScanClientIsDownloaded(hubScheme, host, port, username, password); err != nil {
 		return errors.Annotate(err, "cannot run scan.cli.sh")
 	}
 	startTotal := time.Now()
@@ -142,19 +142,19 @@ func (sc *ScanClient) ScanSh(host string, path string, projectName string, versi
 		"-Dblackduck.scan.cli.benice=true",
 		"-Dblackduck.scan.skipUpdate=true",
 		"-Done-jar.silent=true",
-		//		"-Done-jar.jar.path="+scanCliImplJarPath,
-		//		"-jar", scanCliJarPath,
+		// "-Done-jar.jar.path="+scanCliImplJarPath,
+		// "-jar", scanCliJarPath,
 		"--host", host,
-		"--port", fmt.Sprintf("%d", sc.port),
+		"--port", fmt.Sprintf("%d", port),
 		"--scheme", hubScheme,
 		"--project", projectName,
 		"--release", versionName,
-		"--username", sc.username,
+		"--username", username,
 		"--name", scanName,
-		"--insecure",
+		sc.getTLSVerification(),
 		"-v",
 		path)
-	cmd.Env = append(cmd.Env, fmt.Sprintf("BD_HUB_PASSWORD=%s", sc.password))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("BD_HUB_PASSWORD=%s", password))
 
 	log.Infof("running command %+v for path %s\n", cmd, path)
 	startScanClient := time.Now()

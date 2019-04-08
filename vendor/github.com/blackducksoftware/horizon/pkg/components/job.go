@@ -28,7 +28,12 @@ import (
 	"github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/util"
 
+	"github.com/koki/short/converter/converters"
 	"github.com/koki/short/types"
+
+	batchv1 "k8s.io/api/batch/v1"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Job defines the job component
@@ -141,4 +146,16 @@ func (j *Job) AddMatchExpressionsSelector(add string) {
 // RemoveMatchExpressionsSelector removes the match expressions selector from the job
 func (j *Job) RemoveMatchExpressionsSelector() {
 	j.obj.Selector.Shorthand = ""
+}
+
+// ToKube returns the kubernetes version of the job
+func (j *Job) ToKube() (runtime.Object, error) {
+	wrapper := &types.JobWrapper{Job: *j.obj}
+	jobObj, err := converters.Convert_Koki_Job_to_Kube_Job(wrapper)
+	if err != nil {
+		return nil, err
+	}
+
+	kubeObj := jobObj.(*batchv1.Job)
+	return kubeObj, nil
 }
