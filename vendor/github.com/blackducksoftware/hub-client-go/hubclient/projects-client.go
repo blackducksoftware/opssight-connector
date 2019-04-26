@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/blackducksoftware/hub-client-go/hubapi"
+	"github.com/juju/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -41,7 +42,7 @@ func (c *Client) ListProjects(options *hubapi.GetListOptions) (*hubapi.ProjectLi
 	err := c.HttpGetJSON(projectsURL, &projectList, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve project list")
+		return nil, errors.Annotate(err, "Error trying to retrieve project list")
 	}
 
 	return &projectList, nil
@@ -53,7 +54,7 @@ func (c *Client) GetProject(link hubapi.ResourceLink) (*hubapi.Project, error) {
 	err := c.HttpGetJSON(link.Href, &project, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve a project")
+		return nil, errors.Annotate(err, "Error trying to retrieve a project")
 	}
 
 	return &project, nil
@@ -65,7 +66,7 @@ func (c *Client) CreateProject(projectRequest *hubapi.ProjectRequest) (string, e
 	location, err := c.HttpPostJSON(projectsURL, projectRequest, "application/json", 201)
 
 	if err != nil {
-		return location, TraceHubClientError(err)
+		return location, errors.Trace(err)
 	}
 
 	if location == "" {
@@ -98,7 +99,7 @@ func (c *Client) ListProjectVersions(link hubapi.ResourceLink, options *hubapi.G
 	err := c.HttpGetJSON(projectVersionsURL, &versionList, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve project version list")
+		return nil, errors.Annotate(err, "Error trying to retrieve project version list")
 	}
 
 	return &versionList, nil
@@ -110,7 +111,7 @@ func (c *Client) GetProjectVersion(link hubapi.ResourceLink) (*hubapi.ProjectVer
 	err := c.HttpGetJSON(link.Href, &projectVersion, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve a project version")
+		return nil, errors.Annotate(err, "Error trying to retrieve a project version")
 	}
 
 	return &projectVersion, nil
@@ -121,7 +122,7 @@ func (c *Client) CreateProjectVersion(link hubapi.ResourceLink, projectVersionRe
 	location, err := c.HttpPostJSON(link.Href, projectVersionRequest, "application/json", 201)
 
 	if err != nil {
-		return location, TraceHubClientError(err)
+		return location, errors.Trace(err)
 	}
 
 	if location == "" {
@@ -137,7 +138,7 @@ func (c *Client) GetProjectVersionRiskProfile(link hubapi.ResourceLink) (*hubapi
 	err := c.HttpGetJSON(link.Href, &riskProfile, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve a project version risk profile")
+		return nil, errors.Annotate(err, "Error trying to retrieve a project version risk profile")
 	}
 
 	return &riskProfile, nil
@@ -149,7 +150,7 @@ func (c *Client) GetProjectVersionPolicyStatus(link hubapi.ResourceLink) (*hubap
 	err := c.HttpGetJSON(link.Href, &policyStatus, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve a project version policy status")
+		return nil, errors.Annotate(err, "Error trying to retrieve a project version policy status")
 	}
 
 	return &policyStatus, nil
@@ -160,7 +161,7 @@ func (c *Client) AssignUserToProject(link hubapi.ResourceLink, userAssignmentReq
 	location, err := c.HttpPostJSON(link.Href, userAssignmentRequest, "application/json", 201)
 
 	if err != nil {
-		return location, TraceHubClientError(err)
+		return location, errors.Trace(err)
 	}
 
 	if location == "" {

@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/blackducksoftware/hub-client-go/hubapi"
+	"github.com/juju/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -34,21 +35,8 @@ func (c *Client) ListPolicyRules(options *hubapi.GetListOptions) (*hubapi.Policy
 	err := c.HttpGetJSON(policyRuleURL, &policyRuleList, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve policy rule list")
+		return nil, errors.Annotate(err, "Error trying to retrieve policy rule list")
 	}
-
-	rules := []hubapi.PolicyRule{}
-	for _, pr := range policyRuleList.Items {
-		link := hubapi.ResourceLink{
-			Href: pr.Meta.Href,
-		}
-		rule, err := c.GetPolicyRule(link)
-		if err != nil {
-			return nil, err
-		}
-		rules = append(rules, *rule)
-	}
-	policyRuleList.Items = rules
 
 	return &policyRuleList, nil
 }
@@ -58,7 +46,7 @@ func (c *Client) GetPolicyRule(link hubapi.ResourceLink) (*hubapi.PolicyRule, er
 	err := c.HttpGetJSON(link.Href, &policyRule, 200)
 
 	if err != nil {
-		return nil, AnnotateHubClientError(err, "Error trying to retrieve a policy rule")
+		return nil, errors.Annotate(err, "Error trying to retrieve a policy rule")
 	}
 
 	return &policyRule, nil
@@ -69,7 +57,7 @@ func (c *Client) CreatePolicyRule(policyRuleRequest *hubapi.PolicyRuleRequest) (
 	location, err := c.HttpPostJSON(policyRuleURL, policyRuleRequest, "application/json", 201)
 
 	if err != nil {
-		return location, TraceHubClientError(err)
+		return location, errors.Trace(err)
 	}
 
 	if location == "" {

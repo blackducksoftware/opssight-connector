@@ -22,30 +22,33 @@ under the License.
 package imagefacade
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"strings"
 
-	"github.com/blackducksoftware/perceptor-scanner/pkg/docker"
+	"github.com/blackducksoftware/perceptor-scanner/pkg/common"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-// ImageFacadeConfig ...
+// ImageFacadeConfig maps to the ImageFacade config of the input configmap
 type ImageFacadeConfig struct {
 	// These allow images to be pulled from registries that require authentication
-	PrivateDockerRegistries []docker.RegistryAuth
-
-	CreateImagesOnly bool
-	Port             int
+	PrivateDockerRegistries []*common.RegistryAuth
+	ImagePullerType         string
+	CreateImagesOnly        bool
+	Port                    int
 }
 
-// Config ...
+// Config return the Image Facade configurations
 type Config struct {
 	LogLevel    string
-	ImageFacade ImageFacadeConfig
+	ImageFacade *ImageFacadeConfig
 }
 
-// GetLogLevel ...
+// GetLogLevel returns the log level
 func (config *Config) GetLogLevel() (log.Level, error) {
 	return log.ParseLevel(config.LogLevel)
 }
@@ -60,7 +63,6 @@ func GetConfig(configPath string) (*Config, error) {
 		viper.SetEnvPrefix("PCP")
 		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-		viper.BindEnv("ImageFacade_PrivateDockerRegistries")
 		viper.BindEnv("ImageFacade_Port")
 		viper.BindEnv("ImageFacade_CreateImagesOnly")
 		viper.BindEnv("LogLevel")
@@ -78,5 +80,33 @@ func GetConfig(configPath string) (*Config, error) {
 		return nil, errors.Annotate(err, "failed to unmarshal config")
 	}
 
+	err = config.getPrivateDockerRegistries()
+	if err != nil {
+		return nil, err
+	}
+
 	return config, nil
+}
+
+// getPrivateDockerRegistries will get the private Docker registries credential
+func (config *Config) getPrivateDockerRegistries() error {
+	credentials, ok := os.LookupEnv("securedRegistries.json")
+	if !ok {
+		return fmt.Errorf("cannot find Private Docker Registries: environment variable securedRegistries not found")
+	}
+
+	privateDockerRegistries := map[string]*common.RegistryAuth{}
+	err := json.Unmarshal([]byte(credentials), &privateDockerRegistries)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshall Private Docker registries due to %+v", err)
+	}
+
+	dockerRegistries := []*common.RegistryAuth{}
+	for _, privatedockerRegistry := range privateDockerRegistries {
+		dockerRegistries = append(dockerRegistries, privatedockerRegistry)
+	}
+
+	config.ImageFacade.PrivateDockerRegistries = dockerRegistries
+
+	return nil
 }

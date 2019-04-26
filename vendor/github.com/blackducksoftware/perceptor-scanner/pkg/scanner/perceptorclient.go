@@ -36,20 +36,20 @@ const (
 	finishedScanPath = "finishedscan"
 )
 
-// PerceptorClientInterface ...
+// PerceptorClientInterface provides an interface for accessing the perceptor
 type PerceptorClientInterface interface {
 	GetNextImage() (*api.NextImage, error)
 	PostFinishedScan(scan *api.FinishedScanClientJob) error
 }
 
-// PerceptorClient ...
+// PerceptorClient stores the Perceptor configurations
 type PerceptorClient struct {
 	Resty *resty.Client
 	Host  string
 	Port  int
 }
 
-// NewPerceptorClient ...
+// NewPerceptorClient return the Perceptor client configuration
 func NewPerceptorClient(host string, port int) *PerceptorClient {
 	restyClient := resty.New()
 	restyClient.SetRetryCount(3)
@@ -62,7 +62,7 @@ func NewPerceptorClient(host string, port int) *PerceptorClient {
 	}
 }
 
-// GetNextImage ...
+// GetNextImage return the next image or artifact from the queue
 func (pc *PerceptorClient) GetNextImage() (*api.NextImage, error) {
 	url := fmt.Sprintf("http://%s:%d/%s", pc.Host, pc.Port, nextImagePath)
 	nextImage := api.NextImage{}
@@ -71,7 +71,7 @@ func (pc *PerceptorClient) GetNextImage() (*api.NextImage, error) {
 		SetHeader("Content-Type", "application/json").
 		SetResult(&nextImage).
 		Post(url)
-	log.Debugf("received resp %+v and error %+v from url %s", resp, err, url)
+	log.Debugf("received error %+v from url %s", err, url)
 	recordHTTPStats(nextImagePath, resp.StatusCode())
 	if err != nil {
 		recordScannerError("unable to get next image")
@@ -83,7 +83,7 @@ func (pc *PerceptorClient) GetNextImage() (*api.NextImage, error) {
 	return &nextImage, nil
 }
 
-// PostFinishedScan ...
+// PostFinishedScan updates the perceptor about the Black Duck scan
 func (pc *PerceptorClient) PostFinishedScan(scan *api.FinishedScanClientJob) error {
 	url := fmt.Sprintf("http://%s:%d/%s", pc.Host, pc.Port, finishedScanPath)
 	log.Debugf("about to issue post request %+v to url %s", scan, url)

@@ -54,7 +54,7 @@ func NewPerceptorPodFromKubePod(kubePod *v1.Pod) (*perceptorapi.Pod, error) {
 			}
 			_, tag := docker.ParseImageString(newCont.Image)
 			priority := 1
-			addedCont := perceptorapi.NewContainer(*perceptorapi.NewImage(name, tag, sha, &priority), newCont.Name)
+			addedCont := perceptorapi.NewContainer(*perceptorapi.NewImage(name, tag, sha, &priority, "", ""), newCont.Name)
 			containers = append(containers, *addedCont)
 		} else {
 			metrics.RecordError("pod_mapper", "empty kubernetes imageID")

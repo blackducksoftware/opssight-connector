@@ -24,26 +24,29 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[constraint]]
+  name = "github.com/blackducksoftware/synopsys-operator"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.3"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.3"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor-scanner"
   #branch = "master"
-  version = "v2.2.0"
+  version = "v2.2.3"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor-skyfire"
   #branch = "hammerSandbox"
-  version = "v2.2.0"
+  version = "v2.2.3"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
@@ -56,6 +59,34 @@
 [[constraint]]
   name = "github.com/sirupsen/logrus"
   version = "1.2.0"
+
+[[override]]
+  name = "github.com/prometheus/client_golang"
+  version = "=0.9.0-pre1"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "8.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/aws/aws-sdk-go"
+
+[[override]]
+  name = "k8s.io/api"
+  revision = "d216743eed4c3242b85d094d2a589f41a793652d"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  revision = "94ebb086c69b9fec4ddbfb6a1433d28ecca9292b"
+
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  revision = "e798125b68b9e62ce80c2b4f1157e96da7b3b1c7"
+
+[[override]]
+  name = "k8s.io/kube-aggregator"
+  revision = "29c7989121fc30258c674f31aff9bbd393dfab5e"
 
 [[override]]
   source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"

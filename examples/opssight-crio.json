@@ -1,0 +1,95 @@
+{
+  "apiVersion": "synopsys.com/v1",
+  "kind": "OpsSight",
+  "metadata": {
+    "name": "opssight-test"
+  },
+  "spec": {
+    "namespace": "opssight-test",
+    "desiredState": "start",
+    "perceptor": {
+      "name": "opssight-core",
+      "port": 3001,
+      "image": "docker.io/blackducksoftware/opssight-core:2.2.3",
+      "checkForStalledScansPauseHours": 999999,
+      "stalledScanClientTimeoutHours": 999999,
+      "modelMetricsPauseSeconds": 15,
+      "unknownImagePauseMilliseconds": 15000,
+      "clientTimeoutMilliseconds": 100000
+    },
+    "scannerPod": {
+      "name": "opssight-scanner",
+      "scanner": {
+        "name": "opssight-scanner",
+        "port": 3003,
+        "image": "docker.io/blackducksoftware/opssight-scanner:2.2.3",
+        "clientTimeoutSeconds": 600
+      },
+      "imageFacade": {
+        "name": "opssight-image-getter",
+        "port": 3004,
+        "internalRegistries": [],
+        "image": "docker.io/blackducksoftware/opssight-image-getter:2.2.3",
+        "serviceAccount": "opssight-scanner",
+        "imagePullerType": "skopeo"
+      },
+      "replicaCount": 1
+    },
+    "perceiver": {
+      "enableImagePerceiver": false,
+      "enablePodPerceiver": true,
+      "port": 3002,
+      "imagePerceiver": {
+        "name": "opssight-image-processor",
+        "image": "docker.io/blackducksoftware/opssight-image-processor:2.2.3"
+      },
+      "podPerceiver": {
+        "name": "opssight-pod-processor",
+        "image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.3",
+        "namespaceFilter": ""
+      },
+      "serviceAccount": "opssight-processor",
+      "annotationIntervalSeconds": 30,
+      "dumpIntervalMinutes": 30
+    },
+    "prometheus": {
+      "name": "prometheus",
+      "port": 9090,
+      "image": "docker.io/prom/prometheus:v2.1.0"
+    },
+    "enableSkyfire": false,
+    "skyfire": {
+      "image": "gcr.io/saas-hub-stg/blackducksoftware/pyfire:master",
+      "name": "skyfire",
+      "port": 3005,
+      "prometheusPort": 3006,
+      "serviceAccount": "skyfire",
+      "hubClientTimeoutSeconds": 120,
+      "hubDumpPauseSeconds": 240,
+      "kubeDumpIntervalSeconds": 60,
+      "perceptorDumpIntervalSeconds": 60
+    },
+    "enableMetrics": true,
+    "defaultCPU": "300m",
+    "defaultMem": "1300Mi",
+    "scannerCpu": "300m",
+    "scannerMem": "1300Mi",
+    "logLevel": "debug",
+    "secretName": "blackduck",
+    "blackduck": {
+      "initialCount": 0,
+      "maxCount": 0,
+      "connectionsEnvironmentVariableName": "blackduck.json",
+      "tlsVerification": false,
+      "blackduckSpec": {
+        "licenseKey": "<BLACKDUCK_LICENSE_KEY>",
+        "persistentStorage": false,
+        "certificateName": "default",
+        "dbPrototype": "",
+        "size": "small",
+        "type": "worker",
+        "version": "2019.4.1"
+      }
+    }
+  }
+}

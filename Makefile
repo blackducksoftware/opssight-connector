@@ -39,7 +39,7 @@ $(BINARY):
 ifeq ($(MAKECMDGOALS),${LOCAL_TARGET})
 	cd cmd/$@; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@
 else
-	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ golang:1.9 go build -o $@
+	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ golang:1.11 go build -o $@
 endif
 	mv cmd/$@/$@ ${OUTDIR}
 
@@ -57,9 +57,7 @@ container_prep: ${OUTDIR} $(BINARY)
 			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 			cp ${CURRENT_DIR}/cmd/$p/* ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/opssight-core; \
 		else \
-			if [[ $(p) != $(OPSSIGHT_CORE) ]]; then \
-				mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; \
-			fi; \
+			mkdir -p ${CURRENT_DIR}/${BUILDDIR}/$p; \
 			cp ${CURRENT_DIR}/cmd/$p/* LICENSE ${OUTDIR}/$p ${CURRENT_DIR}/${BUILDDIR}/$p; \
 		fi; \
 	 )
@@ -72,7 +70,7 @@ push: container
 	)
 
 test:
-	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.9 go test ./pkg/...
+	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.11 go test ./pkg/...
 
 clean:
 	rm -rf ${OUTDIR} ${BUILDDIR}
