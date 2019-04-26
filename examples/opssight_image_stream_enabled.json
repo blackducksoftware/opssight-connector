@@ -78,7 +78,7 @@
     "blackduck": {
       "initialCount": 0,
       "maxCount": 0,
-      "connectionsEnvironmentVariableName": "perceptor.json",
+      "connectionsEnvironmentVariableName": "blackduck.json",
       "tlsVerification": false,
       "blackduckSpec": {
         "licenseKey": "<BLACKDUCK_LICENSE_KEY>",
@@ -87,23 +87,7 @@
         "dbPrototype": "",
         "size": "small",
         "type": "worker",
-        "version": "2018.12.2",
-        "imageRegistries": [
-          "docker.io/blackducksoftware/blackduck-authentication:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-documentation:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-jobrunner:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-registration:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-scan:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-webapp:2018.12.2",
-          "docker.io/blackducksoftware/blackduck-cfssl:1.0.0",
-          "docker.io/blackducksoftware/blackduck-logstash:1.0.2",
-          "docker.io/blackducksoftware/blackduck-nginx:1.0.0",
-          "docker.io/blackducksoftware/blackduck-solr:1.0.0",
-          "docker.io/blackducksoftware/blackduck-zookeeper:1.0.0"
-        ],
-        "environs": [
-          "HUB_VERSION:2018.12.2"
-        ]
+        "version": "2019.4.1"
       }
     }
   }
