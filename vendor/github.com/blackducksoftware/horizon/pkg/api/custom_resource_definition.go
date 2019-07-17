@@ -27,71 +27,25 @@ import (
 
 // CRDConfig defines the configuration for a custom defined resource
 type CRDConfig struct {
-	Name                              string
-	Namespace                         string
-	APIVersion                        string
-	ClusterName                       string
-	Group                             string
-	CRDVersion                        string
-	Plural                            string
-	Singular                          string
-	ShortNames                        []string
-	Kind                              string
-	ListKind                          string
-	Categories                        []string
-	ScaleSubresources                 *CRDScaleSubresources
-	Versions                          []CRDVersion
-	Validation                        *apiext.JSONSchemaProps
-	Scope                             CRDScopeType
-	ExtraColumns                      []CRDColumn
-	ConversionStrategy                CRDConversionStraegyType
-	ConversionWebhookURL              *string
-	ConversionWebhookServiceNamespace string
-	ConversionWebhookServiceName      string
-	ConversionWebhookServicePath      *string
-	ConversionWebhookCABundle         []byte
-	ConversionReviewVersions          []string
+	Name        string
+	Namespace   string
+	APIVersion  string
+	ClusterName string
+	Group       string
+	CRDVersion  string
+	Plural      string
+	Singular    string
+	ShortNames  []string
+	Kind        string
+	ListKind    string
+	Validation  *apiext.JSONSchemaProps
+	Scope       CRDScopeType
 }
 
-// CRDScopeType defines the scope of the custom resource definition
+// CRDScopeType defines the scope of the custom defined resource
 type CRDScopeType int
 
 const (
-	CRDClusterScoped CRDScopeType = iota + 1
+	CRDClusterScoped CRDScopeType = iota
 	CRDNamespaceScoped
-)
-
-// CRDVersion defines a version for a custom resource definition
-type CRDVersion struct {
-	Name              string
-	Enabled           bool
-	Storage           bool
-	Schema            *apiext.JSONSchemaProps
-	ScaleSubresources *CRDScaleSubresources
-	ExtraColumns      []CRDColumn
-}
-
-// CRDScaleSubresources defines how to serve the scale subresource for the scale subresource of custom resources
-type CRDScaleSubresources struct {
-	SpecPath     string
-	StatusPath   string
-	SelectorPath *string
-}
-
-// CRDColumn specifies a column for server side printing of a custom resource definition
-type CRDColumn struct {
-	Name        string
-	Type        string
-	Format      string
-	Description string
-	Priority    int32
-	Path        string
-}
-
-// CRDConversionStraegyType defines the type of conversion strategy for the custom resource
-type CRDConversionStraegyType int
-
-const (
-	CRDConversionStraegyTypeNone CRDConversionStraegyType = iota + 1
-	CRDConversionStraegyTypeWebhook
 )

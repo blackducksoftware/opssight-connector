@@ -22,162 +22,89 @@ under the License.
 package components
 
 import (
-	"reflect"
-
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CustomResourceDefinition defines a custom resource
 type CustomResourceDefinition struct {
-	*v1beta1.CustomResourceDefinition
-	MetadataFuncs
+	obj *types.CustomResourceDefinition
 }
 
 // NewCustomResourceDefintion returns a CustomerResrouceDefinition object
 func NewCustomResourceDefintion(config api.CRDConfig) *CustomResourceDefinition {
-	version := "apiextensions/v1beta1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
+	name := types.CRDName{
+		Plural:     config.Plural,
+		Singular:   config.Singular,
+		ShortNames: config.ShortNames,
+		Kind:       config.Kind,
+		ListKind:   config.ListKind,
 	}
-
-	crdVersions := []v1beta1.CustomResourceDefinitionVersion{}
-	for _, v := range config.Versions {
-		crdVersion := v1beta1.CustomResourceDefinitionVersion{
-			Name:    v.Name,
-			Served:  v.Enabled,
-			Storage: v.Storage,
-		}
-
-		if v.Schema != nil {
-			crdVersion.Schema = &v1beta1.CustomResourceValidation{
-				OpenAPIV3Schema: v.Schema,
-			}
-		}
-
-		if v.ScaleSubresources != nil {
-			crdVersion.Subresources = createSubresources(v.ScaleSubresources)
-		}
-
-		crdVersion.AdditionalPrinterColumns = createColumns(v.ExtraColumns)
-		crdVersions = append(crdVersions, crdVersion)
+	meta := types.CRDMeta{
+		Group:   config.Group,
+		Version: config.CRDVersion,
+		CRDName: name,
 	}
-
-	crd := v1beta1.CustomResourceDefinition{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "CustomResourceDefinition",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
-		Spec: v1beta1.CustomResourceDefinitionSpec{
-			Group:   config.Group,
-			Version: config.CRDVersion,
-			Names: v1beta1.CustomResourceDefinitionNames{
-				Plural:     config.Plural,
-				Singular:   config.Singular,
-				ShortNames: config.ShortNames,
-				Kind:       config.Kind,
-				ListKind:   config.ListKind,
-				Categories: config.Categories,
-			},
-			Subresources:             createSubresources(config.ScaleSubresources),
-			Versions:                 crdVersions,
-			AdditionalPrinterColumns: createColumns(config.ExtraColumns),
-			Conversion:               createConversionStrategy(config),
-		},
-	}
-
-	if config.Validation != nil {
-		crd.Spec.Validation = &v1beta1.CustomResourceValidation{
-			OpenAPIV3Schema: config.Validation,
-		}
+	crd := &types.CustomResourceDefinition{
+		Version:    config.APIVersion,
+		Cluster:    config.ClusterName,
+		Name:       config.Name,
+		Namespace:  config.Namespace,
+		Validation: config.Validation,
+		CRDMeta:    meta,
 	}
 
 	switch config.Scope {
 	case api.CRDClusterScoped:
-		crd.Spec.Scope = v1beta1.ClusterScoped
+		crd.Scope = types.CRDClusterScoped
 	case api.CRDNamespaceScoped:
-		crd.Spec.Scope = v1beta1.NamespaceScoped
+		crd.Scope = types.CRDNamespaceScoped
 	}
 
-	return &CustomResourceDefinition{&crd, MetadataFuncs{&crd}}
+	return &CustomResourceDefinition{obj: crd}
 }
 
-func createSubresources(config *api.CRDScaleSubresources) *v1beta1.CustomResourceSubresources {
-	if config == nil {
-		return nil
-	}
+// GetObj returns the custom resource definition object in a format the deployer can use
+func (crd *CustomResourceDefinition) GetObj() *types.CustomResourceDefinition {
+	return crd.obj
+}
 
-	return &v1beta1.CustomResourceSubresources{
-		Scale: &v1beta1.CustomResourceSubresourceScale{
-			SpecReplicasPath:   config.SpecPath,
-			StatusReplicasPath: config.StatusPath,
-			LabelSelectorPath:  config.SelectorPath,
-		},
+// GetName returns the name of the custom resource definition
+func (crd *CustomResourceDefinition) GetName() string {
+	return crd.obj.Name
+}
+
+// AddAnnotations adds annotations to the custom resource definition
+func (crd *CustomResourceDefinition) AddAnnotations(new map[string]string) {
+	crd.obj.Annotations = util.MapMerge(crd.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the custom resource definition
+func (crd *CustomResourceDefinition) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		crd.obj.Annotations = util.RemoveElement(crd.obj.Annotations, k)
 	}
 }
 
-func createColumns(config []api.CRDColumn) []v1beta1.CustomResourceColumnDefinition {
-	columns := []v1beta1.CustomResourceColumnDefinition{}
-
-	for _, c := range config {
-		column := v1beta1.CustomResourceColumnDefinition{
-			Name:        c.Name,
-			Type:        c.Type,
-			Format:      c.Format,
-			Description: c.Description,
-			Priority:    c.Priority,
-			JSONPath:    c.Path,
-		}
-		columns = append(columns, column)
-	}
-
-	return columns
+// AddLabels adds labels to the custom resource definition
+func (crd *CustomResourceDefinition) AddLabels(new map[string]string) {
+	crd.obj.Labels = util.MapMerge(crd.obj.Labels, new)
 }
 
-func createConversionStrategy(config api.CRDConfig) *v1beta1.CustomResourceConversion {
-	strategy := &v1beta1.CustomResourceConversion{
-		ConversionReviewVersions: config.ConversionReviewVersions,
+// RemoveLabels removes labels from the custom resource definition
+func (crd *CustomResourceDefinition) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		crd.obj.Labels = util.RemoveElement(crd.obj.Labels, k)
 	}
-
-	if len(config.ConversionWebhookServiceNamespace) > 0 || len(config.ConversionWebhookServiceName) > 0 ||
-		len(config.ConversionWebhookCABundle) > 0 || config.ConversionWebhookServicePath != nil ||
-		config.ConversionWebhookURL != nil {
-		strategy.WebhookClientConfig = &v1beta1.WebhookClientConfig{
-			URL: config.ConversionWebhookURL,
-			Service: &v1beta1.ServiceReference{
-				Namespace: config.ConversionWebhookServiceNamespace,
-				Name:      config.ConversionWebhookServiceName,
-				Path:      config.ConversionWebhookServicePath,
-			},
-			CABundle: config.ConversionWebhookCABundle,
-		}
-	}
-
-	switch config.ConversionStrategy {
-	case api.CRDConversionStraegyTypeNone:
-		strategy.Strategy = v1beta1.NoneConverter
-	case api.CRDConversionStraegyTypeWebhook:
-		strategy.Strategy = v1beta1.WebhookConverter
-	}
-
-	if reflect.DeepEqual(strategy, &v1beta1.CustomResourceConversion{}) {
-		return nil
-	}
-
-	return strategy
 }
 
-// Deploy will deploy the custom resource definition to the cluster
-func (crd *CustomResourceDefinition) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd.CustomResourceDefinition)
-	return err
-}
-
-// Undeploy will remove the custom resource definition from the cluster
-func (crd *CustomResourceDefinition) Undeploy(res api.DeployerResources) error {
-	return res.KubeExtensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(crd.Name, &metav1.DeleteOptions{})
+// ToKube returns the kubernetes version of the custom resource definition
+func (crd *CustomResourceDefinition) ToKube() (runtime.Object, error) {
+	wrapper := &types.CRDWrapper{CRD: *crd.obj}
+	return converters.Convert_Koki_CRD_to_Kube(wrapper)
 }

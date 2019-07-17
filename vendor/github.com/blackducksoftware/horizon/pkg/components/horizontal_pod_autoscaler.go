@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Synopsys, Inc.
+Copyright (C) 2018 Synopsys, Inc.
 
 Licensej to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -23,53 +23,78 @@ package components
 
 import (
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/api/autoscaling/v1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // HorizontalPodAutoscaler defines the HorizontalPodAutoscaler component
 type HorizontalPodAutoscaler struct {
-	*v1.HorizontalPodAutoscaler
-	MetadataFuncs
+	obj *types.HorizontalPodAutoscaler
 }
 
 // NewHorizontalPodAutoscaler creates a HorizontalPodAutoscaler object
 func NewHorizontalPodAutoscaler(config api.HPAConfig) *HorizontalPodAutoscaler {
-	version := "autoscaling/v1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
+	ref := types.CrossVersionObjectReference{
+		Kind:       config.ScaleTargetRef.Kind,
+		Name:       config.ScaleTargetRef.Name,
+		APIVersion: config.ScaleTargetRef.APIVersion,
 	}
-
-	hpa := v1.HorizontalPodAutoscaler{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
-		Spec: v1.HorizontalPodAutoscalerSpec{
-			ScaleTargetRef: v1.CrossVersionObjectReference{
-				Kind:       config.ScaleTargetKind,
-				Name:       config.ScaleTargetName,
-				APIVersion: config.ScaleTargetAPIVersion,
-			},
+	hpa := &types.HorizontalPodAutoscaler{
+		Version:   config.APIVersion,
+		Cluster:   config.ClusterName,
+		Name:      config.Name,
+		Namespace: config.Namespace,
+		HorizontalPodAutoscalerSpec: types.HorizontalPodAutoscalerSpec{
+			ScaleTargetRef:                 ref,
 			MinReplicas:                    config.MinReplicas,
 			MaxReplicas:                    config.MaxReplicas,
 			TargetCPUUtilizationPercentage: config.TargetCPUUtilizationPercentage,
 		},
 	}
 
-	return &HorizontalPodAutoscaler{&hpa, MetadataFuncs{&hpa}}
+	return &HorizontalPodAutoscaler{obj: hpa}
 }
 
-// Deploy will deploy the horizontal pod autoscaler to the cluster
-func (hpa *HorizontalPodAutoscaler) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.AutoscalingV1().HorizontalPodAutoscalers(hpa.Namespace).Create(hpa.HorizontalPodAutoscaler)
-	return err
+// GetObj returns the horizontal pod autoscaler object in a format the deployer can use
+func (hpa *HorizontalPodAutoscaler) GetObj() *types.HorizontalPodAutoscaler {
+	return hpa.obj
 }
 
-// Undeploy will remove the horizontal pod autoscaler from the cluster
-func (hpa *HorizontalPodAutoscaler) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.AutoscalingV1().HorizontalPodAutoscalers(hpa.Namespace).Delete(hpa.Name, &metav1.DeleteOptions{})
+// GetName returns the name of the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) GetName() string {
+	return hpa.obj.Name
+}
+
+// AddAnnotations adds annotations to the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) AddAnnotations(new map[string]string) {
+	hpa.obj.Annotations = util.MapMerge(hpa.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		hpa.obj.Annotations = util.RemoveElement(hpa.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) AddLabels(new map[string]string) {
+	hpa.obj.Labels = util.MapMerge(hpa.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		hpa.obj.Labels = util.RemoveElement(hpa.obj.Labels, k)
+	}
+}
+
+// ToKube returns the kubernetes version of the horizontal pod autoscaler
+func (hpa *HorizontalPodAutoscaler) ToKube() (runtime.Object, error) {
+	wrapper := &types.HorizontalPodAutoscalerWrapper{HPA: *hpa.obj}
+	return converters.Convert_Koki_HPA_to_Kube(wrapper)
 }

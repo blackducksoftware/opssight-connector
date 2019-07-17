@@ -28,7 +28,7 @@ type DeploymentConfig struct {
 	Name                    string
 	Namespace               string
 	Replicas                *int32
-	Strategy                DeploymentStrategyType
+	Recreate                bool
 	MaxUnavailable          string
 	MaxExtra                string
 	MinReadySeconds         int32
@@ -36,10 +36,3 @@ type DeploymentConfig struct {
 	Paused                  bool
 	ProgressDeadlineSeconds *int32
 }
-
-type DeploymentStrategyType int
-
-const (
-	DeploymentStrategyTypeRecreate DeploymentStrategyType = iota + 1
-	DeploymentStrategyTypeRollingUpdate
-)

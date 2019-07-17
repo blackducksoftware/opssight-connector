@@ -25,116 +25,145 @@ import (
 	"fmt"
 
 	"github.com/blackducksoftware/horizon/pkg/api"
-
-	"k8s.io/api/core/v1"
+	"github.com/blackducksoftware/horizon/pkg/util"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PersistentVolumeClaim defines the persistent volume claim component
 type PersistentVolumeClaim struct {
-	*v1.PersistentVolumeClaim
-	MetadataFuncs
-	LabelSelectorFuncs
+	obj *types.PersistentVolumeClaim
 }
 
 // NewPersistentVolumeClaim creates a new PersistentVolumeClaim object
 func NewPersistentVolumeClaim(config api.PVCConfig) (*PersistentVolumeClaim, error) {
-	version := "v1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
-	}
-
-	size, err := resource.ParseQuantity(config.Size)
+	_, err := resource.ParseQuantity(config.Size)
 	if err != nil {
 		return nil, fmt.Errorf("invalid size: %v", err)
 	}
-
-	pvc := v1.PersistentVolumeClaim{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "PersistentVolumeClaim",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
-		Spec: v1.PersistentVolumeClaimSpec{
-			Resources: v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceStorage: size,
-				},
-			},
-			VolumeName:       config.VolumeName,
-			StorageClassName: config.Class,
-		},
+	pvc := &types.PersistentVolumeClaim{
+		Version:      config.APIVersion,
+		Cluster:      config.ClusterName,
+		Name:         config.Name,
+		Namespace:    config.Namespace,
+		StorageClass: config.Class,
+		Volume:       config.VolumeName,
+		Storage:      config.Size,
 	}
 
-	var volumeMode v1.PersistentVolumeMode
-	switch config.Mode {
-	case api.PVCModeBLock:
-		volumeMode = v1.PersistentVolumeBlock
-		pvc.Spec.VolumeMode = &volumeMode
-	case api.PVCModeFilesystem:
-		volumeMode = v1.PersistentVolumeFilesystem
-		pvc.Spec.VolumeMode = &volumeMode
-	}
+	return &PersistentVolumeClaim{obj: pvc}, nil
+}
 
-	if config.DataSourceAPIGroup != nil || len(config.DataSourceKind) != 0 || len(config.DataSourceName) != 0 {
-		pvc.Spec.DataSource = &v1.TypedLocalObjectReference{
-			APIGroup: config.DataSourceAPIGroup,
-			Kind:     config.DataSourceKind,
-			Name:     config.DataSourceName,
-		}
-	}
+// GetObj returns the PersistentVolumeClaim object in a format the deployer can use
+func (p *PersistentVolumeClaim) GetObj() *types.PersistentVolumeClaim {
+	return p.obj
+}
 
-	return &PersistentVolumeClaim{&pvc, MetadataFuncs{&pvc}, LabelSelectorFuncs{&pvc}}, nil
+// GetName returns the name of the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) GetName() string {
+	return p.obj.Name
+}
+
+// AddAnnotations adds annotations to the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) AddAnnotations(new map[string]string) {
+	p.obj.Annotations = util.MapMerge(p.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		p.obj.Annotations = util.RemoveElement(p.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) AddLabels(new map[string]string) {
+	p.obj.Labels = util.MapMerge(p.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		p.obj.Labels = util.RemoveElement(p.obj.Labels, k)
+	}
+}
+
+// AddMatchLabelsSelectors adds the given match label selectors to the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) AddMatchLabelsSelectors(new map[string]string) {
+	if p.obj.Selector == nil {
+		p.obj.Selector = &types.RSSelector{}
+	}
+	p.obj.Selector.Labels = util.MapMerge(p.obj.Selector.Labels, new)
+}
+
+// RemoveMatchLabelsSelectors removes the given match label selectors from the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) RemoveMatchLabelsSelectors(remove []string) {
+	for _, k := range remove {
+		p.obj.Selector.Labels = util.RemoveElement(p.obj.Selector.Labels, k)
+	}
+}
+
+// AddMatchExpressionsSelector will add match expressions selectors to the PersistentVolumeClaim.
+// It takes a string in the following form:
+// key <op> <value>
+// Where op can be:
+// = 	Equal to value ot should be one of the comma separated values
+// !=	Key should not be one of the comma separated values
+// If no op is provided, then the key should (or should not) exist
+// <key>	key should exist
+// !<key>	key should not exist
+func (p *PersistentVolumeClaim) AddMatchExpressionsSelector(add string) {
+	p.obj.Selector.Shorthand = add
+}
+
+// RemoveMatchExpressionsSelector removes the match expressions selector from the PersistentVolumeClaim
+func (p *PersistentVolumeClaim) RemoveMatchExpressionsSelector() {
+	p.obj.Selector.Shorthand = ""
 }
 
 // AddAccessMode will add an access mode to the persistent volume claim if the mode
 // doesn't already exist
 func (p *PersistentVolumeClaim) AddAccessMode(mode api.PVCAccessModeType) {
-	newMode := p.convertType(mode)
-	for _, m := range p.Spec.AccessModes {
-		if m == newMode {
+	shortMode := p.convertType(mode)
+	for _, m := range p.obj.AccessModes {
+		if m == shortMode {
 			return
 		}
 	}
 
-	p.Spec.AccessModes = append(p.Spec.AccessModes, newMode)
+	p.obj.AccessModes = append(p.obj.AccessModes, shortMode)
 }
 
 // RemoveAccessMode will remove an access mode from the persistent volume claim
 func (p *PersistentVolumeClaim) RemoveAccessMode(mode api.PVCAccessModeType) {
-	newMode := p.convertType(mode)
-	for l, m := range p.Spec.AccessModes {
-		if m == newMode {
-			p.Spec.AccessModes = append(p.Spec.AccessModes[:l], p.Spec.AccessModes[l+1:]...)
+	shortMode := p.convertType(mode)
+	for l, m := range p.obj.AccessModes {
+		if m == shortMode {
+			p.obj.AccessModes = append(p.obj.AccessModes[:l], p.obj.AccessModes[l+1:]...)
 			return
 		}
 	}
 }
 
-func (p *PersistentVolumeClaim) convertType(mode api.PVCAccessModeType) v1.PersistentVolumeAccessMode {
-	var m v1.PersistentVolumeAccessMode
+func (p *PersistentVolumeClaim) convertType(mode api.PVCAccessModeType) types.PersistentVolumeAccessMode {
+	var m types.PersistentVolumeAccessMode
 
 	switch mode {
 	case api.ReadWriteOnce:
-		m = v1.ReadWriteOnce
+		m = types.ReadWriteOnce
 	case api.ReadOnlyMany:
-		m = v1.ReadOnlyMany
+		m = types.ReadOnlyMany
 	case api.ReadWriteMany:
-		m = v1.ReadWriteMany
+		m = types.ReadWriteMany
 	}
 
 	return m
 }
 
-// Deploy will deploy the persistent volume claim to the cluster
-func (p *PersistentVolumeClaim) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.CoreV1().PersistentVolumeClaims(p.Namespace).Create(p.PersistentVolumeClaim)
-	return err
-}
-
-// Undeploy will remove the persistent volume claim from the cluster
-func (p *PersistentVolumeClaim) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.CoreV1().PersistentVolumeClaims(p.Namespace).Delete(p.Name, &metav1.DeleteOptions{})
+// ToKube returns the kubernetes version of the persistent volume claim
+func (p *PersistentVolumeClaim) ToKube() (interface{}, error) {
+	wrapper := &types.PersistentVolumeClaimWrapper{PersistentVolumeClaim: *p.obj}
+	return converters.Convert_Koki_PVC_to_Kube_PVC(wrapper)
 }

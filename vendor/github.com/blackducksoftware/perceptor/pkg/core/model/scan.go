@@ -21,9 +21,11 @@ under the License.
 
 package model
 
-// Scan denotes the status of the scan with vulnerability and policy violation of the status
+import "github.com/blackducksoftware/perceptor/pkg/hub"
+
+// Scan .....
 type Scan struct {
-	OverallStatus    string
+	OverallStatus    hub.PolicyStatusType
 	PolicyViolations int
 	Vulnerabilities  int
 }

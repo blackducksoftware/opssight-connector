@@ -23,94 +23,118 @@ package components
 
 import (
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/api/core/v1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/imdario/mergo"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Secret defines the secret component
 type Secret struct {
-	*v1.Secret
-	MetadataFuncs
+	obj *types.Secret
 }
 
 // NewSecret creates a Secret object
 func NewSecret(config api.SecretConfig) *Secret {
-	version := "v1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
-	}
-
-	s := v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Secret",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
+	s := &types.Secret{
+		Version:   config.APIVersion,
+		Cluster:   config.ClusterName,
+		Name:      config.Name,
+		Namespace: config.Namespace,
 	}
 
 	switch config.Type {
 	case api.SecretTypeOpaque:
-		s.Type = v1.SecretTypeOpaque
+		s.SecretType = types.SecretTypeOpaque
 	case api.SecretTypeServiceAccountToken:
-		s.Type = v1.SecretTypeServiceAccountToken
+		s.SecretType = types.SecretTypeServiceAccountToken
 	case api.SecretTypeDockercfg:
-		s.Type = v1.SecretTypeDockercfg
+		s.SecretType = types.SecretTypeDockercfg
 	case api.SecretTypeDockerConfigJSON:
-		s.Type = v1.SecretTypeDockerConfigJson
+		s.SecretType = types.SecretTypeDockerConfigJson
 	case api.SecretTypeBasicAuth:
-		s.Type = v1.SecretTypeBasicAuth
+		s.SecretType = types.SecretTypeBasicAuth
 	case api.SecretTypeSSHAuth:
-		s.Type = v1.SecretTypeSSHAuth
+		s.SecretType = types.SecretTypeSSHAuth
 	case api.SecretTypeTLS:
-		s.Type = v1.SecretTypeTLS
-	case api.SecretTypeBootstrapToken:
-		s.Type = v1.SecretTypeBootstrapToken
+		s.SecretType = types.SecretTypeTLS
 	}
 
-	return &Secret{&s, MetadataFuncs{&s}}
+	return &Secret{obj: s}
+}
+
+// GetObj returns the secret object in a format the deployer can use
+func (s *Secret) GetObj() *types.Secret {
+	return s.obj
+}
+
+// GetName returns the name of the secret
+func (s *Secret) GetName() string {
+	return s.obj.Name
+}
+
+// AddAnnotations adds annotations to the secret
+func (s *Secret) AddAnnotations(new map[string]string) {
+	s.obj.Annotations = util.MapMerge(s.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the secret
+func (s *Secret) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		s.obj.Annotations = util.RemoveElement(s.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the secret
+func (s *Secret) AddLabels(new map[string]string) {
+	s.obj.Labels = util.MapMerge(s.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the secret
+func (s *Secret) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		s.obj.Labels = util.RemoveElement(s.obj.Labels, k)
+	}
 }
 
 // AddStringData adds string data to the secret
 func (s *Secret) AddStringData(new map[string]string) {
-	if !(len(s.StringData) > 0) {
-		s.StringData = make(map[string]string)
+	if !(len(s.obj.StringData) > 0) {
+		s.obj.StringData = make(map[string]string)
 	}
-	mergo.Merge(&s.StringData, new, mergo.WithOverride)
+	s.obj.StringData = util.MapMerge(s.obj.StringData, new)
 }
 
 // RemoveStringData removes string data from the secret
 func (s *Secret) RemoveStringData(remove []string) {
 	for _, k := range remove {
-		delete(s.StringData, k)
+		s.obj.StringData = util.RemoveElement(s.obj.StringData, k)
 	}
 }
 
 // AddData adds data to the secret
 func (s *Secret) AddData(new map[string][]byte) {
-	if !(len(s.Data) > 0) {
-		s.Data = make(map[string][]byte)
+	if !(len(s.obj.Data) > 0) {
+		s.obj.Data = make(map[string][]byte)
 	}
-	mergo.Merge(&s.Data, new, mergo.WithOverride)
+	for k, v := range new {
+		s.obj.Data[k] = v
+	}
 }
 
 // RemoveData removes data from the secret
 func (s *Secret) RemoveData(remove []string) {
 	for _, k := range remove {
-		delete(s.Data, k)
+		if _, exists := s.obj.Data[k]; exists {
+			delete(s.obj.Data, k)
+		}
 	}
 }
 
-// Deploy will deploy the secret to the cluster
-func (s *Secret) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.CoreV1().Secrets(s.Namespace).Create(s.Secret)
-	return err
-}
-
-// Undeploy will remove the secret from the cluster
-func (s *Secret) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.CoreV1().Secrets(s.Namespace).Delete(s.Name, &metav1.DeleteOptions{})
+// ToKube returns the kubernetes version of the secret
+func (s *Secret) ToKube() (runtime.Object, error) {
+	wrapper := &types.SecretWrapper{Secret: *s.obj}
+	return converters.Convert_Koki_Secret_to_Kube_v1_Secret(wrapper)
 }

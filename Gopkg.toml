@@ -26,17 +26,17 @@
 
 [[constraint]]
   name = "github.com/blackducksoftware/synopsys-operator"
-  revision = "b54811d13dff96f949ac35275162cd4b0383883f"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
   #branch = "master"
   version = "v2.2.3"
 
-[[override]]
+[[constraint]]
   name = "github.com/blackducksoftware/perceptor"
   #branch = "master"
-  version = "v2.2.4"
+  version = "v2.2.3"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceptor-scanner"
