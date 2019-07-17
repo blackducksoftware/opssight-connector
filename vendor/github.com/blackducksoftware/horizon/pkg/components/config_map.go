@@ -23,80 +23,68 @@ package components
 
 import (
 	"github.com/blackducksoftware/horizon/pkg/api"
-	"github.com/blackducksoftware/horizon/pkg/util"
-
-	"github.com/koki/short/converter/converters"
-	"github.com/koki/short/types"
-
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/imdario/mergo"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // ConfigMap defines the config map component
 type ConfigMap struct {
-	obj *types.ConfigMap
+	*v1.ConfigMap
+	MetadataFuncs
 }
 
 // NewConfigMap creates a ConfigMap object
 func NewConfigMap(config api.ConfigMapConfig) *ConfigMap {
-	c := &types.ConfigMap{
-		Version:   config.APIVersion,
-		Cluster:   config.ClusterName,
-		Name:      config.Name,
-		Namespace: config.Namespace,
+	version := "v1"
+	if len(config.APIVersion) > 0 {
+		version = config.APIVersion
 	}
 
-	return &ConfigMap{obj: c}
-}
-
-// GetObj returns the config map object in a format the deployer
-// can use
-func (c *ConfigMap) GetObj() *types.ConfigMap {
-	return c.obj
-}
-
-// GetName returns the name of the config map
-func (c *ConfigMap) GetName() string {
-	return c.obj.Name
-}
-
-// AddAnnotations adds annotations to the config map
-func (c *ConfigMap) AddAnnotations(new map[string]string) {
-	c.obj.Annotations = util.MapMerge(c.obj.Annotations, new)
-}
-
-// RemoveAnnotations removes annotations from the config map
-func (c *ConfigMap) RemoveAnnotations(remove []string) {
-	for _, k := range remove {
-		c.obj.Annotations = util.RemoveElement(c.obj.Annotations, k)
+	c := v1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: version,
+		},
+		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
 	}
-}
 
-// AddLabels adds labels to the config map
-func (c *ConfigMap) AddLabels(new map[string]string) {
-	c.obj.Labels = util.MapMerge(c.obj.Labels, new)
-}
-
-// RemoveLabels removes labels from the config map
-func (c *ConfigMap) RemoveLabels(remove []string) {
-	for _, k := range remove {
-		c.obj.Labels = util.RemoveElement(c.obj.Labels, k)
-	}
+	return &ConfigMap{&c, MetadataFuncs{&c}}
 }
 
 // AddData adds key value pairs to the config map
 func (c *ConfigMap) AddData(new map[string]string) {
-	c.obj.Data = util.MapMerge(c.obj.Data, new)
+	_ = mergo.Merge(&c.Data, new, mergo.WithOverride)
 }
 
 // RemoveData removes the provided keys from the config map
 func (c *ConfigMap) RemoveData(remove []string) {
 	for _, k := range remove {
-		c.obj.Data = util.RemoveElement(c.obj.Data, k)
+		delete(c.Data, k)
 	}
 }
 
-// ToKube returns the kubernetes version of the config map
-func (c *ConfigMap) ToKube() (runtime.Object, error) {
-	wrapper := &types.ConfigMapWrapper{ConfigMap: *c.obj}
-	return converters.Convert_Koki_ConfigMap_to_Kube_v1_ConfigMap(wrapper)
+// AddBinaryData adds key value pairs to the config map
+func (c *ConfigMap) AddBinaryData(new map[string][]byte) {
+	_ = mergo.Merge(&c.BinaryData, new, mergo.WithOverride)
+}
+
+// RemoveBinaryData removes the provided keys from the config map
+func (c *ConfigMap) RemoveBinaryData(remove map[string][]byte) {
+	for k := range remove {
+		if _, exists := c.BinaryData[k]; exists {
+			delete(c.BinaryData, k)
+		}
+	}
+}
+
+// Deploy will deploy the config map to the cluster
+func (c *ConfigMap) Deploy(res api.DeployerResources) error {
+	_, err := res.KubeClient.CoreV1().ConfigMaps(c.Namespace).Create(c.ConfigMap)
+	return err
+}
+
+// Undeploy will remove the config map from the cluster
+func (c *ConfigMap) Undeploy(res api.DeployerResources) error {
+	return res.KubeClient.CoreV1().ConfigMaps(c.Namespace).Delete(c.Name, &metav1.DeleteOptions{})
 }

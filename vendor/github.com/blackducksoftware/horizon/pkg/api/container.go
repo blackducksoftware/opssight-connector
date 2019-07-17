@@ -38,19 +38,21 @@ type ContainerConfig struct {
 	ForceNonRoot             *bool
 	SELinux                  *SELinuxType
 	UID                      *int64
+	GID                      *int64
 	AllocateStdin            bool
 	StdinOnce                bool
 	AllocateTTY              bool
 	WorkingDirectory         string
 	TerminationMsgPath       string
 	TerminationMsgPolicy     TerminationMessagePolicyType
+	ProcMount                *ProcMountType
 }
 
 // PullPolicyType defines the type of pull policy
 type PullPolicyType int
 
 const (
-	PullAlways PullPolicyType = iota
+	PullAlways PullPolicyType = iota + 1
 	PullNever
 	PullIfNotPresent
 )
@@ -60,17 +62,9 @@ type PortConfig struct {
 	Name          string
 	Protocol      ProtocolType
 	IP            string
-	HostPort      string
-	ContainerPort string
+	HostPort      int32
+	ContainerPort int32
 }
-
-// ProtocolType defines the type of protocols
-type ProtocolType int
-
-const (
-	ProtocolTCP ProtocolType = iota
-	ProtocolUDP
-)
 
 // VolumeMountConfig defines the configuration for a volume mount
 type VolumeMountConfig struct {
@@ -78,17 +72,17 @@ type VolumeMountConfig struct {
 	Propagation *MountPropagationType
 	Name        string
 	SubPath     string
-	ReadOnly    *bool
+	ReadOnly    bool
 }
 
 // MountPropagationType defines the type of mount propagation
 // for the volume mount
-type MountPropagationType string
+type MountPropagationType int
 
 const (
-	MountPropagationHostToContainer MountPropagationType = "host-to-container"
-	MountPropagationBidirectional   MountPropagationType = "bidirectional"
-	MountPropagationNone            MountPropagationType = "none"
+	MountPropagationHostToContainer MountPropagationType = iota + 1
+	MountPropagationBidirectional
+	MountPropagationNone
 )
 
 // ProbeConfig defines the configuration for a probe
@@ -105,6 +99,20 @@ type ProbeConfig struct {
 type TerminationMessagePolicyType int
 
 const (
-	TerminationMessageReadFile TerminationMessagePolicyType = iota
+	TerminationMessageReadFile TerminationMessagePolicyType = iota + 1
 	TerminationMessageFallbackToLogsOnError
+)
+
+// VolumeDeviceConfig defines the configuration for a volume device
+type VolumeDeviceConfig struct {
+	Name string
+	Path string
+}
+
+// ProcMountType defines the type of proc mount to use for the container
+type ProcMountType int
+
+const (
+	ProcMountTypeDefault ProcMountType = iota + 1
+	ProcMountTypeUmasked
 )
