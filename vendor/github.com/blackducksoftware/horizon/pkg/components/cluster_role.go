@@ -23,18 +23,20 @@ package components
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/api/rbac/v1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ClusterRole defines the cluster role component
 type ClusterRole struct {
-	*v1.ClusterRole
-	MetadataFuncs
+	obj *types.ClusterRole
 }
 
 // NewClusterRole creates a ClusterRole object
@@ -43,21 +45,53 @@ func NewClusterRole(config api.ClusterRoleConfig) *ClusterRole {
 	if len(config.APIVersion) > 0 {
 		version = config.APIVersion
 	}
-
-	cr := v1.ClusterRole{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ClusterRole",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
+	cr := &types.ClusterRole{
+		Version:   version,
+		Name:      config.Name,
+		Cluster:   config.ClusterName,
+		Namespace: config.Namespace,
 	}
 
-	return &ClusterRole{&cr, MetadataFuncs{&cr}}
+	return &ClusterRole{obj: cr}
+}
+
+// GetObj will return the cluster role object in a format the deployer can use
+func (cr *ClusterRole) GetObj() *types.ClusterRole {
+	return cr.obj
+}
+
+// GetName will return the name of cluster role
+func (cr *ClusterRole) GetName() string {
+	return cr.obj.Name
+}
+
+// AddAnnotations adds annotations to the cluster role
+func (cr *ClusterRole) AddAnnotations(new map[string]string) {
+	cr.obj.Annotations = util.MapMerge(cr.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the cluster role
+func (cr *ClusterRole) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		cr.obj.Annotations = util.RemoveElement(cr.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the cluster role
+func (cr *ClusterRole) AddLabels(new map[string]string) {
+	cr.obj.Labels = util.MapMerge(cr.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the cluster role
+func (cr *ClusterRole) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		cr.obj.Labels = util.RemoveElement(cr.obj.Labels, k)
+	}
 }
 
 // AddPolicyRule will add a policy rule to the cluster role
 func (cr *ClusterRole) AddPolicyRule(config api.PolicyRuleConfig) {
-	r := v1.PolicyRule{
+	r := types.PolicyRule{
 		Verbs:           config.Verbs,
 		APIGroups:       config.APIGroups,
 		Resources:       config.Resources,
@@ -65,60 +99,43 @@ func (cr *ClusterRole) AddPolicyRule(config api.PolicyRuleConfig) {
 		NonResourceURLs: config.NonResourceURLs,
 	}
 
-	cr.Rules = append(cr.Rules, r)
+	cr.obj.Rules = append(cr.obj.Rules, r)
 }
 
 // RemovePolicyRule will remove a policy rule from the cluster role
 func (cr *ClusterRole) RemovePolicyRule(config api.PolicyRuleConfig) {
-	pr := v1.PolicyRule{
+	pr := types.PolicyRule{
 		Verbs:           config.Verbs,
 		APIGroups:       config.APIGroups,
 		Resources:       config.Resources,
 		ResourceNames:   config.ResourceNames,
 		NonResourceURLs: config.NonResourceURLs,
 	}
-
-	for l, r := range cr.Rules {
+	for l, r := range cr.obj.Rules {
 		if reflect.DeepEqual(r, pr) {
-			cr.Rules = append(cr.Rules[:l], cr.Rules[l+1:]...)
+			cr.obj.Rules = append(cr.obj.Rules[:l], cr.obj.Rules[l+1:]...)
 			break
 		}
 	}
 }
 
 // AddAggregationRule will add an aggregation rule to the cluster role
-func (cr *ClusterRole) AddAggregationRule(rule api.SelectorConfig) {
-	selector := createLabelSelector(rule)
-
-	if cr.AggregationRule == nil {
-		cr.AggregationRule = &v1.AggregationRule{
-			ClusterRoleSelectors: []metav1.LabelSelector{selector},
-		}
-	} else {
-		cr.AggregationRule.ClusterRoleSelectors = append(cr.AggregationRule.ClusterRoleSelectors, selector)
-	}
+func (cr *ClusterRole) AddAggregationRule(rule string) {
+	cr.obj.AggregationRule = append(cr.obj.AggregationRule, rule)
 }
 
 // RemoveAggregationRule will remove an aggregation rule from the cluster role
-func (cr *ClusterRole) RemoveAggregationRule(rule api.SelectorConfig) {
-	if cr.AggregationRule != nil {
-		selector := createLabelSelector(rule)
-		for l, r := range cr.AggregationRule.ClusterRoleSelectors {
-			if reflect.DeepEqual(r, selector) {
-				cr.AggregationRule.ClusterRoleSelectors = append(cr.AggregationRule.ClusterRoleSelectors[:l], cr.AggregationRule.ClusterRoleSelectors[l+1:]...)
-				break
-			}
+func (cr *ClusterRole) RemoveAggregationRule(rule string) {
+	for l, r := range cr.obj.AggregationRule {
+		if strings.Compare(r, rule) == 0 {
+			cr.obj.AggregationRule = append(cr.obj.AggregationRule[:l], cr.obj.AggregationRule[l+1:]...)
+			break
 		}
 	}
 }
 
-// Deploy will deploy the cluster role to the cluster
-func (cr *ClusterRole) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.RbacV1().ClusterRoles().Create(cr.ClusterRole)
-	return err
-}
-
-// Undeploy will remove the cluster role from the cluster
-func (cr *ClusterRole) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.RbacV1().ClusterRoles().Delete(cr.Name, &metav1.DeleteOptions{})
+// ToKube returns the kubernetes version of the cluster role
+func (cr *ClusterRole) ToKube() (runtime.Object, error) {
+	wrapper := &types.ClusterRoleWrapper{ClusterRole: *cr.obj}
+	return converters.Convert_Koki_ClusterRole_to_Kube(wrapper)
 }

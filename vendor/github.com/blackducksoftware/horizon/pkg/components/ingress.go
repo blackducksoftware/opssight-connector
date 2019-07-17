@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Synopsys, Inc.
+Copyright (C) 2018 Synopsys, Inc.
 
 Licensej to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -22,121 +22,129 @@ under the License.
 package components
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/api/extensions/v1beta1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Ingress defines the Ingress component
 type Ingress struct {
-	*v1beta1.Ingress
-	MetadataFuncs
+	obj *types.Ingress
 }
 
 // NewIngress creates an Ingress object
 func NewIngress(config api.IngressConfig) (*Ingress, error) {
-	version := "extensions/v1beta1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
+	i := &types.Ingress{
+		Version:     config.APIVersion,
+		Cluster:     config.ClusterName,
+		Name:        config.Name,
+		Namespace:   config.Namespace,
+		ServiceName: config.ServiceName,
 	}
 
-	i := v1beta1.Ingress{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "HorizontalPodAutoscaler",
-			APIVersion: version,
-		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
+	if len(config.ServicePort) > 0 {
+		i.ServicePort = createIntOrStr(config.ServicePort)
 	}
 
-	if len(config.ServiceName) > 0 || len(config.ServicePort) > 0 {
-		if len(config.ServiceName) == 0 || len(config.ServicePort) == 0 {
-			return nil, fmt.Errorf("both ServiceName and ServicePort are required")
-		}
-		port := createIntOrStr(config.ServicePort)
-		i.Spec.Backend = &v1beta1.IngressBackend{
-			ServiceName: config.ServiceName,
-			ServicePort: *port,
-		}
-	}
+	return &Ingress{obj: i}, nil
+}
 
-	return &Ingress{&i, MetadataFuncs{&i}}, nil
+// GetObj returns the ingress object in a format the deployer can use
+func (i *Ingress) GetObj() *types.Ingress {
+	return i.obj
+}
+
+// GetName returns the name of the ingress
+func (i *Ingress) GetName() string {
+	return i.obj.Name
+}
+
+// AddAnnotations adds annotations to the ingress
+func (i *Ingress) AddAnnotations(new map[string]string) {
+	i.obj.Annotations = util.MapMerge(i.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the ingress
+func (i *Ingress) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		i.obj.Annotations = util.RemoveElement(i.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the ingress
+func (i *Ingress) AddLabels(new map[string]string) {
+	i.obj.Labels = util.MapMerge(i.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the ingress
+func (i *Ingress) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		i.obj.Labels = util.RemoveElement(i.obj.Labels, k)
+	}
 }
 
 // AddTLS will add TLS configuration to the ingress
 func (i *Ingress) AddTLS(TLSConfig api.IngressTLSConfig) {
-	tls := v1beta1.IngressTLS{
+	tls := types.IngressTLS{
 		Hosts:      TLSConfig.Hosts,
 		SecretName: TLSConfig.SecretName,
 	}
-	i.Spec.TLS = append(i.Spec.TLS, tls)
+	i.obj.TLS = append(i.obj.TLS, tls)
 }
 
 // RemoveTLS will remove a TLS configuration from the ingress
 func (i *Ingress) RemoveTLS(TLSConfig api.IngressTLSConfig) {
-	for l, tls := range i.Spec.TLS {
+	for l, tls := range i.obj.TLS {
 		if strings.EqualFold(TLSConfig.SecretName, tls.SecretName) && reflect.DeepEqual(TLSConfig.Hosts, tls.Hosts) {
-			i.Spec.TLS = append(i.Spec.TLS[:l], i.Spec.TLS[l+1:]...)
+			i.obj.TLS = append(i.obj.TLS[:l], i.obj.TLS[l+1:]...)
 			break
 		}
 	}
 }
 
-// AddHostRule will add a host rule to the ingress
-func (i *Ingress) AddHostRule(config api.IngressHostRuleConfig) {
-	i.Spec.Rules = append(i.Spec.Rules, i.createHostRule(config))
+// AddRule will add a host rule to the ingress
+func (i *Ingress) AddRule(config api.IngressRuleConfig) {
+	i.obj.Rules = append(i.obj.Rules, i.createHostRule(config))
 }
 
-// RemoveHostRule will remove a host rule from the ingress
-func (i *Ingress) RemoveHostRule(config api.IngressHostRuleConfig) {
+// RemoveRule will remove a host rule from the ingress
+func (i *Ingress) RemoveRule(config api.IngressRuleConfig) {
 	rule := i.createHostRule(config)
-	for l, r := range i.Spec.Rules {
+	for l, r := range i.obj.Rules {
 		if reflect.DeepEqual(r, rule) {
-			i.Spec.Rules = append(i.Spec.Rules[:l], i.Spec.Rules[l+1:]...)
+			i.obj.Rules = append(i.obj.Rules[:l], i.obj.Rules[l+1:]...)
 			break
 		}
 	}
 }
 
-func (i *Ingress) createHostRule(config api.IngressHostRuleConfig) v1beta1.IngressRule {
-	rule := v1beta1.IngressRule{
+func (i *Ingress) createHostRule(config api.IngressRuleConfig) types.IngressRule {
+	rule := types.IngressRule{
 		Host: config.Host,
 	}
 
-	paths := []v1beta1.HTTPIngressPath{}
 	for _, path := range config.Paths {
 		port := createIntOrStr(path.ServicePort)
-		newPath := v1beta1.HTTPIngressPath{
-			Path: path.Path,
-			Backend: v1beta1.IngressBackend{
-				ServiceName: path.ServiceName,
-				ServicePort: *port,
-			},
+		newPath := types.HTTPIngressPath{
+			Path:        path.Path,
+			ServiceName: path.ServiceName,
+			ServicePort: *port,
 		}
-		paths = append(paths, newPath)
-	}
-
-	if len(paths) > 0 {
-		rule.HTTP = &v1beta1.HTTPIngressRuleValue{
-			Paths: paths,
-		}
+		rule.Paths = append(rule.Paths, newPath)
 	}
 
 	return rule
 }
 
-// Deploy will deploy the ingress to the cluster
-func (i *Ingress) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.ExtensionsV1beta1().Ingresses(i.Namespace).Create(i.Ingress)
-	return err
-}
-
-// Undeploy will remove the ingress from the cluster
-func (i *Ingress) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.ExtensionsV1beta1().Ingresses(i.Namespace).Delete(i.Name, &metav1.DeleteOptions{})
+// ToKube returns the kubernetes version of the ingress
+func (i *Ingress) ToKube() (runtime.Object, error) {
+	wrapper := &types.IngressWrapper{Ingress: *i.obj}
+	return converters.Convert_Koki_Ingress_to_Kube_Ingress(wrapper)
 }

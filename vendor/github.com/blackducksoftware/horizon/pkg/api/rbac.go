@@ -38,22 +38,6 @@ type ClusterRoleBindingConfig struct {
 	Namespace   string
 }
 
-// RoleConfig defines the basic configuration for a role
-type RoleConfig struct {
-	APIVersion  string
-	ClusterName string
-	Name        string
-	Namespace   string
-}
-
-// RoleBindingConfig defines the base configuration for a role binding
-type RoleBindingConfig struct {
-	APIVersion  string
-	ClusterName string
-	Name        string
-	Namespace   string
-}
-
 // PolicyRuleConfig defines the configuration for a policy rule
 type PolicyRuleConfig struct {
 	Verbs           []string
@@ -73,8 +57,7 @@ type SubjectConfig struct {
 
 // RoleRefConfig defines the configuration for a role reference
 type RoleRefConfig struct {
-	APIGroup  string
-	Kind      string
-	Name      string
-	Namespace string
+	APIGroup string
+	Kind     string
+	Name     string
 }

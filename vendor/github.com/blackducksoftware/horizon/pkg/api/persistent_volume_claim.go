@@ -23,31 +23,20 @@ package api
 
 // PVCConfig defines the configuration for a persistent volume claim
 type PVCConfig struct {
-	APIVersion         string
-	ClusterName        string
-	Name               string
-	Namespace          string
-	Class              *string
-	VolumeName         string
-	Size               string
-	Mode               PVCMode
-	DataSourceAPIGroup *string
-	DataSourceKind     string
-	DataSourceName     string
+	APIVersion  string
+	ClusterName string
+	Name        string
+	Namespace   string
+	Class       *string
+	VolumeName  string
+	Size        string
 }
 
 // PVCAccessModeType defines the access mode for the persistent volume claim
 type PVCAccessModeType int
 
 const (
-	ReadWriteOnce PVCAccessModeType = iota + 1
+	ReadWriteOnce PVCAccessModeType = iota
 	ReadOnlyMany
 	ReadWriteMany
-)
-
-type PVCMode int
-
-const (
-	PVCModeBLock PVCMode = iota + 1
-	PVCModeFilesystem
 )

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 Synopsys, Inc.
+Copyright (C) 2018 Synopsys, Inc.
 
 Licensej to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -22,54 +22,140 @@ under the License.
 package components
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/blackducksoftware/horizon/pkg/api"
+	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"k8s.io/api/batch/v1"
+	"github.com/koki/short/converter/converters"
+	"github.com/koki/short/types"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	batchv1 "k8s.io/api/batch/v1"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // Job defines the job component
 type Job struct {
-	*v1.Job
-	MetadataFuncs
-	LabelSelectorFuncs
-	PodFuncs
+	obj *types.Job
 }
 
 // NewJob creates a Job object
 func NewJob(config api.JobConfig) *Job {
-	version := "batch/v1"
-	if len(config.APIVersion) > 0 {
-		version = config.APIVersion
-	}
-
-	job := v1.Job{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Job",
-			APIVersion: version,
+	job := &types.Job{
+		Version: config.APIVersion,
+		PodTemplateMeta: types.PodTemplateMeta{
+			Cluster:   config.ClusterName,
+			Name:      config.Name,
+			Namespace: config.Namespace,
 		},
-		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
-		Spec: v1.JobSpec{
-			Parallelism:             config.Parallelism,
-			Completions:             config.Completions,
-			ActiveDeadlineSeconds:   config.ActiveDeadlineSeconds,
-			BackoffLimit:            config.MaxRetries,
-			ManualSelector:          config.SelectManually,
-			TTLSecondsAfterFinished: config.DeletionTTL,
+		JobTemplate: types.JobTemplate{
+			Parallelism:           config.Parallelism,
+			Completions:           config.Completions,
+			MaxRetries:            config.MaxRetries,
+			ActiveDeadlineSeconds: config.ActiveDeadlineSeconds,
+			ManualSelector:        config.SelectManually,
 		},
 	}
 
-	return &Job{&job, MetadataFuncs{&job}, LabelSelectorFuncs{&job}, PodFuncs{&job}}
+	return &Job{obj: job}
 }
 
-// Deploy will deploy the job to the cluster
-func (j *Job) Deploy(res api.DeployerResources) error {
-	_, err := res.KubeClient.BatchV1().Jobs(j.Namespace).Create(j.Job)
-	return err
+// GetObj returns the job object in a format the deployer can use
+func (j *Job) GetObj() *types.Job {
+	return j.obj
 }
 
-// Undeploy will remove the job from the cluster
-func (j *Job) Undeploy(res api.DeployerResources) error {
-	return res.KubeClient.BatchV1().Jobs(j.Namespace).Delete(j.Name, &metav1.DeleteOptions{})
+// GetName returns the name of the job
+func (j *Job) GetName() string {
+	return j.obj.Name
+}
+
+// AddAnnotations adds annotations to the job
+func (j *Job) AddAnnotations(new map[string]string) {
+	j.obj.Annotations = util.MapMerge(j.obj.Annotations, new)
+}
+
+// RemoveAnnotations removes annotations from the job
+func (j *Job) RemoveAnnotations(remove []string) {
+	for _, k := range remove {
+		j.obj.Annotations = util.RemoveElement(j.obj.Annotations, k)
+	}
+}
+
+// AddLabels adds labels to the job
+func (j *Job) AddLabels(new map[string]string) {
+	j.obj.Labels = util.MapMerge(j.obj.Labels, new)
+}
+
+// RemoveLabels removes labels from the job
+func (j *Job) RemoveLabels(remove []string) {
+	for _, k := range remove {
+		j.obj.Labels = util.RemoveElement(j.obj.Labels, k)
+	}
+}
+
+// AddPod adds a poj to the job
+func (j *Job) AddPod(obj *Pod) error {
+	o := obj.GetObj()
+	j.obj.TemplateMetadata = &o.PodTemplateMeta
+	j.obj.PodTemplate = o.PodTemplate
+
+	return nil
+}
+
+// RemovePod removes a poj from the job
+func (j *Job) RemovePod(name string) error {
+	if strings.Compare(j.obj.TemplateMetadata.Name, name) != 0 {
+		return fmt.Errorf("poj with name %s doesn't exist on job", name)
+	}
+	j.obj.TemplateMetadata = nil
+	j.obj.PodTemplate = types.PodTemplate{}
+	return nil
+}
+
+// AddMatchLabelsSelectors adds the given match label selectors to the job
+func (j *Job) AddMatchLabelsSelectors(new map[string]string) {
+	if j.obj.JobTemplate.Selector == nil {
+		j.obj.Selector = &types.RSSelector{}
+	}
+	j.obj.Selector.Labels = util.MapMerge(j.obj.Labels, new)
+}
+
+// RemoveMatchLabelsSelectors removes the given match label selectors from the job
+func (j *Job) RemoveMatchLabelsSelectors(remove []string) {
+	for _, k := range remove {
+		j.obj.Selector.Labels = util.RemoveElement(j.obj.Selector.Labels, k)
+	}
+}
+
+// AddMatchExpressionsSelector will add match expressions selectors to the job.
+// It takes a string in the following form:
+// key <op> <value>
+// Where op can be:
+// = 	Equal to value ot should be one of the comma separated values
+// !=	Key should not be one of the comma separated values
+// If no op is provided, then the key should (or should not) exist
+// <key>	key should exist
+// !<key>	key should not exist
+func (j *Job) AddMatchExpressionsSelector(add string) {
+	j.obj.Selector.Shorthand = add
+}
+
+// RemoveMatchExpressionsSelector removes the match expressions selector from the job
+func (j *Job) RemoveMatchExpressionsSelector() {
+	j.obj.Selector.Shorthand = ""
+}
+
+// ToKube returns the kubernetes version of the job
+func (j *Job) ToKube() (runtime.Object, error) {
+	wrapper := &types.JobWrapper{Job: *j.obj}
+	jobObj, err := converters.Convert_Koki_Job_to_Kube_Job(wrapper)
+	if err != nil {
+		return nil, err
+	}
+
+	kubeObj := jobObj.(*batchv1.Job)
+	return kubeObj, nil
 }

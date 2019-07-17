@@ -33,7 +33,7 @@ type EmptyDirVolumeConfig struct {
 type StorageMediumType int
 
 const (
-	StorageMediumDefault StorageMediumType = iota + 1
+	StorageMediumDefault StorageMediumType = iota
 	StorageMediumMemory
 	StorageMediumHugePages
 )
@@ -43,16 +43,15 @@ const (
 type ConfigMapOrSecretVolumeConfig struct {
 	VolumeName      string
 	MapOrSecretName string
-	Items           []KeyPath
+	Items           map[string]KeyAndMode
 	DefaultMode     *int32
-	Optional        *bool
+	Required        *bool
 }
 
-// KeyPath defines the mapping of a string key to a path within a volume
-type KeyPath struct {
-	Key  string
-	Path string
-	Mode *int32
+// KeyAndMode defines the key and file mode
+type KeyAndMode struct {
+	KeyOrPath string
+	Mode      *int32
 }
 
 // HostPathVolumeConfig defines the configuration for a
@@ -67,7 +66,7 @@ type HostPathVolumeConfig struct {
 type HostPathType int
 
 const (
-	HostPathUnset HostPathType = iota + 1
+	HostPathUnset HostPathType = iota
 	HostPathDirectoryOrCreate
 	HostPathDirectory
 	HostPathFileOrCreate

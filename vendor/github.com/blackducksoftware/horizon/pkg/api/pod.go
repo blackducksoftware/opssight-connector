@@ -42,17 +42,22 @@ type PodConfig struct {
 	RunAsUser              *int64
 	RunAsGroup             *int64
 	ForceNonRoot           *bool
-	MountSAToken           *bool
-	ShareNamespace         *bool
-	RuntimeClass           *string
-	ServiceLinks           *bool
+}
+
+// AffinityConfig defines the configuration for an affinity
+type AffinityConfig struct {
+	NodeAffinity    string
+	PodAffinity     string
+	PodAntiAffinity string
+	Topology        string
+	Namespaces      []string
 }
 
 // DNSPolicyType defines the pod DNS policy
 type DNSPolicyType int
 
 const (
-	DNSClusterFirstWithHostNet DNSPolicyType = iota + 1
+	DNSClusterFirstWithHostNet DNSPolicyType = iota
 	DNSClusterFirst
 	DNSDefault
 )
@@ -61,7 +66,7 @@ const (
 type RestartPolicyType int
 
 const (
-	RestartPolicyAlways RestartPolicyType = iota + 1
+	RestartPolicyAlways RestartPolicyType = iota
 	RestartPolicyOnFailure
 	RestartPolicyNever
 )
@@ -70,25 +75,26 @@ const (
 type HostModeType int
 
 const (
-	HostModeNet HostModeType = iota + 1
+	HostModeNet HostModeType = iota
 	HostModePID
 	HostModeIPC
 )
 
 // TolerationConfig defines the configuration for a pod toleration
 type TolerationConfig struct {
-	Duration *int64
-	Effect   TolerationEffectType
-	Key      string
-	Value    string
-	Op       TolerationOpType
+	Expires *int64
+	Effect  TolerationEffectType
+	Key     string
+	Value   string
+	Op      TolerationOpType
 }
 
 // TolerationEffectType defines the effect of the toleration
 type TolerationEffectType int
 
 const (
-	TolerationEffectNoSchedule TolerationEffectType = iota + 1
+	TolerationEffectNone TolerationEffectType = iota
+	TolerationEffectNoSchedule
 	TolerationEffectPreferNoSchedule
 	TolerationEffectNoExecute
 )
@@ -97,19 +103,6 @@ const (
 type TolerationOpType int
 
 const (
-	TolerationOpExists TolerationOpType = iota + 1
+	TolerationOpExists TolerationOpType = iota
 	TolerationOpEqual
 )
-
-// PodDNSConfig defines the dns configuration for a pod
-type PodDNSConfig struct {
-	Nameservers     []string
-	SearchDomains   []string
-	ResolverOptions map[string]string
-}
-
-// HostAliasConfig defines the configuration for a host alias on a pod
-type HostAliasConfig struct {
-	IP        string
-	Hostnames []string
-}

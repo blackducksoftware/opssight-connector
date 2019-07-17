@@ -26,14 +26,20 @@ import (
 
 	"github.com/blackducksoftware/horizon/pkg/api"
 
-	"k8s.io/api/core/v1"
+	"github.com/koki/short/types"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // Volume defines the volume component
 type Volume struct {
-	*v1.Volume
+	Name string
+	obj  *types.Volume
+}
+
+// GetObj will return the volume object in a format the deployer can use
+func (v *Volume) GetObj() *types.Volume {
+	return v.obj
 }
 
 // NewEmptyDirVolume creates an EmptyDir volume object
@@ -48,147 +54,133 @@ func NewEmptyDirVolume(config api.EmptyDirVolumeConfig) (*Volume, error) {
 		size = &s
 	}
 
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			EmptyDir: &v1.EmptyDirVolumeSource{
-				SizeLimit: size,
-			},
+	v := &types.Volume{
+		EmptyDir: &types.EmptyDirVolume{
+			SizeLimit: size,
 		},
 	}
 
 	switch config.Medium {
 	case api.StorageMediumDefault:
-		v.VolumeSource.EmptyDir.Medium = v1.StorageMediumDefault
+		v.EmptyDir.Medium = types.StorageMediumDefault
 	case api.StorageMediumMemory:
-		v.VolumeSource.EmptyDir.Medium = v1.StorageMediumMemory
+		v.EmptyDir.Medium = types.StorageMediumMemory
 	case api.StorageMediumHugePages:
-		v.VolumeSource.EmptyDir.Medium = v1.StorageMediumHugePages
+		v.EmptyDir.Medium = types.StorageMediumHugePages
 	}
 
-	return &Volume{&v}, nil
+	return &Volume{Name: config.VolumeName, obj: v}, nil
 }
 
 // NewHostPathVolume create a HostPath volume object
 func NewHostPathVolume(config api.HostPathVolumeConfig) *Volume {
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			HostPath: &v1.HostPathVolumeSource{
-				Path: config.Path,
-			},
+	v := &types.Volume{
+		HostPath: &types.HostPathVolume{
+			Path: config.Path,
 		},
 	}
-
-	var hpType v1.HostPathType
 	switch config.Type {
 	case api.HostPathUnset:
-		hpType = v1.HostPathUnset
+		v.HostPath.Type = types.HostPathUnset
 	case api.HostPathDirectoryOrCreate:
-		hpType = v1.HostPathDirectoryOrCreate
+		v.HostPath.Type = types.HostPathDirectoryOrCreate
 	case api.HostPathDirectory:
-		hpType = v1.HostPathDirectory
+		v.HostPath.Type = types.HostPathDirectory
 	case api.HostPathFileOrCreate:
-		hpType = v1.HostPathFileOrCreate
+		v.HostPath.Type = types.HostPathFileOrCreate
 	case api.HostPathFile:
-		hpType = v1.HostPathFile
+		v.HostPath.Type = types.HostPathFile
 	case api.HostPathSocket:
-		hpType = v1.HostPathSocket
+		v.HostPath.Type = types.HostPathSocket
 	case api.HostPathCharDev:
-		hpType = v1.HostPathCharDev
+		v.HostPath.Type = types.HostPathCharDev
 	case api.HostPathBlockDev:
-		hpType = v1.HostPathBlockDev
+		v.HostPath.Type = types.HostPathBlockDev
 	default:
-		hpType = v1.HostPathUnset
+		v.HostPath.Type = types.HostPathUnset
 	}
 
-	v.VolumeSource.HostPath.Type = &hpType
-
-	return &Volume{&v}
+	return &Volume{Name: config.VolumeName, obj: v}
 }
 
 // NewConfigMapVolume creates a ConfigMap volume object
 func NewConfigMapVolume(config api.ConfigMapOrSecretVolumeConfig) *Volume {
-	items := generateKeyToPath(config.Items)
+	dfm, items := generateFileModeAndItems(config.DefaultMode, config.Items)
 
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			ConfigMap: &v1.ConfigMapVolumeSource{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: config.MapOrSecretName,
-				},
-				Items:       items,
-				DefaultMode: config.DefaultMode,
-				Optional:    config.Optional,
-			},
+	v := &types.Volume{
+		ConfigMap: &types.ConfigMapVolume{
+			Name:        config.MapOrSecretName,
+			DefaultMode: dfm,
+			Items:       items,
+			Required:    config.Required,
 		},
 	}
 
-	return &Volume{&v}
+	return &Volume{Name: config.VolumeName, obj: v}
 }
 
 // NewSecretVolume creates a Secret volume object
 func NewSecretVolume(config api.ConfigMapOrSecretVolumeConfig) *Volume {
-	items := generateKeyToPath(config.Items)
+	dfm, items := generateFileModeAndItems(config.DefaultMode, config.Items)
 
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			Secret: &v1.SecretVolumeSource{
-				SecretName:  config.MapOrSecretName,
-				Items:       items,
-				DefaultMode: config.DefaultMode,
-				Optional:    config.Optional,
-			},
+	v := &types.Volume{
+		Secret: &types.SecretVolume{
+			SecretName:  config.MapOrSecretName,
+			DefaultMode: dfm,
+			Items:       items,
+			Required:    config.Required,
 		},
 	}
 
-	return &Volume{&v}
+	return &Volume{Name: config.VolumeName, obj: v}
 }
 
-func generateKeyToPath(items []api.KeyPath) []v1.KeyToPath {
-	converted := []v1.KeyToPath{}
-	for _, kp := range items {
-		ktp := v1.KeyToPath{
-			Key:  kp.Key,
-			Path: kp.Path,
-			Mode: kp.Mode,
-		}
-		converted = append(converted, ktp)
+func generateFileModeAndItems(defaultMode *int32, items map[string]api.KeyAndMode) (*types.FileMode, map[string]types.KeyAndMode) {
+	var dfm *types.FileMode
+
+	if defaultMode != nil {
+		fm := types.FileMode(*defaultMode)
+		dfm = &fm
 	}
 
-	return converted
+	converted := map[string]types.KeyAndMode{}
+	for k, v := range items {
+		var fm *types.FileMode
+		if v.Mode != nil {
+			m := types.FileMode(*v.Mode)
+			fm = &m
+		}
+		converted[k] = types.KeyAndMode{
+			Key:  v.KeyOrPath,
+			Mode: fm,
+		}
+	}
+
+	return dfm, converted
 }
 
 // NewGCEPersistentDiskVolume creates a new GCE Persistent Disk volume object
 func NewGCEPersistentDiskVolume(config api.GCEPersistentDiskVolumeConfig) *Volume {
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			GCEPersistentDisk: &v1.GCEPersistentDiskVolumeSource{
-				PDName:    config.DiskName,
-				FSType:    config.FSType,
-				Partition: config.Partition,
-				ReadOnly:  config.ReadOnly,
-			},
+	v := &types.Volume{
+		GcePD: &types.GcePDVolume{
+			PDName:    config.DiskName,
+			FSType:    config.FSType,
+			Partition: config.Partition,
+			ReadOnly:  config.ReadOnly,
 		},
 	}
 
-	return &Volume{&v}
+	return &Volume{Name: config.VolumeName, obj: v}
 }
 
 // NewPVCVolume creates a new Persistent Volume Claim volume object
 func NewPVCVolume(config api.PVCVolumeConfig) *Volume {
-	v := v1.Volume{
-		Name: config.VolumeName,
-		VolumeSource: v1.VolumeSource{
-			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-				ClaimName: config.PVCName,
-				ReadOnly:  config.ReadOnly,
-			},
+	v := &types.Volume{
+		PVC: &types.PVCVolume{
+			ClaimName: config.PVCName,
+			ReadOnly:  config.ReadOnly,
 		},
 	}
 
-	return &Volume{&v}
+	return &Volume{Name: config.VolumeName, obj: v}
 }

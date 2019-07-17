@@ -30,8 +30,8 @@ type ServiceAccountConfig struct {
 	AutomountToken *bool
 }
 
-// ServiceAccountSecretConfig defines the configuration for an allowed secret by a service account
-type ServiceAccountSecretConfig struct {
+// ObjectReferenceConfig defines the configuration for an object reference
+type ObjectReferenceConfig struct {
 	Kind            string
 	Namespace       string
 	Name            string
