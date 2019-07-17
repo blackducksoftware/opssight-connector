@@ -27,13 +27,14 @@ type EnvConfig struct {
 	Type         EnvType
 	KeyOrVal     string
 	FromName     string
+	Optional     *bool
 }
 
 // EnvType defines the type of environemnt configuration
 type EnvType int
 
 const (
-	EnvVal EnvType = iota
+	EnvVal EnvType = iota + 1
 	EnvFromConfigMap
 	EnvFromSecret
 	EnvFromCPULimits

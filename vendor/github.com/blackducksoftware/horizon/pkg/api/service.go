@@ -28,28 +28,22 @@ type ServiceConfig struct {
 	Name                     string
 	Namespace                string
 	ExternalName             string
-	IPServiceType            ClusterIPServiceType
+	Type                     ServiceType
 	ClusterIP                string
 	PublishNotReadyAddresses bool
 	TrafficPolicy            TrafficPolicyType
-
-	// Valid Affinity values are true or a valid integer.
-	// If set to true, it configures the session affinity
-	// of the service based on client ip addresses.
-	// If set to a number then, along with configuring the
-	// session affinity, it also configures the number of
-	// seconds the session affinity sticks to a client ip address
-	// before it expires.
-	Affinity string
+	Affinity                 ServiceAffinityType
+	IPTimeout                *int32
 }
 
-// ClusterIPServiceType defines the type of IP service
-type ClusterIPServiceType int
+// ServiceType defines how the service is exposed service
+type ServiceType int
 
 const (
-	ClusterIPServiceTypeDefault ClusterIPServiceType = iota
-	ClusterIPServiceTypeNodePort
-	ClusterIPServiceTypeLoadBalancer
+	ServiceTypeServiceIP ServiceType = iota + 1
+	ServiceTypeNodePort
+	ServiceTypeLoadBalancer
+	ServiceTypeExternalName
 )
 
 // ServicePortConfig defines the configuration for a service port
@@ -65,8 +59,7 @@ type ServicePortConfig struct {
 type TrafficPolicyType int
 
 const (
-	ServiceTrafficPolicyNil TrafficPolicyType = iota
-	ServiceTrafficPolicyLocal
+	ServiceTrafficPolicyLocal TrafficPolicyType = iota + 1
 	ServiceTrafficPolicyCluster
 )
 
@@ -76,11 +69,11 @@ type LoadBalancerConfig struct {
 	IP                  string
 	AllowedIPs          []string
 	HealthCheckNodePort int32
-	Ingress             []LoadBalancerIngressConfig
 }
 
-// LoadBalancerIngressConfig defines the configuration for a load balancer ingress
-type LoadBalancerIngressConfig struct {
-	IP       string
-	Hostname string
-}
+type ServiceAffinityType int
+
+const (
+	ServiceAffinityTypeClientIP ServiceAffinityType = iota + 1
+	ServiceAffinityTypeNone
+)
