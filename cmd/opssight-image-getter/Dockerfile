@@ -1,6 +1,6 @@
 FROM fedora
 
-MAINTAINER Black Duck OpsSight Team
+LABEL Black Duck OpsSight Team
 
 ARG LASTCOMMIT
 ARG BUILDTIME

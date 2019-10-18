@@ -82,11 +82,13 @@
   revision = "f1fdde519aec5ce540e9a42440fcce9bd641644a"
 
 [[projects]]
-  digest = "1:2835b958a568f1e886e11bd22a58b9dec552664c9950234f434370264bc96c86"
+  digest = "1:9c616e8620bb157b8f140a06e09fc023d38fc8b97802033c6aa77d645e368806"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
+    "cmd/artifactory-perceiver/app",
     "cmd/image-perceiver/app",
     "cmd/pod-perceiver/app",
+    "cmd/quay-perceiver/app",
     "pkg/annotations",
     "pkg/annotator",
     "pkg/communicator",
@@ -96,10 +98,11 @@
     "pkg/mapper",
     "pkg/metrics",
     "pkg/utils",
+    "pkg/webhook",
   ]
   pruneopts = "UT"
-  revision = "717ca5b45c89241be0f3f8e5936281f69c7acb11"
-  version = "v2.2.3"
+  revision = "8bf6e64ece8ae4cd111163db517b367aab3d02ae"
+  version = "v2.2.5"
 
 [[projects]]
   digest = "1:bad0e5fb0a6d3ee8750b060c8142b3f5e45c167032af4489ffe01a98e241b4e1"
@@ -146,7 +149,7 @@
   version = "v2.2.3"
 
 [[projects]]
-  digest = "1:c0a3dde84000f7a761cac9ebf4414f5183a29413d74ec3e556e36ec885db2aa0"
+  digest = "1:28934a6f8d2037388f855d7bb957d239010b9bc3420ab21ccfd468834f655b16"
   name = "github.com/blackducksoftware/synopsys-operator"
   packages = [
     "pkg/alert/client/clientset/versioned",
@@ -163,14 +166,9 @@
     "pkg/blackduck/client/clientset/versioned/scheme",
     "pkg/blackduck/client/clientset/versioned/typed/blackduck/v1",
     "pkg/crds",
-    "pkg/crdupdater",
-    "pkg/opssight",
     "pkg/opssight/client/clientset/versioned",
     "pkg/opssight/client/clientset/versioned/scheme",
     "pkg/opssight/client/clientset/versioned/typed/opssight/v1",
-    "pkg/opssight/client/informers/externalversions/internalinterfaces",
-    "pkg/opssight/client/informers/externalversions/opssight/v1",
-    "pkg/opssight/client/listers/opssight/v1",
     "pkg/protoform",
     "pkg/util",
   ]
@@ -364,14 +362,6 @@
   pruneopts = "UT"
   revision = "7c29201646fa3de8506f701213473dd407f19646"
   version = "v0.3.7"
-
-[[projects]]
-  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
 
 [[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
@@ -675,14 +665,6 @@
   pruneopts = "UT"
   revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
   version = "v1.3.0"
-
-[[projects]]
-  digest = "1:e096613fb7cf34743d49af87d197663cfccd61876e2219853005a57baedfa562"
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
-  version = "v0.0.5"
 
 [[projects]]
   digest = "1:1b753ec16506f5864d26a28b43703c58831255059644351bbcb019b843950900"
@@ -1075,15 +1057,16 @@
     "github.com/aws/aws-sdk-go/aws/credentials/stscreds",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/ecr",
+    "github.com/blackducksoftware/perceivers/cmd/artifactory-perceiver/app",
     "github.com/blackducksoftware/perceivers/cmd/image-perceiver/app",
     "github.com/blackducksoftware/perceivers/cmd/pod-perceiver/app",
+    "github.com/blackducksoftware/perceivers/cmd/quay-perceiver/app",
     "github.com/blackducksoftware/perceivers/pkg/annotations",
     "github.com/blackducksoftware/perceptor-scanner/pkg/imagefacade",
     "github.com/blackducksoftware/perceptor-scanner/pkg/scanner",
     "github.com/blackducksoftware/perceptor-skyfire/pkg/report",
     "github.com/blackducksoftware/perceptor/pkg/core",
     "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1",
-    "github.com/blackducksoftware/synopsys-operator/pkg/opssight",
     "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned",
     "github.com/blackducksoftware/synopsys-operator/pkg/protoform",
     "github.com/blackducksoftware/synopsys-operator/pkg/util",
