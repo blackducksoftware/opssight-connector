@@ -22,6 +22,7 @@ under the License.
 package crdupdater
 
 import (
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
@@ -46,7 +47,7 @@ func NewServiceAccount(config *CommonConfig, serviceAccounts []*components.Servi
 	}
 	newServiceAccounts := append([]*components.ServiceAccount{}, serviceAccounts...)
 	for i := 0; i < len(newServiceAccounts); i++ {
-		if !isLabelsExist(config.expectedLabels, newServiceAccounts[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newServiceAccounts[i].Labels) {
 			newServiceAccounts = append(newServiceAccounts[:i], newServiceAccounts[i+1:]...)
 			i--
 		}
@@ -73,11 +74,7 @@ func (s *ServiceAccount) buildNewAndOldObject() error {
 
 	// build new service account
 	for _, newSa := range s.serviceAccounts {
-		newServiceAccountKube, err := newSa.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert service account %s to kube %s", newSa.GetName(), s.config.namespace)
-		}
-		s.newServiceAccounts[newSa.GetName()] = newServiceAccountKube.(*corev1.ServiceAccount)
+		s.newServiceAccounts[newSa.GetName()] = newSa.ServiceAccount
 	}
 
 	return nil
@@ -88,7 +85,7 @@ func (s *ServiceAccount) add(isPatched bool) (bool, error) {
 	isAdded := false
 	for _, serviceAccount := range s.serviceAccounts {
 		if _, ok := s.oldServiceAccounts[serviceAccount.GetName()]; !ok {
-			s.deployer.Deployer.AddServiceAccount(serviceAccount)
+			s.deployer.Deployer.AddComponent(horizonapi.ServiceAccountComponent, serviceAccount)
 			isAdded = true
 		}
 	}

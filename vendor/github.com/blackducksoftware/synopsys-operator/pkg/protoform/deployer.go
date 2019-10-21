@@ -24,32 +24,44 @@ package protoform
 import (
 	crd "github.com/blackducksoftware/synopsys-operator/pkg/crds"
 	"github.com/juju/errors"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 // Deployer handles deploying configured components to a cluster
 type Deployer struct {
-	Config        *Config
-	KubeConfig    *rest.Config
-	KubeClientSet *kubernetes.Clientset
-	controllers   []crd.ProtoformControllerInterface
+	Config             *Config
+	KubeConfig         *rest.Config
+	KubeClientSet      *kubernetes.Clientset
+	APIExtensionClient *apiextensionsclient.Clientset
+	controllers        []crd.ProtoformControllerInterface
 }
 
 // NewDeployer will create the specification that is used for deploying controllers
-func NewDeployer(config *Config, kubeConfig *rest.Config, kubeClientSet *kubernetes.Clientset) *Deployer {
-	deployer := Deployer{
-		Config:        config,
-		KubeConfig:    kubeConfig,
-		KubeClientSet: kubeClientSet,
-		controllers:   make([]crd.ProtoformControllerInterface, 0),
+func NewDeployer(config *Config, kubeConfig *rest.Config, kubeClientSet *kubernetes.Clientset) (*Deployer, error) {
+	apiExtensionClient, err := apiextensionsclient.NewForConfig(kubeConfig)
+	if err != nil {
+		return nil, err
 	}
-	return &deployer
+	deployer := Deployer{
+		Config:             config,
+		KubeConfig:         kubeConfig,
+		KubeClientSet:      kubeClientSet,
+		APIExtensionClient: apiExtensionClient,
+		controllers:        make([]crd.ProtoformControllerInterface, 0),
+	}
+	return &deployer, nil
 }
 
 // AddController will add the controllers to the list
 func (d *Deployer) AddController(controller crd.ProtoformControllerInterface) {
 	d.controllers = append(d.controllers, controller)
+}
+
+// Cleanup makes an empty controller list
+func (d *Deployer) Cleanup() {
+	d.controllers = make([]crd.ProtoformControllerInterface, 0)
 }
 
 // Deploy will deploy the controllers

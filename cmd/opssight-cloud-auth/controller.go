@@ -63,6 +63,7 @@ type RegistryAuth struct {
 	URL      string
 	User     string
 	Password string
+	Token    string
 }
 
 // getGCRAuthorizationKey will get the authorization key from Google Container Registry (GCR)
@@ -222,7 +223,7 @@ func (c *controller) updateOpsSightWithAuthToken(opssightClient *opssightclients
 		}
 	}
 
-	_, err := util.UpdateOpsSight(opssightClient, opssight.Spec.Namespace, opssight)
+	_, err := util.UpdateOpsSight(opssightClient, "", opssight)
 	return err
 }
 

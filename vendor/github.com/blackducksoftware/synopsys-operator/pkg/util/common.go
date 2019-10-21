@@ -29,13 +29,17 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
+
+	alertScheme "github.com/blackducksoftware/synopsys-operator/pkg/alert/client/clientset/versioned/scheme"
+	blackduckScheme "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned/scheme"
+	opssightScheme "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned/scheme"
 
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	alertclientset "github.com/blackducksoftware/synopsys-operator/pkg/alert/client/clientset/versioned"
+	"github.com/blackducksoftware/synopsys-operator/pkg/api"
 	alertapi "github.com/blackducksoftware/synopsys-operator/pkg/api/alert/v1"
 	blackduckapi "github.com/blackducksoftware/synopsys-operator/pkg/api/blackduck/v1"
 	opssightapi "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
@@ -47,25 +51,39 @@ import (
 	securityclient "github.com/openshift/client-go/security/clientset/versioned/typed/security/v1"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/api/storage/v1beta1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
+const (
+	// OPENSHIFT denotes to create an OpenShift routes
+	OPENSHIFT = "OPENSHIFT"
+	// NONE denotes no exposed service
+	NONE = "NONE"
+	// NODEPORT denotes to create a NodePort service
+	NODEPORT = "NODEPORT"
+	// LOADBALANCER denotes to create a LoadBalancer service
+	LOADBALANCER = "LOADBALANCER"
+)
+
 // CreateContainer will create the container
 func CreateContainer(config *horizonapi.ContainerConfig, envs []*horizonapi.EnvConfig, volumeMounts []*horizonapi.VolumeMountConfig, ports []*horizonapi.PortConfig,
-	actionConfig *horizonapi.ActionConfig, preStopConfig *horizonapi.ActionConfig, livenessProbeConfigs []*horizonapi.ProbeConfig, readinessProbeConfigs []*horizonapi.ProbeConfig) *components.Container {
+	actionConfig *horizonapi.ActionConfig, preStopConfig *horizonapi.ActionConfig, livenessProbeConfigs []*horizonapi.ProbeConfig, readinessProbeConfigs []*horizonapi.ProbeConfig) (*components.Container, error) {
 
-	container := components.NewContainer(*config)
+	container, err := components.NewContainer(*config)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, env := range envs {
 		container.AddEnv(*env)
@@ -96,7 +114,7 @@ func CreateContainer(config *horizonapi.ContainerConfig, envs []*horizonapi.EnvC
 		container.AddReadinessProbe(*readinessProbe)
 	}
 
-	return container
+	return container, nil
 }
 
 // CreateGCEPersistentDiskVolume will create a GCE Persistent disk volume for a pod
@@ -162,92 +180,131 @@ func CreateSecretVolume(volumeName string, secretName string, defaultMode int) (
 }
 
 // CreatePod will create the pod
-func CreatePod(name string, serviceAccount string, volumes []*components.Volume, containers []*Container, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig, labels map[string]string) *components.Pod {
+func CreatePod(podConfig *PodConfig) (*components.Pod, error) {
+	name := podConfig.Name
+	// create pod config
 	pod := components.NewPod(horizonapi.PodConfig{
-		Name: name,
+		Name:  name,
+		FSGID: podConfig.FSGID,
 	})
 
-	if !strings.EqualFold(serviceAccount, "") {
-		pod.GetObj().Account = serviceAccount
+	// set service account
+	if len(podConfig.ServiceAccount) > 0 {
+		pod.Spec.ServiceAccountName = podConfig.ServiceAccount
 	}
 
-	for _, volume := range volumes {
+	// add volumes
+	for _, volume := range podConfig.Volumes {
 		pod.AddVolume(volume)
 	}
 
-	pod.AddLabels(labels)
+	// add labels
+	pod.AddLabels(podConfig.Labels)
 
-	for _, affinityConfig := range affinityConfigs {
-		pod.AddAffinity(affinityConfig)
-	}
-
-	for _, containerConfig := range containers {
-		container := CreateContainer(containerConfig.ContainerConfig, containerConfig.EnvConfigs, containerConfig.VolumeMounts, containerConfig.PortConfig,
-			containerConfig.ActionConfig, containerConfig.PreStopConfig, containerConfig.LivenessProbeConfigs, containerConfig.ReadinessProbeConfigs)
-		pod.AddContainer(container)
-	}
-
-	for _, initContainerConfig := range initContainers {
-		initContainer := CreateContainer(initContainerConfig.ContainerConfig, initContainerConfig.EnvConfigs, initContainerConfig.VolumeMounts,
-			initContainerConfig.PortConfig, initContainerConfig.ActionConfig, initContainerConfig.PreStopConfig, initContainerConfig.LivenessProbeConfigs, initContainerConfig.ReadinessProbeConfigs)
-		err := pod.AddInitContainer(initContainer)
-		if err != nil {
-			log.Printf("failed to create the init container for pod %s because %+v", name, err)
+	// add pod affinities
+	for affinityType, podAffinityConfigs := range podConfig.PodAffinityConfigs {
+		for _, podAffinityConfig := range podAffinityConfigs {
+			pod.AddPodAffinity(affinityType, *podAffinityConfig)
 		}
 	}
 
-	return pod
+	// add pod anti affinities
+	for affinityType, podAntiAffinityConfigs := range podConfig.PodAntiAffinityConfigs {
+		for _, podAntiAffinityConfig := range podAntiAffinityConfigs {
+			pod.AddPodAntiAffinity(affinityType, *podAntiAffinityConfig)
+		}
+	}
+
+	// add node affinities
+	for affinityType, nodeAffinityConfigs := range podConfig.NodeAffinityConfigs {
+		for _, nodeAffinityConfig := range nodeAffinityConfigs {
+			pod.AddNodeAffinity(affinityType, *nodeAffinityConfig)
+		}
+	}
+
+	// add containers
+	for _, containerConfig := range podConfig.Containers {
+		container, err := CreateContainer(containerConfig.ContainerConfig, containerConfig.EnvConfigs, containerConfig.VolumeMounts, containerConfig.PortConfig,
+			containerConfig.ActionConfig, containerConfig.PreStopConfig, containerConfig.LivenessProbeConfigs, containerConfig.ReadinessProbeConfigs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create the container for pod %s because %+v", name, err)
+		}
+		pod.AddContainer(container)
+	}
+
+	// add init containers
+	for _, initContainerConfig := range podConfig.InitContainers {
+		initContainer, err := CreateContainer(initContainerConfig.ContainerConfig, initContainerConfig.EnvConfigs, initContainerConfig.VolumeMounts,
+			initContainerConfig.PortConfig, initContainerConfig.ActionConfig, initContainerConfig.PreStopConfig, initContainerConfig.LivenessProbeConfigs, initContainerConfig.ReadinessProbeConfigs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create the init container for pod %s because %+v", name, err)
+		}
+		err = pod.AddInitContainer(initContainer)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create the init container for pod %s because %+v", name, err)
+		}
+	}
+
+	if len(podConfig.ImagePullSecrets) > 0 {
+		pod.AddImagePullSecrets(podConfig.ImagePullSecrets)
+	}
+
+	return pod, nil
 }
 
 // CreateDeployment will create a deployment
-func CreateDeployment(deploymentConfig *horizonapi.DeploymentConfig, pod *components.Pod) *components.Deployment {
+func CreateDeployment(deploymentConfig *horizonapi.DeploymentConfig, pod *components.Pod, labelSelector map[string]string) *components.Deployment {
 	deployment := components.NewDeployment(*deploymentConfig)
-
-	deployment.AddMatchLabelsSelectors(map[string]string{
-		"app":  deploymentConfig.Name,
-		"tier": deploymentConfig.Name,
-	})
+	deployment.AddMatchLabelsSelectors(labelSelector)
 	deployment.AddPod(pod)
 	return deployment
 }
 
 // CreateDeploymentFromContainer will create a deployment with multiple containers inside a pod
-func CreateDeploymentFromContainer(deploymentConfig *horizonapi.DeploymentConfig, serviceAccount string, containers []*Container, volumes []*components.Volume, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig, labels map[string]string) *components.Deployment {
-	pod := CreatePod(deploymentConfig.Name, serviceAccount, volumes, containers, initContainers, affinityConfigs, labels)
-	deployment := CreateDeployment(deploymentConfig, pod)
-	return deployment
+func CreateDeploymentFromContainer(deploymentConfig *horizonapi.DeploymentConfig, podConfig *PodConfig, labelSelector map[string]string) (*components.Deployment, error) {
+	podConfig.Name = deploymentConfig.Name
+	pod, err := CreatePod(podConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create pod for the deployment %s due to %+v", deploymentConfig.Name, err)
+	}
+	deployment := CreateDeployment(deploymentConfig, pod, labelSelector)
+	return deployment, nil
 }
 
 // CreateReplicationController will create a replication controller
-func CreateReplicationController(replicationControllerConfig *horizonapi.ReplicationControllerConfig, pod *components.Pod, labels map[string]string, labelSelector map[string]string) *components.ReplicationController {
+func CreateReplicationController(replicationControllerConfig *horizonapi.ReplicationControllerConfig, pod *components.Pod, labels map[string]string,
+	labelSelector map[string]string) *components.ReplicationController {
 	rc := components.NewReplicationController(*replicationControllerConfig)
-	rc.AddLabelSelectors(labelSelector)
+	rc.AddSelectors(labelSelector)
 	rc.AddLabels(labels)
 	rc.AddPod(pod)
 	return rc
 }
 
 // CreateReplicationControllerFromContainer will create a replication controller with multiple containers inside a pod
-func CreateReplicationControllerFromContainer(replicationControllerConfig *horizonapi.ReplicationControllerConfig, serviceAccount string, containers []*Container, volumes []*components.Volume, initContainers []*Container, affinityConfigs []horizonapi.AffinityConfig, labels map[string]string, labelSelector map[string]string) *components.ReplicationController {
-	pod := CreatePod(replicationControllerConfig.Name, serviceAccount, volumes, containers, initContainers, affinityConfigs, labels)
-	rc := CreateReplicationController(replicationControllerConfig, pod, labels, labelSelector)
-	return rc
+func CreateReplicationControllerFromContainer(replicationControllerConfig *horizonapi.ReplicationControllerConfig, podConfig *PodConfig, labelSelector map[string]string) (*components.ReplicationController, error) {
+	podConfig.Name = replicationControllerConfig.Name
+	pod, err := CreatePod(podConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create pod for the replication controller %s due to %+v", replicationControllerConfig.Name, err)
+	}
+	rc := CreateReplicationController(replicationControllerConfig, pod, podConfig.Labels, labelSelector)
+	return rc, nil
 }
 
 // CreateService will create the service
-func CreateService(name string, selectLabel map[string]string, namespace string, port string, target string, serviceType horizonapi.ClusterIPServiceType, label map[string]string) *components.Service {
+func CreateService(name string, selectLabel map[string]string, namespace string, port int32, target int32, serviceType horizonapi.ServiceType, label map[string]string) *components.Service {
 	svcConfig := horizonapi.ServiceConfig{
-		Name:          name,
-		Namespace:     namespace,
-		IPServiceType: serviceType,
+		Name:      name,
+		Namespace: namespace,
+		Type:      serviceType,
 	}
 
 	mySvc := components.NewService(svcConfig)
-	portVal, _ := strconv.Atoi(port)
 	myPort := &horizonapi.ServicePortConfig{
-		Name:       fmt.Sprintf("port-" + name),
-		Port:       int32(portVal),
-		TargetPort: target,
+		Name:       fmt.Sprintf("port-%d", port),
+		Port:       port,
+		TargetPort: fmt.Sprint(target),
 		Protocol:   horizonapi.ProtocolTCP,
 	}
 
@@ -259,21 +316,20 @@ func CreateService(name string, selectLabel map[string]string, namespace string,
 }
 
 // CreateServiceWithMultiplePort will create the service with multiple port
-func CreateServiceWithMultiplePort(name string, selectLabel map[string]string, namespace string, ports []string, serviceType horizonapi.ClusterIPServiceType, label map[string]string) *components.Service {
+func CreateServiceWithMultiplePort(name string, selectLabel map[string]string, namespace string, ports []int32, serviceType horizonapi.ServiceType, label map[string]string) *components.Service {
 	svcConfig := horizonapi.ServiceConfig{
-		Name:          name,
-		Namespace:     namespace,
-		IPServiceType: serviceType,
+		Name:      name,
+		Namespace: namespace,
+		Type:      serviceType,
 	}
 
 	mySvc := components.NewService(svcConfig)
 
 	for _, port := range ports {
-		portVal, _ := strconv.Atoi(port)
 		myPort := &horizonapi.ServicePortConfig{
-			Name:       fmt.Sprintf("port-" + port),
-			Port:       int32(portVal),
-			TargetPort: port,
+			Name:       fmt.Sprintf("port-%d", port),
+			Port:       port,
+			TargetPort: fmt.Sprint(port),
 			Protocol:   horizonapi.ProtocolTCP,
 		}
 		mySvc.AddPort(*myPort)
@@ -323,9 +379,8 @@ func ListSecrets(clientset *kubernetes.Clientset, namespace string, labelSelecto
 }
 
 // UpdateSecret updates a secret
-func UpdateSecret(clientset *kubernetes.Clientset, namespace string, secret *corev1.Secret) error {
-	_, err := clientset.CoreV1().Secrets(namespace).Update(secret)
-	return err
+func UpdateSecret(clientset *kubernetes.Clientset, namespace string, secret *corev1.Secret) (*corev1.Secret, error) {
+	return clientset.CoreV1().Secrets(namespace).Update(secret)
 }
 
 // DeleteSecret will delete the secret
@@ -350,9 +405,8 @@ func ListConfigMaps(clientset *kubernetes.Clientset, namespace string, labelSele
 }
 
 // UpdateConfigMap updates a config map
-func UpdateConfigMap(clientset *kubernetes.Clientset, namespace string, configMap *corev1.ConfigMap) error {
-	_, err := clientset.CoreV1().ConfigMaps(namespace).Update(configMap)
-	return err
+func UpdateConfigMap(clientset *kubernetes.Clientset, namespace string, configMap *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+	return clientset.CoreV1().ConfigMaps(namespace).Update(configMap)
 }
 
 // DeleteConfigMap will delete the config map
@@ -400,6 +454,16 @@ func GetNamespace(clientset *kubernetes.Clientset, namespace string) (*corev1.Na
 	return clientset.CoreV1().Namespaces().Get(namespace, metav1.GetOptions{})
 }
 
+// ListNamespaces will list the namespace
+func ListNamespaces(clientset *kubernetes.Clientset, labelSelector string) (*corev1.NamespaceList, error) {
+	return clientset.CoreV1().Namespaces().List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateNamespace updates a namespace
+func UpdateNamespace(clientset *kubernetes.Clientset, namespace *corev1.Namespace) (*corev1.Namespace, error) {
+	return clientset.CoreV1().Namespaces().Update(namespace)
+}
+
 // DeleteNamespace will delete the namespace
 func DeleteNamespace(clientset *kubernetes.Clientset, namespace string) error {
 	return clientset.CoreV1().Namespaces().Delete(namespace, &metav1.DeleteOptions{})
@@ -415,6 +479,19 @@ func ListPods(clientset *kubernetes.Clientset, namespace string) (*corev1.PodLis
 	return clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 }
 
+// ListPodsWithLabels will get all the pods corresponding to a namespace and labels
+func ListPodsWithLabels(clientset *kubernetes.Clientset, namespace string, labelSelector string) (*corev1.PodList, error) {
+	return clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// DeletePod will delete the input pods corresponding to a namespace
+func DeletePod(clientset *kubernetes.Clientset, namespace string, name string) error {
+	propagationPolicy := metav1.DeletePropagationBackground
+	return clientset.CoreV1().Pods(namespace).Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
+}
+
 // GetReplicationController will get the replication controller corresponding to a namespace and name
 func GetReplicationController(clientset *kubernetes.Clientset, namespace string, name string) (*corev1.ReplicationController, error) {
 	return clientset.CoreV1().ReplicationControllers(namespace).Get(name, metav1.GetOptions{})
@@ -423,6 +500,11 @@ func GetReplicationController(clientset *kubernetes.Clientset, namespace string,
 // ListReplicationControllers will get the replication controllers corresponding to a namespace
 func ListReplicationControllers(clientset *kubernetes.Clientset, namespace string, labelSelector string) (*corev1.ReplicationControllerList, error) {
 	return clientset.CoreV1().ReplicationControllers(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateReplicationController updates the replication controller
+func UpdateReplicationController(clientset *kubernetes.Clientset, namespace string, rc *corev1.ReplicationController) (*corev1.ReplicationController, error) {
+	return clientset.CoreV1().ReplicationControllers(namespace).Update(rc)
 }
 
 // DeleteReplicationController will delete the replication controller corresponding to a namespace and name
@@ -441,6 +523,11 @@ func GetDeployment(clientset *kubernetes.Clientset, namespace string, name strin
 // ListDeployments will get all the deployments corresponding to a namespace
 func ListDeployments(clientset *kubernetes.Clientset, namespace string, labelSelector string) (*appsv1.DeploymentList, error) {
 	return clientset.AppsV1().Deployments(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateDeployment updates the deployment
+func UpdateDeployment(clientset *kubernetes.Clientset, namespace string, deployment *appsv1.Deployment) (*appsv1.Deployment, error) {
+	return clientset.AppsV1().Deployments(namespace).Update(deployment)
 }
 
 // DeleteDeployment will delete the deployment corresponding to a namespace and name
@@ -547,46 +634,6 @@ func WaitForServiceEndpointReady(clientset *kubernetes.Clientset, namespace stri
 	return nil
 }
 
-// ValidatePodsAreRunningInNamespace will validate whether the pods are running in a given namespace
-func ValidatePodsAreRunningInNamespace(clientset *kubernetes.Clientset, namespace string, timeoutInSeconds int64) error {
-	// timer starts the timer for timeoutInSeconds. If the task doesn't completed, return error
-	timeout := time.NewTimer(time.Duration(timeoutInSeconds) * time.Second)
-	// ticker starts and execute the task for every n intervals
-	ticker := time.NewTicker(10 * time.Second)
-	for {
-		select {
-		case <-timeout.C:
-			ticker.Stop()
-			return fmt.Errorf("the pods weren't able to start - timing out after %d seconds", timeoutInSeconds)
-		case <-ticker.C:
-			pods, err := ListPods(clientset, namespace)
-			if err != nil {
-				timeout.Stop()
-				ticker.Stop()
-				return fmt.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
-			}
-			if ValidatePodsAreRunning(clientset, pods) {
-				timeout.Stop()
-				ticker.Stop()
-				return nil
-			}
-		}
-	}
-}
-
-// ValidatePodsAreRunning will validate whether the pods are running
-func ValidatePodsAreRunning(clientset *kubernetes.Clientset, pods *corev1.PodList) bool {
-	// Check whether all pods are running
-	for _, podList := range pods.Items {
-		pod, _ := clientset.CoreV1().Pods(podList.Namespace).Get(podList.Name, metav1.GetOptions{})
-		if !strings.EqualFold(string(pod.Status.Phase), "Running") {
-			log.Infof("pod %s is in %s status...", pod.Name, string(pod.Status.Phase))
-			return false
-		}
-	}
-	return true
-}
-
 // FilterPodByNamePrefixInNamespace will filter the pod based on pod name prefix from a list a pods in a given namespace
 func FilterPodByNamePrefixInNamespace(clientset *kubernetes.Clientset, namespace string, prefix string) (*corev1.Pod, error) {
 	pods, err := ListPods(clientset, namespace)
@@ -668,35 +715,66 @@ func DeletePVC(clientset *kubernetes.Clientset, namespace string, name string) e
 	return clientset.CoreV1().PersistentVolumeClaims(namespace).Delete(name, &metav1.DeleteOptions{})
 }
 
-// CreateHub will create hub in the cluster
-func CreateHub(hubClientset *hubclientset.Clientset, namespace string, createHub *blackduckapi.Blackduck) (*blackduckapi.Blackduck, error) {
-	return hubClientset.SynopsysV1().Blackducks(namespace).Create(createHub)
+// CreateBlackduck will create hub in the cluster
+func CreateBlackduck(blackduckClientset *hubclientset.Clientset, namespace string, createHub *blackduckapi.Blackduck) (*blackduckapi.Blackduck, error) {
+	result := &blackduckapi.Blackduck{}
+	req := blackduckClientset.SynopsysV1().RESTClient().Post().Resource("blackducks").Body(createHub)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
-// ListHubs will list all hubs in the cluster
-func ListHubs(hubClientset *hubclientset.Clientset, namespace string) (*blackduckapi.BlackduckList, error) {
-	return hubClientset.SynopsysV1().Blackducks(namespace).List(metav1.ListOptions{})
+// GetBlackduck will get hubs in the cluster
+func GetBlackduck(blackduckClientset *hubclientset.Clientset, namespace string, name string, options metav1.GetOptions) (*blackduckapi.Blackduck, error) {
+	result := &blackduckapi.Blackduck{}
+	req := blackduckClientset.SynopsysV1().RESTClient().Get().Resource("blackducks").Name(name).VersionedParams(&options, blackduckScheme.ParameterCodec)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
-// GetHub will get hubs in the cluster
-func GetHub(hubClientset *hubclientset.Clientset, namespace string, name string) (*blackduckapi.Blackduck, error) {
-	return hubClientset.SynopsysV1().Blackducks(namespace).Get(name, metav1.GetOptions{})
-}
+// ListBlackduck gets all blackducks
+func ListBlackduck(blackduckClientset *hubclientset.Clientset, namespace string, opts metav1.ListOptions) (*blackduckapi.BlackduckList, error) {
+	result := &blackduckapi.BlackduckList{}
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	req := blackduckClientset.SynopsysV1().RESTClient().Get().Resource("blackducks").VersionedParams(&opts, blackduckScheme.ParameterCodec).Timeout(timeout)
 
-// GetBlackducks gets all blackducks
-func GetBlackducks(clientSet *hubclientset.Clientset) (*blackduckapi.BlackduckList, error) {
-	return clientSet.SynopsysV1().Blackducks(metav1.NamespaceAll).List(metav1.ListOptions{})
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // UpdateBlackduck will update Blackduck in the cluster
-func UpdateBlackduck(blackduckClientset *hubclientset.Clientset, namespace string, blackduck *blackduckapi.Blackduck) (*blackduckapi.Blackduck, error) {
-	return blackduckClientset.SynopsysV1().Blackducks(namespace).Update(blackduck)
+func UpdateBlackduck(blackduckClientset *hubclientset.Clientset, blackduck *blackduckapi.Blackduck) (*blackduckapi.Blackduck, error) {
+	result := &blackduckapi.Blackduck{}
+	req := blackduckClientset.SynopsysV1().RESTClient().Put().Resource("blackducks").Body(blackduck).Name(blackduck.Name)
+
+	if len(blackduck.Namespace) > 0 {
+		req = req.Namespace(blackduck.Namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // UpdateBlackducks will update a set of Blackducks in the cluster
 func UpdateBlackducks(clientSet *hubclientset.Clientset, blackduckCRDs []blackduckapi.Blackduck) error {
 	for _, crd := range blackduckCRDs {
-		_, err := UpdateBlackduck(clientSet, crd.Spec.Namespace, &crd)
+		_, err := UpdateBlackduck(clientSet, &crd)
 		if err != nil {
 			return err
 		}
@@ -704,24 +782,57 @@ func UpdateBlackducks(clientSet *hubclientset.Clientset, blackduckCRDs []blackdu
 	return nil
 }
 
-// WatchHubs will watch for hub events in the cluster
-func WatchHubs(hubClientset *hubclientset.Clientset, namespace string) (watch.Interface, error) {
-	return hubClientset.SynopsysV1().Blackducks(namespace).Watch(metav1.ListOptions{})
+// DeleteBlackduck will delete Blackduck in the cluster
+func DeleteBlackduck(blackduckClientset *hubclientset.Clientset, name string, namespace string, options *metav1.DeleteOptions) error {
+	req := blackduckClientset.SynopsysV1().RESTClient().Delete().Resource("blackducks").Name(name).Body(options)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+	return req.Do().Error()
 }
 
 // CreateOpsSight will create opsSight in the cluster
 func CreateOpsSight(opssightClientset *opssightclientset.Clientset, namespace string, opssight *opssightapi.OpsSight) (*opssightapi.OpsSight, error) {
-	return opssightClientset.SynopsysV1().OpsSights(namespace).Create(opssight)
+	result := &opssightapi.OpsSight{}
+	req := opssightClientset.SynopsysV1().RESTClient().Post().Resource("opssights").Body(opssight)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // ListOpsSights will list all opssights in the cluster
-func ListOpsSights(opssightClientset *opssightclientset.Clientset, namespace string) (*opssightapi.OpsSightList, error) {
-	return opssightClientset.SynopsysV1().OpsSights(namespace).List(metav1.ListOptions{})
+func ListOpsSights(opssightClientset *opssightclientset.Clientset, namespace string, opts metav1.ListOptions) (*opssightapi.OpsSightList, error) {
+	result := &opssightapi.OpsSightList{}
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	req := opssightClientset.SynopsysV1().RESTClient().Get().Resource("opssights").VersionedParams(&opts, opssightScheme.ParameterCodec).Timeout(timeout)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // GetOpsSight will get OpsSight in the cluster
-func GetOpsSight(opssightClientset *opssightclientset.Clientset, namespace string, name string) (*opssightapi.OpsSight, error) {
-	return opssightClientset.SynopsysV1().OpsSights(namespace).Get(name, metav1.GetOptions{})
+func GetOpsSight(opssightClientset *opssightclientset.Clientset, namespace string, name string, options metav1.GetOptions) (*opssightapi.OpsSight, error) {
+	result := &opssightapi.OpsSight{}
+	req := opssightClientset.SynopsysV1().RESTClient().Get().Resource("opssights").Name(name).VersionedParams(&options, opssightScheme.ParameterCodec)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // GetOpsSights gets all opssights
@@ -731,7 +842,15 @@ func GetOpsSights(clientSet *opssightclientset.Clientset) (*opssightapi.OpsSight
 
 // UpdateOpsSight will update OpsSight in the cluster
 func UpdateOpsSight(opssightClientset *opssightclientset.Clientset, namespace string, opssight *opssightapi.OpsSight) (*opssightapi.OpsSight, error) {
-	return opssightClientset.SynopsysV1().OpsSights(namespace).Update(opssight)
+	result := &opssightapi.OpsSight{}
+	req := opssightClientset.SynopsysV1().RESTClient().Put().Resource("opssights").Body(opssight).Name(opssight.Name)
+
+	if len(opssight.Namespace) > 0 {
+		req = req.Namespace(opssight.Namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // UpdateOpsSights will update a set of OpsSights in the cluster
@@ -745,19 +864,57 @@ func UpdateOpsSights(clientSet *opssightclientset.Clientset, opsSightCRDs []opss
 	return nil
 }
 
+// DeleteOpsSight will delete OpsSight in the cluster
+func DeleteOpsSight(clientSet *opssightclientset.Clientset, name string, namespace string, options *metav1.DeleteOptions) error {
+	req := clientSet.SynopsysV1().RESTClient().Delete().Resource("opssights").Name(name).Body(options)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+	return req.Do().Error()
+}
+
 // CreateAlert will create alert in the cluster
 func CreateAlert(alertClientset *alertclientset.Clientset, namespace string, createAlert *alertapi.Alert) (*alertapi.Alert, error) {
-	return alertClientset.SynopsysV1().Alerts(namespace).Create(createAlert)
+	result := &alertapi.Alert{}
+	req := alertClientset.SynopsysV1().RESTClient().Post().Resource("alerts").Body(createAlert)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // ListAlerts will list all alerts in the cluster
-func ListAlerts(clientSet *alertclientset.Clientset, namespace string) (*alertapi.AlertList, error) {
-	return clientSet.SynopsysV1().Alerts(namespace).List(metav1.ListOptions{})
+func ListAlerts(clientSet *alertclientset.Clientset, namespace string, opts metav1.ListOptions) (*alertapi.AlertList, error) {
+	result := &alertapi.AlertList{}
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
+	req := clientSet.SynopsysV1().RESTClient().Get().Resource("alerts").VersionedParams(&opts, alertScheme.ParameterCodec).Timeout(timeout)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // GetAlert will get Alert in the cluster
-func GetAlert(clientSet *alertclientset.Clientset, namespace string, name string) (*alertapi.Alert, error) {
-	return clientSet.SynopsysV1().Alerts(namespace).Get(name, metav1.GetOptions{})
+func GetAlert(clientSet *alertclientset.Clientset, namespace string, name string, options metav1.GetOptions) (*alertapi.Alert, error) {
+	result := &alertapi.Alert{}
+	req := clientSet.SynopsysV1().RESTClient().Get().Resource("alerts").Name(name).VersionedParams(&options, alertScheme.ParameterCodec)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // GetAlerts gets all alerts
@@ -767,7 +924,15 @@ func GetAlerts(clientSet *alertclientset.Clientset) (*alertapi.AlertList, error)
 
 // UpdateAlert will update an Alert in the cluster
 func UpdateAlert(clientSet *alertclientset.Clientset, namespace string, alert *alertapi.Alert) (*alertapi.Alert, error) {
-	return clientSet.SynopsysV1().Alerts(namespace).Update(alert)
+	result := &alertapi.Alert{}
+	req := clientSet.SynopsysV1().RESTClient().Put().Resource("alerts").Body(alert).Name(alert.Name)
+
+	if len(alert.Namespace) > 0 {
+		req = req.Namespace(alert.Namespace)
+	}
+
+	err := req.Do().Into(result)
+	return result, err
 }
 
 // UpdateAlerts will update a set of Alerts in the cluster
@@ -781,11 +946,21 @@ func UpdateAlerts(clientSet *alertclientset.Clientset, alertCRDs []alertapi.Aler
 	return nil
 }
 
+// DeleteAlert will delete Alert in the cluster
+func DeleteAlert(clientSet *alertclientset.Clientset, name string, namespace string, options *metav1.DeleteOptions) error {
+	req := clientSet.SynopsysV1().RESTClient().Delete().Resource("alerts").Name(name).Body(options)
+
+	if len(namespace) > 0 {
+		req = req.Namespace(namespace)
+	}
+	return req.Do().Error()
+}
+
 // ListHubPV will list all the persistent volumes attached to each hub in the cluster
 func ListHubPV(hubClientset *hubclientset.Clientset, namespace string) (map[string]string, error) {
 	var pvList map[string]string
 	pvList = make(map[string]string)
-	hubs, err := ListHubs(hubClientset, namespace)
+	hubs, err := ListBlackduck(hubClientset, namespace, metav1.ListOptions{})
 	if err != nil {
 		log.Errorf("unable to list the hubs due to %+v", err)
 		return pvList, err
@@ -839,10 +1014,22 @@ func getBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
+// Base64Encode will return an encoded string using a URL-compatible base64 format
+func Base64Encode(data []byte) string {
+	return base64.URLEncoding.EncodeToString(data)
+}
+
+// Base64Decode will return a decoded string using a URL-compatible base64 format;
+// decoding may return an error, which you can check if you don’t already know the input to be well-formed.
+func Base64Decode(data string) (string, error) {
+	uDec, err := base64.URLEncoding.DecodeString(data)
+	return string(uDec), err
+}
+
 // RandomString will generate the random string
 func RandomString(n int) (string, error) {
 	b, err := getBytes(n)
-	return base64.URLEncoding.EncodeToString(b), err
+	return Base64Encode(b), err
 }
 
 // CreateServiceAccount creates a service account
@@ -898,22 +1085,22 @@ func CreateClusterRoleBinding(namespace string, name string, serviceAccountName 
 
 // GetClusterRoleBinding get a cluster role
 func GetClusterRoleBinding(clientset *kubernetes.Clientset, name string) (*rbacv1.ClusterRoleBinding, error) {
-	return clientset.Rbac().ClusterRoleBindings().Get(name, metav1.GetOptions{})
+	return clientset.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{})
 }
 
 // ListClusterRoleBindings list a cluster role binding
 func ListClusterRoleBindings(clientset *kubernetes.Clientset, labelSelector string) (*rbacv1.ClusterRoleBindingList, error) {
-	return clientset.Rbac().ClusterRoleBindings().List(metav1.ListOptions{LabelSelector: labelSelector})
+	return clientset.RbacV1().ClusterRoleBindings().List(metav1.ListOptions{LabelSelector: labelSelector})
 }
 
 // UpdateClusterRoleBinding updates the cluster role binding
 func UpdateClusterRoleBinding(clientset *kubernetes.Clientset, clusterRoleBinding *rbacv1.ClusterRoleBinding) (*rbacv1.ClusterRoleBinding, error) {
-	return clientset.Rbac().ClusterRoleBindings().Update(clusterRoleBinding)
+	return clientset.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
 }
 
 // DeleteClusterRoleBinding delete a cluster role binding
 func DeleteClusterRoleBinding(clientset *kubernetes.Clientset, name string) error {
-	return clientset.Rbac().ClusterRoleBindings().Delete(name, &metav1.DeleteOptions{})
+	return clientset.RbacV1().ClusterRoleBindings().Delete(name, &metav1.DeleteOptions{})
 }
 
 // IsClusterRoleBindingSubjectNamespaceExist checks whether the namespace is already exist in the subject of cluster role binding
@@ -926,8 +1113,26 @@ func IsClusterRoleBindingSubjectNamespaceExist(subjects []rbacv1.Subject, namesp
 	return false
 }
 
-// IsClusterRoleBindingSubjectExist checks whether the namespace is already exist in the subject of cluster role binding
-func IsClusterRoleBindingSubjectExist(subjects []rbacv1.Subject, namespace string, name string) bool {
+// IsClusterRoleRefExistForOtherNamespace checks whether the cluster role exist for any cluster role bindings present in other namespace
+func IsClusterRoleRefExistForOtherNamespace(roleRef rbacv1.RoleRef, roleName string, namespace string, subjects []rbacv1.Subject) bool {
+	for _, subject := range subjects {
+		if "clusterrole" == strings.ToLower(roleRef.Kind) && strings.EqualFold(roleRef.Name, roleName) && !strings.EqualFold(namespace, subject.Namespace) {
+			return true
+		}
+	}
+	return false
+}
+
+// IsSubjectExistForOtherNamespace checks whether anyother namespace is exist in the subject of cluster role binding
+func IsSubjectExistForOtherNamespace(subject rbacv1.Subject, namespace string) bool {
+	if !strings.EqualFold(subject.Namespace, namespace) {
+		return true
+	}
+	return false
+}
+
+// IsSubjectExist checks whether the namespace is already exist in the subject of cluster role binding
+func IsSubjectExist(subjects []rbacv1.Subject, namespace string, name string) bool {
 	for _, subject := range subjects {
 		if strings.EqualFold(subject.Namespace, namespace) && strings.EqualFold(subject.Name, name) {
 			return true
@@ -938,22 +1143,22 @@ func IsClusterRoleBindingSubjectExist(subjects []rbacv1.Subject, namespace strin
 
 // GetClusterRole get a cluster role
 func GetClusterRole(clientset *kubernetes.Clientset, name string) (*rbacv1.ClusterRole, error) {
-	return clientset.Rbac().ClusterRoles().Get(name, metav1.GetOptions{})
+	return clientset.RbacV1().ClusterRoles().Get(name, metav1.GetOptions{})
 }
 
 // ListClusterRoles list a cluster role
 func ListClusterRoles(clientset *kubernetes.Clientset, labelSelector string) (*rbacv1.ClusterRoleList, error) {
-	return clientset.Rbac().ClusterRoles().List(metav1.ListOptions{LabelSelector: labelSelector})
+	return clientset.RbacV1().ClusterRoles().List(metav1.ListOptions{LabelSelector: labelSelector})
 }
 
 // UpdateClusterRole updates the cluster role
 func UpdateClusterRole(clientset *kubernetes.Clientset, clusterRole *rbacv1.ClusterRole) (*rbacv1.ClusterRole, error) {
-	return clientset.Rbac().ClusterRoles().Update(clusterRole)
+	return clientset.RbacV1().ClusterRoles().Update(clusterRole)
 }
 
-// DeleteClusterRole delete a cluster role binding
+// DeleteClusterRole delete a cluster role
 func DeleteClusterRole(clientset *kubernetes.Clientset, name string) error {
-	return clientset.Rbac().ClusterRoles().Delete(name, &metav1.DeleteOptions{})
+	return clientset.RbacV1().ClusterRoles().Delete(name, &metav1.DeleteOptions{})
 }
 
 // IsClusterRoleRuleExist checks whether the namespace is already exist in the rule of cluster role
@@ -966,52 +1171,106 @@ func IsClusterRoleRuleExist(oldRules []rbacv1.PolicyRule, newRule rbacv1.PolicyR
 	return false
 }
 
+// GetRole get a role
+func GetRole(clientset *kubernetes.Clientset, namespace string, name string) (*rbacv1.Role, error) {
+	return clientset.RbacV1().Roles(namespace).Get(name, metav1.GetOptions{})
+}
+
+// ListRoles list a role
+func ListRoles(clientset *kubernetes.Clientset, namespace string, labelSelector string) (*rbacv1.RoleList, error) {
+	return clientset.RbacV1().Roles(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateRole updates the role
+func UpdateRole(clientset *kubernetes.Clientset, namespace string, role *rbacv1.Role) (*rbacv1.Role, error) {
+	return clientset.RbacV1().Roles(namespace).Update(role)
+}
+
+// DeleteRole delete a role
+func DeleteRole(clientset *kubernetes.Clientset, namespace string, name string) error {
+	return clientset.RbacV1().Roles(namespace).Delete(name, &metav1.DeleteOptions{})
+}
+
+// GetRoleBinding get a role binding
+func GetRoleBinding(clientset *kubernetes.Clientset, namespace string, name string) (*rbacv1.RoleBinding, error) {
+	return clientset.RbacV1().RoleBindings(namespace).Get(name, metav1.GetOptions{})
+}
+
+// ListRoleBindings list a role binding
+func ListRoleBindings(clientset *kubernetes.Clientset, namespace string, labelSelector string) (*rbacv1.RoleBindingList, error) {
+	return clientset.RbacV1().RoleBindings(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateRoleBinding updates the role binding
+func UpdateRoleBinding(clientset *kubernetes.Clientset, namespace string, role *rbacv1.RoleBinding) (*rbacv1.RoleBinding, error) {
+	return clientset.RbacV1().RoleBindings(namespace).Update(role)
+}
+
+// DeleteRoleBinding delete a role binding
+func DeleteRoleBinding(clientset *kubernetes.Clientset, namespace string, name string) error {
+	return clientset.RbacV1().RoleBindings(namespace).Delete(name, &metav1.DeleteOptions{})
+}
+
 // GetRouteClient attempts to get a Route Client. It returns nil if it
 // fails due to an error or due to being on kubernetes (doesn't support routes)
-func GetRouteClient(restConfig *rest.Config) *routeclient.RouteV1Client {
+func GetRouteClient(restConfig *rest.Config, clientset *kubernetes.Clientset, namespace string) *routeclient.RouteV1Client {
 	routeClient, err := routeclient.NewForConfig(restConfig)
 	if err != nil {
-		routeClient = nil
-		log.Debugf("Error getting route client")
-	} else {
-		_, err := GetOpenShiftRoutes(routeClient, "default", "docker-registry")
-		if err != nil && strings.Contains(err.Error(), "could not find the requested resource") && strings.Contains(err.Error(), "openshift.io") {
-			log.Debugf("Ignoring routes for kubernetes cluster")
-			routeClient = nil
-		}
+		return nil
 	}
 	return routeClient
 }
 
-// GetOpenShiftRoutes get a OpenShift routes
-func GetOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace string, name string) (*routev1.Route, error) {
+// GetRoute gets an OpenShift routes
+func GetRoute(routeClient *routeclient.RouteV1Client, namespace string, name string) (*routev1.Route, error) {
 	return routeClient.Routes(namespace).Get(name, metav1.GetOptions{})
 }
 
-// CreateOpenShiftRoutes creates a OpenShift routes
-func CreateOpenShiftRoutes(routeClient *routeclient.RouteV1Client, namespace string, name string, routeKind string, serviceName string) (*routev1.Route, error) {
-	return routeClient.Routes(namespace).Create(&routev1.Route{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		Spec: routev1.RouteSpec{
-			TLS: &routev1.TLSConfig{Termination: routev1.TLSTerminationPassthrough},
-			To: routev1.RouteTargetReference{
-				Kind: routeKind,
-				Name: serviceName,
-			},
-			Port: &routev1.RoutePort{TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: fmt.Sprintf("port-%s", serviceName)}},
-		},
-	})
+// ListRoutes list an OpenShift routes
+func ListRoutes(routeClient *routeclient.RouteV1Client, namespace string, labelSelector string) (*routev1.RouteList, error) {
+	return routeClient.Routes(namespace).List(metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-// GetOpenShiftSecurityConstraint get a OpenShift security constraints
+// UpdateRoute updates an OpenShift routes
+func UpdateRoute(routeClient *routeclient.RouteV1Client, namespace string, route *routev1.Route) (*routev1.Route, error) {
+	return routeClient.Routes(namespace).Update(route)
+}
+
+// GetRouteComponent returns the route component
+func GetRouteComponent(routeClient *routeclient.RouteV1Client, route *api.Route, labels map[string]string) *routev1.Route {
+	return &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      route.Name,
+			Namespace: route.Namespace,
+			Labels:    labels,
+		},
+		Spec: routev1.RouteSpec{
+			TLS: &routev1.TLSConfig{Termination: route.TLSTerminationType},
+			To: routev1.RouteTargetReference{
+				Kind: route.Kind,
+				Name: route.ServiceName,
+			},
+			Port: &routev1.RoutePort{TargetPort: intstr.IntOrString{Type: intstr.String, StrVal: route.PortName}},
+		},
+	}
+}
+
+// CreateRoute creates an OpenShift routes
+func CreateRoute(routeClient *routeclient.RouteV1Client, namespace string, route *routev1.Route) (*routev1.Route, error) {
+	return routeClient.Routes(namespace).Create(route)
+}
+
+// DeleteRoute deletes an OpenShift routes
+func DeleteRoute(routeClient *routeclient.RouteV1Client, namespace string, name string) error {
+	return routeClient.Routes(namespace).Delete(name, &metav1.DeleteOptions{})
+}
+
+// GetOpenShiftSecurityConstraint gets an OpenShift security constraints
 func GetOpenShiftSecurityConstraint(osSecurityClient *securityclient.SecurityV1Client, name string) (*securityv1.SecurityContextConstraints, error) {
 	return osSecurityClient.SecurityContextConstraints().Get(name, metav1.GetOptions{})
 }
 
-// UpdateOpenShiftSecurityConstraint updates a OpenShift security constraints
+// UpdateOpenShiftSecurityConstraint updates an OpenShift security constraints
 func UpdateOpenShiftSecurityConstraint(osSecurityClient *securityclient.SecurityV1Client, serviceAccounts []string, name string) error {
 	scc, err := GetOpenShiftSecurityConstraint(osSecurityClient, name)
 	if err != nil {
@@ -1045,6 +1304,65 @@ func UpdateOpenShiftSecurityConstraint(osSecurityClient *securityclient.Security
 	return err
 }
 
+// EnsureFilterPodsByNamePrefixInNamespaceToZero filters the pods based on the prefix and make sure that it is zero
+func EnsureFilterPodsByNamePrefixInNamespaceToZero(clientset *kubernetes.Clientset, namespace string, prefix string) error {
+	// timer starts the timer for timeoutInSeconds. If the task doesn't completed, return error
+	timeout := time.NewTimer(120 * time.Second)
+	// ticker starts and execute the task for every n intervals
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			pods, err := filterPodsByNamePrefixInNamespace(clientset, namespace, prefix)
+			if err != nil {
+				return err
+			}
+
+			if len(pods) == 0 {
+				return nil
+			}
+			return fmt.Errorf("[WARNING] timeout expired to scale down the pod for replication controller %s in namespace %s", prefix, namespace)
+		case <-ticker.C:
+			pods, err := filterPodsByNamePrefixInNamespace(clientset, namespace, prefix)
+			if err != nil {
+				return err
+			}
+
+			if len(pods) == 0 {
+				return nil
+			}
+		}
+	}
+}
+
+// filterPodsByNamePrefixInNamespace will filter the pod based on pod name prefix from a list a pods in a given namespace
+func filterPodsByNamePrefixInNamespace(clientset *kubernetes.Clientset, namespace string, prefix string) ([]*corev1.Pod, error) {
+	pods, err := ListPods(clientset, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("unable to list the pods in namespace %s due to %+v", namespace, err)
+	}
+
+	pod := filterPodsByNamePrefix(pods, prefix)
+	if len(pod) > 0 {
+		return pod, nil
+	}
+	return nil, nil
+}
+
+// filterPodsByNamePrefix will filter the pod based on pod name prefix from a list a pods
+func filterPodsByNamePrefix(pods *corev1.PodList, prefix string) []*corev1.Pod {
+	podsArr := make([]*corev1.Pod, 0)
+	for _, pod := range pods.Items {
+		if strings.HasPrefix(pod.Name, prefix) && pod.Status.Phase != corev1.PodFailed && pod.Status.Phase != corev1.PodUnknown {
+			podsArr = append(podsArr, &pod)
+		}
+	}
+	return podsArr
+}
+
 // PatchReplicationControllerForReplicas patch a replication controller for replica update
 func PatchReplicationControllerForReplicas(clientset *kubernetes.Clientset, old *corev1.ReplicationController, replicas *int32) (*corev1.ReplicationController, error) {
 	oldData, err := json.Marshal(old)
@@ -1065,11 +1383,12 @@ func PatchReplicationControllerForReplicas(clientset *kubernetes.Clientset, old 
 	if err != nil {
 		return nil, err
 	}
+
 	return rc, nil
 }
 
 // PatchReplicationController patch a replication controller
-func PatchReplicationController(clientset *kubernetes.Clientset, old corev1.ReplicationController, new corev1.ReplicationController) error {
+func PatchReplicationController(clientset *kubernetes.Clientset, old corev1.ReplicationController, new corev1.ReplicationController, isUpdateReplica bool) error {
 	oldData, err := json.Marshal(old)
 	if err != nil {
 		return err
@@ -1087,15 +1406,13 @@ func PatchReplicationController(clientset *kubernetes.Clientset, old corev1.Repl
 		return err
 	}
 
-	newRc, err = PatchReplicationControllerForReplicas(clientset, newRc, IntToInt32(0))
-	if err != nil {
-		return err
+	if !isUpdateReplica {
+		newRc, err = PatchReplicationControllerForReplicas(clientset, newRc, IntToInt32(0))
+		if err != nil {
+			return err
+		}
 	}
 
-	newRc, err = PatchReplicationControllerForReplicas(clientset, newRc, new.Spec.Replicas)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -1123,7 +1440,7 @@ func PatchDeploymentForReplicas(clientset *kubernetes.Clientset, old *appsv1.Dep
 }
 
 // PatchDeployment patch a deployment
-func PatchDeployment(clientset *kubernetes.Clientset, old appsv1.Deployment, new appsv1beta2.Deployment) error {
+func PatchDeployment(clientset *kubernetes.Clientset, old appsv1.Deployment, new appsv1.Deployment) error {
 	oldData, err := json.Marshal(old)
 	if err != nil {
 		return err
@@ -1166,4 +1483,480 @@ func UniqueValues(input []string) []string {
 	}
 
 	return u
+}
+
+// GetCustomResourceDefinition get the custom resource defintion
+func GetCustomResourceDefinition(apiExtensionClient *apiextensionsclient.Clientset, name string) (*apiextensions.CustomResourceDefinition, error) {
+	return apiExtensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, metav1.GetOptions{})
+}
+
+// ListCustomResourceDefinitions list the custom resource defintions
+func ListCustomResourceDefinitions(apiExtensionClient *apiextensionsclient.Clientset, labelSelector string) (*apiextensions.CustomResourceDefinitionList, error) {
+	return apiExtensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().List(metav1.ListOptions{LabelSelector: labelSelector})
+}
+
+// UpdateCustomResourceDefinition updates the custom resource defintion
+func UpdateCustomResourceDefinition(apiExtensionClient *apiextensionsclient.Clientset, crd *apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error) {
+	return apiExtensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
+}
+
+// DeleteCustomResourceDefinition deletes the custom resource defintion
+func DeleteCustomResourceDefinition(apiExtensionClient *apiextensionsclient.Clientset, name string) error {
+	return apiExtensionClient.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(name, &metav1.DeleteOptions{})
+}
+
+// WaitUntilPodsAreReady will wait for the pods to be ready
+func WaitUntilPodsAreReady(clientset *kubernetes.Clientset, namespace string, labelSelector string, timeoutInSeconds int64) error {
+	// timer starts the timer for timeoutInSeconds. If the task doesn't completed, return error
+	timeout := time.NewTimer(time.Duration(timeoutInSeconds) * time.Second)
+	// ticker starts and execute the task for every n intervals
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	defer timeout.Stop()
+
+	for {
+		select {
+		case <-timeout.C:
+			// check right before the timeout; this will handle both when timeout is less than ticker; and also when timeout is not a multiple of 10 seconds
+			podsAreReady, err := ArePodsReady(clientset, namespace, labelSelector)
+			if err != nil {
+				return err
+			}
+			if podsAreReady == false {
+				return nil
+			}
+			return fmt.Errorf("[NS: %s | Label: %s] the pods weren't ready - timing out after %d seconds", namespace, labelSelector, timeoutInSeconds)
+		case <-ticker.C:
+			// log.Debugf("Ticker ticked at: %v", time.Now())
+			podsAreReady, err := ArePodsReady(clientset, namespace, labelSelector)
+			if err != nil {
+				return err
+			}
+			if podsAreReady == true {
+				return nil
+			}
+		}
+	}
+}
+
+// ArePodsReady returns whether the pods are ready or not. Returns an error if pods will never become ready.
+func ArePodsReady(clientset *kubernetes.Clientset, namespace string, labelSelector string) (bool, error) {
+	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	// Check if all the pods are ready
+	arePodsReady := true
+	for _, p := range pods.Items {
+		// Skip if a pod is in a failed or unknown state
+		if p.Status.Phase == corev1.PodFailed || p.Status.Phase == corev1.PodUnknown {
+			continue
+		}
+		// verify the pod is ready, otherwise set arePodsReady to false
+		for _, condition := range p.Status.Conditions {
+			if condition.Type == corev1.PodReady && condition.Status == corev1.ConditionFalse {
+				arePodsReady = false
+			}
+		}
+	}
+	return arePodsReady, nil
+}
+
+// GetClusterScopeByName returns whether the CRD is cluster scope
+func GetClusterScopeByName(apiExtensionClient *apiextensionsclient.Clientset, name string) bool {
+	cr, err := GetCustomResourceDefinition(apiExtensionClient, name)
+	if err == nil && strings.EqualFold("CLUSTER", string(cr.Spec.Scope)) {
+		return true
+	}
+	return false
+}
+
+// GetClusterScope returns whether any of the CRD is cluster scope
+func GetClusterScope(apiExtensionClient *apiextensionsclient.Clientset) bool {
+	crds := []string{AlertCRDName, BlackDuckCRDName, OpsSightCRDName}
+	for _, crd := range crds {
+		cr, err := GetCustomResourceDefinition(apiExtensionClient, crd)
+		if err == nil && strings.EqualFold("CLUSTER", string(cr.Spec.Scope)) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetOperatorNamespace uses labels to return the namespace of the synopsys operator based on
+// the provided namespace. In cluster scoped mode it will return the namespaces of all operators if provided
+// namespace=NamespaceAll. In namespace scoped mode it will return nil if there is no operator in
+// the namespace
+func GetOperatorNamespace(clientset *kubernetes.Clientset, namespace string) ([]string, error) {
+	namespaces := make(map[string]string, 0)
+	// check if operator is already installed
+	rcs, err := ListReplicationControllers(clientset, namespace, "app=synopsys-operator,component=operator")
+	if err == nil && len(rcs.Items) > 0 {
+		for _, rc := range rcs.Items {
+			if metav1.NamespaceAll != namespace {
+				return []string{rc.Namespace}, nil
+			}
+			if _, ok := namespaces[rc.Namespace]; !ok {
+				namespaces[rc.Namespace] = rc.Namespace
+			}
+		}
+	}
+	deployments, err := ListDeployments(clientset, namespace, "app=synopsys-operator,component=operator")
+	if err == nil && len(deployments.Items) > 0 {
+		for _, deployment := range deployments.Items {
+			if metav1.NamespaceAll != namespace {
+				return []string{deployment.Namespace}, nil
+			}
+			if _, ok := namespaces[deployment.Namespace]; !ok {
+				namespaces[deployment.Namespace] = deployment.Namespace
+			}
+		}
+	}
+	pods, err := ListPodsWithLabels(clientset, namespace, "app=synopsys-operator,component=operator")
+	if err == nil && len(pods.Items) > 0 {
+		for _, pod := range pods.Items {
+			if metav1.NamespaceAll != namespace {
+				return []string{pod.Namespace}, nil
+			}
+			if _, ok := namespaces[pod.Namespace]; !ok {
+				namespaces[pod.Namespace] = pod.Namespace
+			}
+		}
+	}
+	if len(namespaces) > 0 {
+		return MapKeyToStringArray(namespaces), nil
+	}
+	return nil, fmt.Errorf("unable to find the synopsys operator namespace")
+}
+
+// MapKeyToStringArray will return map keys
+func MapKeyToStringArray(maps map[string]string) []string {
+	keys := make([]string, 0)
+	for key := range maps {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+// GetOperatorRoles returns the roles or the cluster role of the synopsys operator based on the labels
+func GetOperatorRoles(clientset *kubernetes.Clientset, namespace string) ([]string, []string, error) {
+	clusterRoles := []string{}
+	roles := []string{}
+
+	// synopsysctl case
+	// list cluster roles with app=synopsys-operator
+	crs, err := ListClusterRoles(clientset, "app=synopsys-operator")
+	if err != nil {
+		return clusterRoles, roles, fmt.Errorf("unable to list the cluster roles due to %+v", err)
+	}
+	for _, cr := range crs.Items {
+		clusterRoles = append(clusterRoles, cr.Name)
+	}
+
+	// list roles with app=synopsys-operator
+	rs, err := ListRoles(clientset, namespace, "app=synopsys-operator")
+	if err != nil {
+		return clusterRoles, roles, fmt.Errorf("unable to list the roles due to %+v", err)
+	}
+	for _, r := range rs.Items {
+		roles = append(roles, r.Name)
+	}
+
+	// OLM case
+	if len(roles) == 0 {
+		// list cluster roles with app=synopsys-operator
+		crs, err := ListClusterRoles(clientset, fmt.Sprintf("olm.owner.namespace=%s,olm.owner.kind=ClusterServiceVersion", namespace))
+		if err != nil {
+			return clusterRoles, roles, fmt.Errorf("unable to list the cluster roles due to %+v", err)
+		}
+		for _, cr := range crs.Items {
+			clusterRoles = append(clusterRoles, cr.Name)
+		}
+
+		// list roles with app=synopsys-operator
+		rs, err := ListRoles(clientset, namespace, fmt.Sprintf("olm.owner.namespace=%s,olm.owner.kind=ClusterServiceVersion", namespace))
+		if err != nil {
+			return clusterRoles, roles, fmt.Errorf("unable to list the roles due to %+v", err)
+		}
+		for _, r := range rs.Items {
+			roles = append(roles, r.Name)
+		}
+	}
+	return UniqueStringSlice(clusterRoles), UniqueStringSlice(roles), nil
+}
+
+// GetOperatorRoleBindings returns the cluster role bindings of the synopsys operator based on the labels
+func GetOperatorRoleBindings(clientset *kubernetes.Clientset, namespace string) ([]string, []string, error) {
+	clusterRolebindings := []string{}
+	rolebindings := []string{}
+
+	// synopsysctl case
+	// list cluster role binding
+	crbs, err := ListClusterRoleBindings(clientset, "app=synopsys-operator,component=operator")
+	if err != nil {
+		return clusterRolebindings, rolebindings, fmt.Errorf("unable to list the cluster role bindings due to %+v", err)
+	}
+	for _, crb := range crbs.Items {
+		clusterRolebindings = append(clusterRolebindings, crb.Name)
+	}
+
+	// list role binding
+	rbs, err := ListRoleBindings(clientset, namespace, "app=synopsys-operator,component=operator")
+	if err != nil {
+		return clusterRolebindings, rolebindings, fmt.Errorf("unable to list the role bindings due to %+v", err)
+	}
+	for _, rb := range rbs.Items {
+		rolebindings = append(rolebindings, rb.Name)
+	}
+
+	// OLM case
+	if len(rolebindings) == 0 {
+		// list cluster role binding
+		crbs, err := ListClusterRoleBindings(clientset, fmt.Sprintf("olm.owner.namespace=%s,olm.owner.kind=ClusterServiceVersion", namespace))
+		if err != nil {
+			return clusterRolebindings, rolebindings, fmt.Errorf("unable to list the cluster role bindings due to %+v", err)
+		}
+		for _, crb := range crbs.Items {
+			clusterRolebindings = append(clusterRolebindings, crb.Name)
+		}
+
+		// list role binding
+		rbs, err := ListRoleBindings(clientset, namespace, fmt.Sprintf("olm.owner.namespace=%s,olm.owner.kind=ClusterServiceVersion", namespace))
+		if err != nil {
+			return clusterRolebindings, rolebindings, fmt.Errorf("unable to list the role bindings due to %+v", err)
+		}
+		for _, rb := range rbs.Items {
+			rolebindings = append(rolebindings, rb.Name)
+		}
+	}
+	return UniqueStringSlice(clusterRolebindings), UniqueStringSlice(rolebindings), nil
+}
+
+// GetKubernetesVersion will return the kubernetes version
+func GetKubernetesVersion(clientset *kubernetes.Clientset) (string, error) {
+	k, err := clientset.Discovery().ServerVersion()
+	if k != nil {
+		return k.GitVersion, nil
+	}
+	return "", err
+}
+
+// IsOpenshift will whether it is an openshift cluster
+func IsOpenshift(clientset *kubernetes.Clientset) bool {
+	body, err := clientset.Discovery().RESTClient().Get().AbsPath("/").Do().Raw()
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(string(body), "openshift")
+}
+
+// IsOperatorExist returns whether the operator exist or not
+func IsOperatorExist(clientset *kubernetes.Clientset, namespace string) bool {
+	rcs, err := ListReplicationControllers(clientset, namespace, "app=synopsys-operator")
+	if err == nil && len(rcs.Items) > 0 {
+		return true
+	}
+	deployments, err := ListDeployments(clientset, namespace, "app=synopsys-operator")
+	if err == nil && len(deployments.Items) > 0 {
+		return true
+	}
+	pods, err := ListPodsWithLabels(clientset, namespace, "app=synopsys-operator")
+	if err == nil && len(pods.Items) > 0 {
+		return true
+	}
+	return false
+}
+
+// isSynopsysResourceExist returns whether any Synopsys resources like Alert, Black Duck or OpsSight etc. exist in the namespace
+func isSynopsysResourceExist(namespace, label string) error {
+	crdNames := []string{AlertName, BlackDuckName, OpsSightName}
+	for _, crdName := range crdNames {
+		if strings.HasPrefix(label, fmt.Sprintf("synopsys.com/%s", crdName)) {
+			name := label[len(fmt.Sprintf("synopsys.com/%s", crdName))+1:]
+			return fmt.Errorf("%s %s instance is already running in %s namespace", name, crdName, namespace)
+		}
+	}
+	return nil
+}
+
+// IsOwnerLabelExistInNamespace check for owner label exist in the namespace
+func IsOwnerLabelExistInNamespace(kubeClient *kubernetes.Clientset, namespace string) bool {
+	// verify whether the namespace exist
+	ns, err := GetNamespace(kubeClient, namespace)
+	if err != nil {
+		return false
+	}
+
+	// check for owner label
+	if owner, ok := ns.Labels["owner"]; !ok || (ok && owner != OperatorName) {
+		return false
+	}
+	return true
+}
+
+// CheckResourceNamespace checks whether namespace is having any resource types
+func CheckResourceNamespace(kubeClient *kubernetes.Clientset, namespace string, label string, isOperator bool) (bool, error) {
+	// verify whether the namespace exist
+	ns, err := GetNamespace(kubeClient, namespace)
+	if err != nil {
+		return false, fmt.Errorf("error getting namespace due to %+v", err)
+	}
+
+	var isExist bool
+	if !isOperator {
+		// check whether the operator already exist in the namespace
+		isExist = IsOperatorExist(kubeClient, namespace)
+		if isExist {
+			return true, fmt.Errorf("synopsys operator is already running in %s namespace... namespace cannot be deleted", namespace)
+		}
+	}
+
+	// iterate over each label and verify whether any Synopsys resources like Alert, Black Duck or OpsSight etc. exist in the namespace
+	for synopsysLabel := range ns.Labels {
+		if synopsysLabel != label {
+			err := isSynopsysResourceExist(namespace, synopsysLabel)
+			if err != nil {
+				return true, err
+			}
+		}
+	}
+
+	return true, nil
+}
+
+// DeleteResourceNamespace deletes the namespace if none of the other resource types are running
+func DeleteResourceNamespace(kubeClient *kubernetes.Clientset, resourceName string, namespace string, name string, isOperator bool) error {
+	isExist, err := CheckResourceNamespace(kubeClient, namespace, fmt.Sprintf("synopsys.com/%s.%s", resourceName, name), isOperator)
+	if isExist {
+		// if namespace exist and there is no error,
+		// check for owner label, if exist, then delete the namespace otherwise patch the namespace to remove the app label
+		if err == nil && IsOwnerLabelExistInNamespace(kubeClient, namespace) {
+			log.Infof("deleting %s namespace", namespace)
+			err = DeleteNamespace(kubeClient, namespace)
+			if err != nil {
+				return fmt.Errorf("unable to delete the %s namespace because %+v", namespace, err)
+			}
+		} else {
+			_, checkErr := CheckAndUpdateNamespace(kubeClient, resourceName, namespace, name, "", true)
+			if checkErr != nil {
+				return fmt.Errorf("deleting the Synopsys label for the namespace %s failed due to %+v", namespace, checkErr)
+			}
+		}
+	}
+	return err
+}
+
+// CheckAndUpdateNamespace will check whether the namespace is exist and if exist, update the version label in namespace of the updated/deleted resource
+func CheckAndUpdateNamespace(kubeClient *kubernetes.Clientset, resourceName string, namespace string, name string, version string, isDelete bool) (bool, error) {
+	ns, err := GetNamespace(kubeClient, namespace)
+	if err == nil {
+		err = updateLabelsInNamespace(kubeClient, ns, resourceName, namespace, name, version, isDelete)
+		if err != nil {
+			return true, err
+		}
+		return true, nil
+	}
+	return false, fmt.Errorf("unable to get %s namespace due to %+v", namespace, err)
+}
+
+// updateLabelsInNamespace will update the labels in the namespace
+func updateLabelsInNamespace(kubeClient *kubernetes.Clientset, ns *corev1.Namespace, resourceName string, namespace string, name string, version string, isDelete bool) error {
+	isLabelUpdated := false
+	ns.Labels = InitLabels(ns.Labels)
+	if isDelete {
+		// delete from labels
+		delete(ns.Labels, fmt.Sprintf("synopsys.com/%s.%s", resourceName, name))
+		isLabelUpdated = true
+	} else {
+		// add or update the label
+		if existingVersion, ok := ns.Labels[fmt.Sprintf("synopsys.com/%s.%s", resourceName, name)]; !ok || existingVersion != version {
+			ns.Labels = InitLabels(ns.Labels)
+			ns.Labels[fmt.Sprintf("synopsys.com/%s.%s", resourceName, name)] = version
+			isLabelUpdated = true
+		}
+	}
+	if isLabelUpdated {
+		// update the namespace with labels updated
+		_, err := UpdateNamespace(kubeClient, ns)
+		if err != nil {
+			return fmt.Errorf("unable to update the %s namespace labels due to %+v", namespace, err)
+		}
+	}
+	return nil
+}
+
+// GetOperatorNamespaceByCRDScope get the operator namespace by CRD scope
+func GetOperatorNamespaceByCRDScope(kubeClient *kubernetes.Clientset, crdName string, scope apiextensions.ResourceScope, namespace string) (string, error) {
+	operatorNamespace := namespace
+	if scope == apiextensions.ClusterScoped {
+		operatorNamespace = metav1.NamespaceAll
+	}
+
+	// Get all Synopsys Operator running namespaces
+	namespaces, err := GetOperatorNamespace(kubeClient, operatorNamespace)
+	if err != nil {
+		return "", err
+	}
+
+	// For each namespace, get the CRD names and see if the CRD name is belong to input CRD name
+	for _, namespace := range namespaces {
+		crdNames, err := GetCRDNamesFromConfigMap(kubeClient, namespace)
+		if err != nil {
+			continue
+		}
+		crds := StringToStringSlice(crdNames, ",")
+		for _, crd := range crds {
+			if crd == crdName {
+				return namespace, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("%s is not enabled in any of the Synopsys Operator", crdName)
+}
+
+// GetCRDNamesFromConfigMap get CRD names from the Synopsys Operator config map
+func GetCRDNamesFromConfigMap(kubeClient *kubernetes.Clientset, namespace string) (string, error) {
+	cm, err := GetConfigMap(kubeClient, namespace, "synopsys-operator")
+	if err != nil {
+		return "", fmt.Errorf("error getting the Synopsys Operator config map due to %+v", err)
+	}
+	data := cm.Data["config.json"]
+	var cmData map[string]interface{}
+	err = json.Unmarshal([]byte(data), &cmData)
+	if err != nil {
+		log.Errorf("unable to unmarshal config map data due to %+v", err)
+	}
+	if crdNames, ok := cmData["CrdNames"]; ok {
+		return crdNames.(string), nil
+	}
+	return "", fmt.Errorf("unable to find CRD names in the Synopsys Operator config map")
+}
+
+// StringToStringSlice slices s into all substrings separated by sep
+func StringToStringSlice(s string, sep string) []string {
+	if len(s) > 0 {
+		return strings.Split(s, sep)
+	}
+	return make([]string, 0)
+}
+
+// InitLabels initialize the label
+func InitLabels(labels map[string]string) map[string]string {
+	if labels == nil {
+		return make(map[string]string, 0)
+	}
+	return labels
+}
+
+// InitAnnotations initialize the annotation
+func InitAnnotations(annotations map[string]string) map[string]string {
+	if annotations == nil {
+		return make(map[string]string, 0)
+	}
+	return annotations
 }
