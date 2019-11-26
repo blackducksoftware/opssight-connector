@@ -10,7 +10,7 @@
     "perceptor": {
       "name": "opssight-core",
       "port": 3001,
-      "image": "docker.io/blackducksoftware/opssight-core:2.2.5",
+      "image": "docker.io/blackducksoftware/opssight-core:2.2.4",
       "checkForStalledScansPauseHours": 999999,
       "stalledScanClientTimeoutHours": 999999,
       "modelMetricsPauseSeconds": 15,
@@ -22,14 +22,14 @@
       "scanner": {
         "name": "opssight-scanner",
         "port": 3003,
-        "image": "docker.io/blackducksoftware/opssight-scanner:2.2.5",
+        "image": "docker.io/blackducksoftware/opssight-scanner:2.2.4",
         "clientTimeoutSeconds": 600
       },
       "imageFacade": {
         "name": "opssight-image-getter",
         "port": 3004,
         "internalRegistries": [],
-        "image": "docker.io/blackducksoftware/opssight-image-getter:2.2.5",
+        "image": "docker.io/blackducksoftware/opssight-image-getter:2.2.4",
         "serviceAccount": "opssight-scanner"
       },
       "replicaCount": 1
@@ -40,21 +40,21 @@
       "port": 3002,
       "imagePerceiver": {
         "name": "opssight-image-processor",
-        "image": "docker.io/blackducksoftware/opssight-image-processor:2.2.5"
+        "image": "docker.io/blackducksoftware/opssight-image-processor:2.2.4"
       },
       "podPerceiver": {
         "name": "opssight-pod-processor",
-        "image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.5",
+        "image": "docker.io/blackducksoftware/opssight-pod-processor:2.2.4",
         "namespaceFilter": ""
       },
       "artifactoryPerceiver": {
         "name": "opssight-artifactory-processor",
-        "image": "docker.io/blackducksoftware/opssight-artifactory-processor:2.2.5",
+        "image": "docker.io/blackducksoftware/opssight-artifactory-processor:2.2.4",
         "dumper": "false"
       },
       "quayPerceiver": {
         "name": "opssight-quay-processor",
-        "image": "docker.io/blackducksoftware/opssight-quay-processor:2.2.5"
+        "image": "docker.io/blackducksoftware/opssight-quay-processor:2.2.4"
       },
       "serviceAccount": "opssight-processor",
       "annotationIntervalSeconds": 30,
