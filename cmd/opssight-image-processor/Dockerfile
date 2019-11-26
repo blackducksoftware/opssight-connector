@@ -1,6 +1,6 @@
 FROM scratch
 
-LABEL Black Duck OpsSight Team
+MAINTAINER Black Duck OpsSight Team
 
 ARG LASTCOMMIT
 ARG BUILDTIME

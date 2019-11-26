@@ -26,12 +26,12 @@
 
 [[constraint]]
   name = "github.com/blackducksoftware/synopsys-operator"
-  version = "2019.8.4"
+  version = "2019.11.0"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
   #branch = "master"
-  version = "v2.2.5"
+  version = "v2.2.4"
 
 [[override]]
   name = "github.com/blackducksoftware/perceptor"
