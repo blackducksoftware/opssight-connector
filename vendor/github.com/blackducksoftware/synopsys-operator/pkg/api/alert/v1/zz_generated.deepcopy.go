@@ -95,13 +95,22 @@ func (in *AlertSpec) DeepCopyInto(out *AlertSpec) {
 	}
 	if in.Port != nil {
 		in, out := &in.Port, &out.Port
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	if in.Environs != nil {
 		in, out := &in.Environs, &out.Environs
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.ImageRegistries != nil {
+		in, out := &in.ImageRegistries, &out.ImageRegistries
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.RegistryConfiguration != nil {
+		in, out := &in.RegistryConfiguration, &out.RegistryConfiguration
+		*out = (*in).DeepCopy()
 	}
 	return
 }

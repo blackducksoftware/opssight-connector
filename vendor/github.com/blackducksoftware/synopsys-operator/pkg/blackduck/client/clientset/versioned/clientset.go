@@ -28,8 +28,6 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	SynopsysV1() synopsysv1.SynopsysV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Synopsys() synopsysv1.SynopsysV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -41,12 +39,6 @@ type Clientset struct {
 
 // SynopsysV1 retrieves the SynopsysV1Client
 func (c *Clientset) SynopsysV1() synopsysv1.SynopsysV1Interface {
-	return c.synopsysV1
-}
-
-// Deprecated: Synopsys retrieves the default version of SynopsysClient.
-// Please explicitly pick a version.
-func (c *Clientset) Synopsys() synopsysv1.SynopsysV1Interface {
 	return c.synopsysV1
 }
 

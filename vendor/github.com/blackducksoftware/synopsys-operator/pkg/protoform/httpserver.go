@@ -22,8 +22,6 @@ under the License.
 package protoform
 
 import (
-	"os"
-
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -45,7 +43,7 @@ func SetupHTTPServer() {
 		// router.Use(GinRequestLogger())
 
 		// prometheus metrics
-		prometheus.Unregister(prometheus.NewProcessCollector(os.Getpid(), ""))
+		prometheus.Unregister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
 		prometheus.Unregister(prometheus.NewGoCollector())
 		h := promhttp.Handler()
 		router.GET("/metrics", func(c *gin.Context) {
