@@ -24,9 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[constraint]]
+[[override]]
   name = "github.com/blackducksoftware/synopsys-operator"
-  version = "2019.11.0"
+  branch = "release-2019.11.x"
 
 [[constraint]]
   name = "github.com/blackducksoftware/perceivers"
@@ -50,8 +50,8 @@
 
 [[override]]
   name = "github.com/blackducksoftware/horizon"
-  #branch = "master"
-  revision = "370ac9fd2f493ce9aa8fdc57ad6a67dcb4458e62"
+  branch = "master"
+  # revision = "e83e92ac1523e73a4be924d688aeab200db0c2c0"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"
@@ -71,7 +71,7 @@
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "8.0.0"
+  version = "kubernetes-1.14.0"
 
 [[constraint]]
   branch = "master"
@@ -79,19 +79,15 @@
 
 [[override]]
   name = "k8s.io/api"
-  revision = "d216743eed4c3242b85d094d2a589f41a793652d"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  revision = "94ebb086c69b9fec4ddbfb6a1433d28ecca9292b"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  revision = "e798125b68b9e62ce80c2b4f1157e96da7b3b1c7"
-
-[[override]]
-  name = "k8s.io/kube-aggregator"
-  revision = "29c7989121fc30258c674f31aff9bbd393dfab5e"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   source = "https://github.com/fsnotify/fsnotify/archive/v1.4.7.tar.gz"

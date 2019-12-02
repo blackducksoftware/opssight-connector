@@ -24,6 +24,7 @@ package webhook
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -35,21 +36,25 @@ import (
 
 // ArtifactoryWebhook handles watching images and sending them to perceptor
 type ArtifactoryWebhook struct {
-	perceptorURL  string
-	registryAuths []*utils.RegistryAuth
+	perceptorURL   string
+	registryAuths  []*utils.RegistryAuth
+	certificate    string
+	certificateKey string
 }
 
 // NewArtifactoryWebhook creates a new ArtifactoryWebhook object
-func NewArtifactoryWebhook(perceptorURL string, credentials []*utils.RegistryAuth) *ArtifactoryWebhook {
+func NewArtifactoryWebhook(perceptorURL string, credentials []*utils.RegistryAuth, certificate string, certificateKey string) *ArtifactoryWebhook {
 	return &ArtifactoryWebhook{
-		perceptorURL:  perceptorURL,
-		registryAuths: credentials,
+		perceptorURL:   perceptorURL,
+		registryAuths:  credentials,
+		certificate:    certificate,
+		certificateKey: certificateKey,
 	}
 }
 
 // Run starts a controller that watches images and sends them to perceptor
 func (aw *ArtifactoryWebhook) Run() {
-	log.Infof("Webhook: starting artifactory webhook on :3008 at /webhook")
+
 	http.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			log.Info("Webhook: Artifactory hook incoming!")
@@ -65,9 +70,25 @@ func (aw *ArtifactoryWebhook) Run() {
 			}
 		}
 	})
-	err := http.ListenAndServe(":3008", nil)
-	if err != nil {
-		log.Errorf("Webhook: Webhook listener on port 3008 failed: %e", err)
+
+	if len(aw.certificate) > 0 && len(aw.certificateKey) > 0 {
+		errC := ioutil.WriteFile("cert", []byte(aw.certificate), 0644)
+		errK := ioutil.WriteFile("key", []byte(aw.certificateKey), 0644)
+		if errC != nil || errK != nil {
+			log.Errorf("Webhook: Writing to a certificate file failed %e %e", errC, errK)
+		} else {
+			log.Infof("Webhook: Starting HTTPs webhook with TLS enabled for artifactory on :3002 at /webhook")
+			err := http.ListenAndServeTLS(":3002", "cert", "key", nil)
+			if err != nil {
+				log.Errorf("Webhook: HTTPs listener on port 3002 failed: %e", err)
+			}
+		}
+	} else {
+		log.Infof("Webhook: starting HTTP webhook for artifactory on :3002 at /webhook")
+		err := http.ListenAndServe(":3002", nil)
+		if err != nil {
+			log.Errorf("Webhook: HTTP listener on port 3002 failed: %e", err)
+		}
 	}
 }
 

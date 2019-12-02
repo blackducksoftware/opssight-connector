@@ -24,6 +24,7 @@ package webhook
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -62,15 +63,19 @@ type QuayTagDigest struct {
 
 // QuayWebhook handles watching images and sending them to perceptor
 type QuayWebhook struct {
-	perceptorURL  string
-	registryAuths []*utils.RegistryAuth
+	certificate    string
+	certificateKey string
+	perceptorURL   string
+	registryAuths  []*utils.RegistryAuth
 }
 
 // NewQuayWebhook creates a new QuayWebhook object
-func NewQuayWebhook(perceptorURL string, credentials []*utils.RegistryAuth) *QuayWebhook {
+func NewQuayWebhook(perceptorURL string, credentials []*utils.RegistryAuth, certificate string, certificateKey string) *QuayWebhook {
 	return &QuayWebhook{
-		perceptorURL:  perceptorURL,
-		registryAuths: credentials,
+		perceptorURL:   perceptorURL,
+		registryAuths:  credentials,
+		certificate:    certificate,
+		certificateKey: certificateKey,
 	}
 }
 
@@ -83,16 +88,31 @@ func (qw *QuayWebhook) Run() {
 			qr := &QuayRepo{}
 			json.NewDecoder(r.Body).Decode(qr)
 			for _, registry := range qw.registryAuths {
-				if strings.Contains(qr.DockerURL, registry.URL) {
+				if strings.Contains(qr.DockerURL, registry.URL) && len(registry.Token) > 0 {
 					qw.webhook(registry.Token, qr)
 				}
 			}
 		}
 	})
-	log.Infof("Webhook: starting artifactory webhook on :3008 at /webhook")
-	err := http.ListenAndServe(":3008", nil)
-	if err != nil {
-		log.Errorf("Webhook: Webhook listener on port 3008 failed: %e", err)
+
+	if len(qw.certificate) > 0 && len(qw.certificateKey) > 0 {
+		errC := ioutil.WriteFile("cert", []byte(qw.certificate), 0644)
+		errK := ioutil.WriteFile("key", []byte(qw.certificateKey), 0644)
+		if errC != nil || errK != nil {
+			log.Errorf("Webhook: Writing to a certificate file failed %e %e", errC, errK)
+		} else {
+			log.Infof("Webhook: Starting HTTPs webhook with TLS enabled for quay on :3002 at /webhook")
+			err := http.ListenAndServeTLS(":3002", "cert", "key", nil)
+			if err != nil {
+				log.Errorf("Webhook: HTTPs listener on port 3002 failed: %e", err)
+			}
+		}
+	} else {
+		log.Infof("Webhook: starting HTTP webhook for quay on :3002 at /webhook")
+		err := http.ListenAndServe(":3002", nil)
+		if err != nil {
+			log.Errorf("Webhook: HTTP listener on port 3002 failed: %e", err)
+		}
 	}
 }
 
@@ -103,7 +123,7 @@ func (qw *QuayWebhook) webhook(bearerToken string, qr *QuayRepo) {
 	url = fmt.Sprintf("%s/tag", url)
 	err := utils.GetResourceOfType(url, nil, bearerToken, rt)
 	if err != nil {
-		log.Errorf("Webhook: Error in getting docker repo: %e", err)
+		log.Errorf("Webhook: Error in getting docker repo: %+v", err)
 	}
 
 	for _, tagDigest := range rt.Tags {

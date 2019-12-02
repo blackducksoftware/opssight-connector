@@ -68,7 +68,7 @@ func NewArtifactoryPerceiver(configPath string) (*ArtifactoryPerceiver, error) {
 	ap := ArtifactoryPerceiver{
 		controller:         controller.NewArtifactoryController(perceptorURL, config.PrivateDockerRegistries),
 		annotator:          annotator.NewArtifactoryAnnotator(perceptorURL, config.PrivateDockerRegistries),
-		webhook:            webhook.NewArtifactoryWebhook(perceptorURL, config.PrivateDockerRegistries),
+		webhook:            webhook.NewArtifactoryWebhook(perceptorURL, config.PrivateDockerRegistries, config.Perceiver.Certificate, config.Perceiver.CertificateKey),
 		annotationInterval: time.Second * time.Duration(config.Perceiver.AnnotationIntervalSeconds),
 		dumpInterval:       time.Minute * time.Duration(config.Perceiver.DumpIntervalMinutes),
 		metricsURL:         fmt.Sprintf(":%d", config.Perceiver.Port),

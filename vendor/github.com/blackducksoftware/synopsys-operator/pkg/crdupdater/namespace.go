@@ -129,6 +129,7 @@ func (n *Namespace) patch(ns interface{}, isPatched bool) (bool, error) {
 				return false, errors.Annotatef(err, "unable to get the namespace %s", namespace.GetName())
 			}
 			oldNamespace := getN.(*corev1.Namespace)
+			oldNamespace.Labels = util.InitLabels(oldNamespace.Labels)
 			oldNamespace.Labels[fmt.Sprintf("synopsys.com/%s.%s", app, name)] = n.config.version
 
 			_, err = util.UpdateNamespace(n.config.kubeClient, oldNamespace)

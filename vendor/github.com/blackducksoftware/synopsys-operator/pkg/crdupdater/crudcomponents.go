@@ -93,7 +93,7 @@ func (c *CommonConfig) CRUDComponents() (bool, []error) {
 	}
 
 	// cluster role
-	if c.isClusterLevelPermEnabled || len(c.components.ClusterRoles) > 0 {
+	if c.isClusterLevelPermEnabled && len(c.components.ClusterRoles) > 0 {
 		clusterRoles, err := NewClusterRole(c, c.components.ClusterRoles)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("unable to create new cluster role updater due to %+v", err))
@@ -103,7 +103,7 @@ func (c *CommonConfig) CRUDComponents() (bool, []error) {
 	}
 
 	// cluster role binding
-	if c.isClusterLevelPermEnabled || len(c.components.ClusterRoleBindings) > 0 {
+	if c.isClusterLevelPermEnabled && len(c.components.ClusterRoleBindings) > 0 {
 		clusterRoleBindings, err := NewClusterRoleBinding(c, c.components.ClusterRoleBindings)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("unable to create new cluster role binding updater due to %+v", err))

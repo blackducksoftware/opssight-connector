@@ -21,15 +21,22 @@ under the License.
 
 package api
 
+// ActionType defines the type of action
+type ActionType int
+
+const (
+	ActionTypeCommand ActionType = iota + 1
+	ActionTypeHTTP
+	ActionTypeHTTPS
+	ActionTypeTCP
+)
+
 // ActionConfig defines the configuration for an action (ie on-start, pre-stop)
 type ActionConfig struct {
+	Type    ActionType
 	Command []string
-	Headers []HTTPHeaderType
-	URL     string
-}
-
-// HTTPHeaderType defines HTTP header variables
-type HTTPHeaderType struct {
-	Name  string
-	Value string
+	Headers map[string]string
+	Host    string
+	Port    string
+	Path    string
 }

@@ -32,4 +32,5 @@ type JobConfig struct {
 	MaxRetries            *int32
 	ActiveDeadlineSeconds *int64
 	SelectManually        *bool
+	DeletionTTL           *int32
 }

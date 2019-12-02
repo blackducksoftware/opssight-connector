@@ -40,6 +40,8 @@ type PerceptorConfig struct {
 
 // PerceiverConfig contains general Perceiver config
 type PerceiverConfig struct {
+	Certificate               string
+	CertificateKey            string
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
