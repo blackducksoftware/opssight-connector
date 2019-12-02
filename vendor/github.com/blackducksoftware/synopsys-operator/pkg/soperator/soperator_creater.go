@@ -23,7 +23,6 @@ package soperator
 
 import (
 	"fmt"
-	corev1 "k8s.io/api/core/v1"
 	"time"
 
 	alertclientset "github.com/blackducksoftware/synopsys-operator/pkg/alert/client/clientset/versioned"
@@ -36,6 +35,7 @@ import (
 	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
 	operatorutil "github.com/blackducksoftware/synopsys-operator/pkg/util"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -192,25 +192,11 @@ func (sc *Creater) UpdateSOperatorComponents(specConfig *SpecConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to get Synopsys Operator components: %s", err)
 	}
-	sOperatorCommonConfig := crdupdater.NewCRUDComponents(sc.KubeConfig, sc.KubeClient, false, false, specConfig.Namespace, "", sOperatorComponents, "app=synopsys-operator,component=operator", true)
+	sOperatorCommonConfig := crdupdater.NewCRUDComponents(sc.KubeConfig, sc.KubeClient, false, false, specConfig.Namespace, "", sOperatorComponents, "app=synopsys-operator,component=operator", specConfig.IsClusterScoped)
 	_, errs := sOperatorCommonConfig.CRUDComponents()
 	if errs != nil {
 		return fmt.Errorf("failed to update Synopsys Operator components: %+v", errs)
 	}
 
-	return nil
-}
-
-// UpdatePrometheus updates Kubernetes resources for Prometheus
-func (sc *Creater) UpdatePrometheus(specConfig *PrometheusSpecConfig) error {
-	prometheusComponents, err := specConfig.GetComponents()
-	if err != nil {
-		return fmt.Errorf("failed to get Prometheus components: %s", err)
-	}
-	prometheusCommonConfig := crdupdater.NewCRUDComponents(sc.KubeConfig, sc.KubeClient, false, false, specConfig.Namespace, "", prometheusComponents, "app=synopsys-operator,component=prometheus", true)
-	_, errs := prometheusCommonConfig.CRUDComponents()
-	if errs != nil {
-		return fmt.Errorf("failed to update Prometheus components: %+v", errs)
-	}
 	return nil
 }

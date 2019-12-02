@@ -201,7 +201,9 @@ func IsVersionGreaterThanOrEqualTo(version string, year int, month time.Month, d
 			return false, err
 		}
 
-		if t.Year() >= year && t.Month() >= month && minorDotVersion >= dotRelease {
+		if (t.Year() > year) ||
+			(t.Year() == year && t.Month() > month) ||
+			(t.Year() == year && t.Month() == month && minorDotVersion >= dotRelease) {
 			return true, nil
 		}
 	}

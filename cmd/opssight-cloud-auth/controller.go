@@ -35,6 +35,7 @@ import (
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -234,7 +235,7 @@ func (c *controller) updateAuthTokens() error {
 	if err != nil {
 		return fmt.Errorf("error in creating the opssight client due to %+v", err)
 	}
-	opssights, err := util.ListOpsSights(opsSightClient, "")
+	opssights, err := util.ListOpsSights(opsSightClient, "", metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("error in getting the list of opssight due to %+v", err)
 	}

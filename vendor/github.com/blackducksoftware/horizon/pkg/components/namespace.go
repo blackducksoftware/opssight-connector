@@ -22,99 +22,44 @@ under the License.
 package components
 
 import (
-	"strings"
-
 	"github.com/blackducksoftware/horizon/pkg/api"
-	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"github.com/koki/short/converter/converters"
-	"github.com/koki/short/types"
+	"k8s.io/api/core/v1"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Namespace defines the namespace component
 type Namespace struct {
-	obj *types.Namespace
+	*v1.Namespace
+	MetadataFuncs
 }
 
 // NewNamespace creates a Namespace object
 func NewNamespace(config api.NamespaceConfig) *Namespace {
-	version := "rbac.authorization.k8s.io/v1"
+	version := "v1"
 	if len(config.APIVersion) > 0 {
 		version = config.APIVersion
 	}
-	n := &types.Namespace{
-		Version:   version,
-		Name:      config.Name,
-		Cluster:   config.ClusterName,
-		Namespace: config.Namespace,
+
+	n := v1.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: version,
+		},
+		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
 	}
 
-	return &Namespace{obj: n}
+	return &Namespace{&n, MetadataFuncs{&n}}
 }
 
-// GetObj will return the namespace object in a format the deployer can use
-func (n *Namespace) GetObj() *types.Namespace {
-	return n.obj
+// Deploy will deploy the namespace to the cluster
+func (n *Namespace) Deploy(res api.DeployerResources) error {
+	_, err := res.KubeClient.CoreV1().Namespaces().Create(n.Namespace)
+	return err
 }
 
-// GetName will return the name of namespace
-func (n *Namespace) GetName() string {
-	return n.obj.Name
-}
-
-// AddAnnotations adds annotations to the namespace
-func (n *Namespace) AddAnnotations(new map[string]string) {
-	n.obj.Annotations = util.MapMerge(n.obj.Annotations, new)
-}
-
-// RemoveAnnotations removes annotations from the namespace
-func (n *Namespace) RemoveAnnotations(remove []string) {
-	for _, k := range remove {
-		n.obj.Annotations = util.RemoveElement(n.obj.Annotations, k)
-	}
-}
-
-// AddLabels adds labels to the namespace
-func (n *Namespace) AddLabels(new map[string]string) {
-	n.obj.Labels = util.MapMerge(n.obj.Labels, new)
-}
-
-// RemoveLabels removes labels from the namespace
-func (n *Namespace) RemoveLabels(remove []string) {
-	for _, k := range remove {
-		n.obj.Labels = util.RemoveElement(n.obj.Labels, k)
-	}
-}
-
-// AddFinalizers will add finalizers to the namespace
-func (n *Namespace) AddFinalizers(new []string) {
-	for _, f := range new {
-		n.obj.Finalizers = n.appendFinalizerIfMissing(f, n.obj.Finalizers)
-	}
-}
-
-// RemoveFinalizer will remove a finalizer from the namespace
-func (n *Namespace) RemoveFinalizer(remove string) {
-	for l, f := range n.obj.Finalizers {
-		if strings.Compare(string(f), remove) == 0 {
-			n.obj.Finalizers = append(n.obj.Finalizers[:l], n.obj.Finalizers[l+1:]...)
-		}
-	}
-}
-
-func (n *Namespace) appendFinalizerIfMissing(new string, list []types.FinalizerName) []types.FinalizerName {
-	for _, f := range list {
-		if strings.Compare(new, string(f)) == 0 {
-			return list
-		}
-	}
-	return append(list, types.FinalizerName(new))
-}
-
-// ToKube returns the kubernetes version of the namespace
-func (n *Namespace) ToKube() (runtime.Object, error) {
-	wrapper := &types.NamespaceWrapper{Namespace: *n.obj}
-	return converters.Convert_Koki_Namespace_to_Kube_Namespace(wrapper)
+// Undeploy will remove the namespace from the cluster
+func (n *Namespace) Undeploy(res api.DeployerResources) error {
+	return res.KubeClient.CoreV1().Namespaces().Delete(n.Name, &metav1.DeleteOptions{})
 }

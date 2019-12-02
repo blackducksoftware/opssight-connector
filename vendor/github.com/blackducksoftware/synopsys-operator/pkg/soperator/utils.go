@@ -25,7 +25,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	alertclientset "github.com/blackducksoftware/synopsys-operator/pkg/alert/client/clientset/versioned"
 	alertv1 "github.com/blackducksoftware/synopsys-operator/pkg/api/alert/v1"
@@ -33,8 +32,9 @@ import (
 	opssightv1 "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
 	blackduckclientset "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned"
 	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
-	util "github.com/blackducksoftware/synopsys-operator/pkg/util"
+	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -166,27 +166,6 @@ func GetOldOperatorSpec(restConfig *rest.Config, kubeClient *kubernetes.Clientse
 	log.Debugf("got current Synopsys Operator secret data from Cluster")
 
 	return &sOperatorSpec, nil
-}
-
-// GetOldPrometheusSpec returns a spec that respesents the current prometheus in the cluster
-func GetOldPrometheusSpec(restConfig *rest.Config, kubeClient *kubernetes.Clientset, namespace string) (*PrometheusSpecConfig, error) {
-	log.Debugf("creating New Prometheus SpecConfig")
-	prometheusSpec := PrometheusSpecConfig{}
-	// Set Namespace
-	prometheusSpec.Namespace = namespace
-	// Set Image
-	currCM, err := util.GetConfigMap(kubeClient, namespace, "prometheus")
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get Prometheus ConfigMap: %s", err)
-	}
-	prometheusSpec.Image = currCM.Data["Image"]
-	prometheusSpec.Expose = currCM.Data["Expose"]
-	prometheusSpec.RestConfig = restConfig
-	prometheusSpec.KubeClient = kubeClient
-	log.Debugf("added image %s to Prometheus SpecConfig", prometheusSpec.Image)
-
-	return &prometheusSpec, nil
-
 }
 
 // GetClusterType returns the Cluster type. It defaults to Kubernetes

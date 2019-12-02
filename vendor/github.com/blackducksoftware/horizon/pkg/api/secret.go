@@ -23,22 +23,23 @@ package api
 
 // SecretConfig defines the basic configuration for a secret
 type SecretConfig struct {
-	APIVersion string
+	APIVersion  string
 	ClusterName string
-	Name      string
-	Namespace string
-	Type      SecretType
+	Name        string
+	Namespace   string
+	Type        SecretType
 }
 
 // SecretType defines the type of sercret
 type SecretType int
 
 const (
-	SecretTypeOpaque SecretType = iota
+	SecretTypeOpaque SecretType = iota + 1
 	SecretTypeServiceAccountToken
 	SecretTypeDockercfg
 	SecretTypeDockerConfigJSON
 	SecretTypeBasicAuth
 	SecretTypeSSHAuth
 	SecretTypeTLS
+	SecretTypeBootstrapToken
 )

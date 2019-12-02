@@ -49,7 +49,7 @@ func GetResourceOfType(url string, cred *RegistryAuth, bearerToken string, targe
 		req.SetBasicAuth(cred.User, cred.Password)
 	}
 
-	if bearerToken != "" {
+	if len(bearerToken) > 0 {
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+bearerToken)
 	}

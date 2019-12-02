@@ -96,24 +96,5 @@ func NewController(configPath string, version string) (*Deployer, error) {
 		deployer.Run()
 	}
 
-	// check for the existence of prometheus configmap, if not create it
-	_, err = util.GetConfigMap(kubeClientSet, config.Namespace, "prometheus")
-	if err != nil {
-		deployer, err := horizon.NewDeployer(kubeConfig)
-		if err != nil {
-			return nil, errors.Annotate(err, "unable to create deployer object")
-		}
-		prometheusConfig := soperator.PrometheusSpecConfig{
-			Namespace: config.Namespace,
-			Expose:    util.NONE,
-		}
-		prometheusCm, err := prometheusConfig.GetPrometheusConfigMap()
-		if err != nil {
-			return nil, errors.Annotate(err, "unable to create prometheus configmap")
-		}
-		deployer.AddComponent(horizonapi.ConfigMapComponent, prometheusCm)
-		deployer.Run()
-	}
-
 	return NewDeployer(config, kubeConfig, kubeClientSet)
 }
