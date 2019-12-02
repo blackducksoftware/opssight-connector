@@ -23,7 +23,7 @@ package protoform
 
 import (
 	"fmt"
-	"math"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -34,22 +34,24 @@ type Config struct {
 	DryRun                        bool
 	LogLevel                      string
 	Namespace                     string
+	CrdNamespace                  string
 	Threadiness                   int
-	PostgresRestartInMins         int
+	PostgresRestartInMins         int64
 	HubFederatorConfig            *HubFederatorConfig
 	PodWaitTimeoutSeconds         int64
 	ResyncIntervalInSeconds       int64
 	TerminationGracePeriodSeconds int64
-
-	// Not recommended production, just for testing, QA, resiliency, and CI/CD.
-	OperatorTimeBombInSeconds int64
+	AdmissionWebhookListener      bool
+	CrdNames                      string
+	IsClusterScoped               bool
+	IsOpenshift                   bool
+	Version                       string
 }
 
 // SelfSetDefaults ...
 func (config *Config) SelfSetDefaults() {
 	config.HubFederatorConfig = &HubFederatorConfig{}
 	config.HubFederatorConfig.HubConfig = &HubConfig{}
-	config.OperatorTimeBombInSeconds = math.MaxInt64
 }
 
 // HubFederatorConfig will have the configuration related to hub federator
@@ -78,19 +80,42 @@ func (config *Config) GetLogLevel() (log.Level, error) {
 }
 
 // GetConfig will read the config file and set in the Viper
-func GetConfig(configPath string) (*Config, error) {
+func GetConfig(configPath string, version string) (*Config, error) {
 	var config *Config
 
-	viper.SetConfigFile(configPath)
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %v", err)
+	if len(configPath) > 0 {
+		viper.SetConfigFile(configPath)
+		err := viper.ReadInConfig()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read config file: %v", err)
+		}
+	} else {
+		viper.SetEnvPrefix("SO")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+		viper.BindEnv("DryRun")
+		viper.BindEnv("LogLevel")
+		viper.BindEnv("Namespace")
+		viper.BindEnv("Threadiness")
+		viper.BindEnv("PostgresRestartInMins")
+		viper.BindEnv("PodWaitTimeoutSeconds")
+		viper.BindEnv("ResyncIntervalInSeconds")
+		viper.BindEnv("TerminationGracePeriodSeconds")
+		viper.BindEnv("AdmissionWebhookListener")
+		viper.BindEnv("CrdNames")
+		viper.BindEnv("IsClusterScoped")
+		viper.AutomaticEnv()
 	}
 
-	err = viper.Unmarshal(&config)
+	err := viper.Unmarshal(&config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal config: %v", err)
+	}
+
+	// set the operator version
+	config.Version = version
+
+	if !config.IsClusterScoped {
+		config.CrdNamespace = config.Namespace
 	}
 
 	return config, nil

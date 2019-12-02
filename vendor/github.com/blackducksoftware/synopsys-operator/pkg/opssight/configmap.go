@@ -31,15 +31,23 @@ import (
 
 // PerceiverConfig stores the Perceiver configuration
 type PerceiverConfig struct {
+	Certificate               string
+	CertificateKey            string
 	AnnotationIntervalSeconds int
 	DumpIntervalMinutes       int
 	Port                      int
 	Pod                       *PodPerceiverConfig
 	Image                     *ImagePerceiverConfig
+	Artifactory               *ArtifactoryPerceiverConfig
 }
 
 // ImagePerceiverConfig stores the Image Perceiver configuration
 type ImagePerceiverConfig struct{}
+
+// ArtifactoryPerceiverConfig stores the Artifactory Perceiver configuration
+type ArtifactoryPerceiverConfig struct {
+	Dumper bool
+}
 
 // PodPerceiverConfig stores the Pod Perceiver configuration
 type PodPerceiverConfig struct {
@@ -123,7 +131,7 @@ func (cm *MainOpssightConfigMap) horizonConfigMap(name string, namespace string,
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
-	configMap.AddLabels(map[string]string{"name": name, "app": "opssight"})
+	configMap.AddLabels(map[string]string{"component": name, "app": "opssight"})
 	configMap.AddData(map[string]string{filename: configMapString})
 
 	return configMap, nil

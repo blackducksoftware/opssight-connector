@@ -53,7 +53,7 @@ func main() {
 	log.Infof("Using AWS Assume Role: %s", *argAWSAssumeRole)
 	log.Infof("Refresh Interval (minutes): %d", *argRefreshMinutes)
 
-	kubeConfig, err := protoform.GetKubeConfig()
+	kubeConfig, err := protoform.GetKubeConfig("", false)
 	if err != nil {
 		log.Errorf("unable to create config for both in-cluster and external to cluster due to %+v", err)
 		os.Exit(1)

@@ -24,13 +24,12 @@ package crdupdater
 import (
 	"reflect"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // Secret stores the configuration to add or delete the secret object
@@ -50,7 +49,7 @@ func NewSecret(config *CommonConfig, secrets []*components.Secret) (*Secret, err
 	}
 	newSecrets := append([]*components.Secret{}, secrets...)
 	for i := 0; i < len(newSecrets); i++ {
-		if !isLabelsExist(config.expectedLabels, newSecrets[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newSecrets[i].Labels) {
 			newSecrets = append(newSecrets[:i], newSecrets[i+1:]...)
 			i--
 		}
@@ -77,11 +76,7 @@ func (s *Secret) buildNewAndOldObject() error {
 
 	// build new secret
 	for _, newSrt := range s.secrets {
-		newSecretKube, err := newSrt.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert secret %s to kube %s", newSrt.GetName(), s.config.namespace)
-		}
-		s.newSecrets[newSrt.GetName()] = newSecretKube.(*corev1.Secret)
+		s.newSecrets[newSrt.GetName()] = newSrt.Secret
 	}
 
 	return nil
@@ -94,7 +89,7 @@ func (s *Secret) add(isPatched bool) (bool, error) {
 	var err error
 	for _, secret := range s.secrets {
 		if _, ok := s.oldSecrets[secret.GetName()]; !ok {
-			s.deployer.Deployer.AddSecret(secret)
+			s.deployer.Deployer.AddComponent(horizonapi.SecretComponent, secret)
 			isAdded = true
 		} else {
 			isUpdated, err = s.patch(secret, isPatched)
@@ -102,6 +97,7 @@ func (s *Secret) add(isPatched bool) (bool, error) {
 				return false, errors.Annotatef(err, "patch secret:")
 			}
 		}
+		isPatched = isAdded || isUpdated || isPatched
 	}
 	if isAdded && !s.config.dryRun {
 		err := s.deployer.Deployer.Run()
@@ -109,7 +105,7 @@ func (s *Secret) add(isPatched bool) (bool, error) {
 			return false, errors.Annotatef(err, "unable to deploy secret in %s", s.config.namespace)
 		}
 	}
-	return isAdded || isUpdated, nil
+	return isPatched, nil
 }
 
 // get gets the secret
@@ -157,44 +153,9 @@ func (s *Secret) patch(i interface{}, isPatched bool) (bool, error) {
 		oldLatestSecret := srt.(*corev1.Secret)
 		oldLatestSecret.Data = newSecret.Data
 		oldLatestSecret.StringData = newSecret.StringData
-		err = util.UpdateSecret(s.config.kubeClient, s.config.namespace, oldLatestSecret)
+		_, err = util.UpdateSecret(s.config.kubeClient, s.config.namespace, oldLatestSecret)
 		if err != nil {
 			return false, errors.Annotatef(err, "unable to update the secret %s in namespace %s", secretName, s.config.namespace)
-		}
-		return true, nil
-	}
-	return false, nil
-}
-
-// UpdateSecret updates the secret by comparing the old and new secret data
-func UpdateSecret(kubeConfig *rest.Config, kubeClient *kubernetes.Clientset, namespace string, secretName string, newConfig *components.Secret) (bool, error) {
-	newSecretKube, err := newConfig.ToKube()
-	if err != nil {
-		return false, errors.Annotatef(err, "unable to convert secret %s to kube in namespace %s", secretName, namespace)
-	}
-	newSecret := newSecretKube.(*corev1.Secret)
-	newSecretData := newSecret.Data
-	newSecretStringData := newSecret.StringData
-
-	// getting old secret data
-	oldSecret, err := util.GetSecret(kubeClient, namespace, secretName)
-	if err != nil {
-		// if secret is not present, create the secret
-		deployer, err := util.NewDeployer(kubeConfig)
-		deployer.Deployer.AddSecret(newConfig)
-		err = deployer.Deployer.Run()
-		return false, errors.Annotatef(err, "unable to create the secret %s in namespace %s", secretName, namespace)
-	}
-	oldSecretData := oldSecret.Data
-	oldSecretStringData := oldSecret.StringData
-
-	// compare for difference between old and new secret data, if changed update the secret
-	if !reflect.DeepEqual(newSecretData, oldSecretData) || !reflect.DeepEqual(newSecretStringData, oldSecretStringData) {
-		oldSecret.Data = newSecretData
-		oldSecret.StringData = newSecretStringData
-		err = util.UpdateSecret(kubeClient, namespace, oldSecret)
-		if err != nil {
-			return false, errors.Annotatef(err, "unable to update the secret %s in namespace %s", secretName, namespace)
 		}
 		return true, nil
 	}

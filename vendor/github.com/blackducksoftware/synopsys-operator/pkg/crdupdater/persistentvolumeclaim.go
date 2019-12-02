@@ -24,6 +24,7 @@ package crdupdater
 import (
 	"reflect"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
@@ -48,7 +49,7 @@ func NewPersistentVolumeClaim(config *CommonConfig, persistentVolumeClaims []*co
 	}
 	newPersistentVolumeClaims := append([]*components.PersistentVolumeClaim{}, persistentVolumeClaims...)
 	for i := 0; i < len(newPersistentVolumeClaims); i++ {
-		if !isLabelsExist(config.expectedLabels, newPersistentVolumeClaims[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newPersistentVolumeClaims[i].Labels) {
 			newPersistentVolumeClaims = append(newPersistentVolumeClaims[:i], newPersistentVolumeClaims[i+1:]...)
 			i--
 		}
@@ -65,21 +66,17 @@ func NewPersistentVolumeClaim(config *CommonConfig, persistentVolumeClaims []*co
 // buildNewAndOldObject builds the old and new persistent volume claim
 func (r *PersistentVolumeClaim) buildNewAndOldObject() error {
 	// build old persistent volume claim
-	oldRCs, err := r.list()
+	oldPvcs, err := r.list()
 	if err != nil {
 		return errors.Annotatef(err, "unable to get persistent volume claims for %s", r.config.namespace)
 	}
-	for _, oldRC := range oldRCs.(*corev1.PersistentVolumeClaimList).Items {
-		r.oldPersistentVolumeClaims[oldRC.GetName()] = oldRC
+	for _, oldPvc := range oldPvcs.(*corev1.PersistentVolumeClaimList).Items {
+		r.oldPersistentVolumeClaims[oldPvc.GetName()] = oldPvc
 	}
 
 	// build new persistent volume claim
-	for _, newRc := range r.persistentVolumeClaims {
-		newPersistentVolumeClaimKube, err := newRc.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert persistent volume claim %s to kube %s", newRc.GetName(), r.config.namespace)
-		}
-		r.newPersistentVolumeClaims[newRc.GetName()] = newPersistentVolumeClaimKube.(*corev1.PersistentVolumeClaim)
+	for _, newPvc := range r.persistentVolumeClaims {
+		r.newPersistentVolumeClaims[newPvc.GetName()] = newPvc.PersistentVolumeClaim
 	}
 
 	return nil
@@ -90,7 +87,7 @@ func (r *PersistentVolumeClaim) add(isPatched bool) (bool, error) {
 	isAdded := false
 	for _, persistentVolumeClaim := range r.persistentVolumeClaims {
 		if _, ok := r.oldPersistentVolumeClaims[persistentVolumeClaim.GetName()]; !ok {
-			r.deployer.Deployer.AddPVC(persistentVolumeClaim)
+			r.deployer.Deployer.AddComponent(horizonapi.PersistentVolumeClaimComponent, persistentVolumeClaim)
 			isAdded = true
 		}
 		// else {
