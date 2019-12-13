@@ -1,4 +1,4 @@
-FROM scratch
+FROM alpine:3.10
 
 MAINTAINER Black Duck OpsSight Team
 
