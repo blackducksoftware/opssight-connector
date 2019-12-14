@@ -1,5 +1,7 @@
 FROM alpine:3.10
 
+RUN apk add --update openssl && rm -rf /var/cache/apk/*
+
 MAINTAINER Black Duck OpsSight Team
 
 ARG LASTCOMMIT
