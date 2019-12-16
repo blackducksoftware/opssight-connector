@@ -491,8 +491,8 @@ func (specConfig *SpecConfig) getOperatorRole() *horizoncomponents.Role {
 	return synopsysOperatorRole
 }
 
-// getTLSCertificateSecret creates a TLS certificate in horizon format
-func (specConfig *SpecConfig) getTLSCertificateSecret() *horizoncomponents.Secret {
+// GetTLSCertificateSecret creates a TLS certificate in horizon format
+func (specConfig *SpecConfig) GetTLSCertificateSecret() *horizoncomponents.Secret {
 	tlsSecret := horizoncomponents.NewSecret(horizonapi.SecretConfig{
 		Name:      "synopsys-operator-tls",
 		Namespace: specConfig.Namespace,

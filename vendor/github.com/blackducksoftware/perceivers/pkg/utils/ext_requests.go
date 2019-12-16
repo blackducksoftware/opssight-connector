@@ -22,6 +22,7 @@ under the License.
 package utils
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -40,6 +41,9 @@ type RegistryAuth struct {
 // GetResourceOfType takes in the specified URL with credentials and
 // tries to decode returning json to specified interface
 func GetResourceOfType(url string, cred *RegistryAuth, bearerToken string, target interface{}) error {
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: tr}
+
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("Error in creating get request %e at url %s", err, url)
@@ -54,7 +58,7 @@ func GetResourceOfType(url string, cred *RegistryAuth, bearerToken string, targe
 		req.Header.Set("Authorization", "Bearer "+bearerToken)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -65,13 +69,16 @@ func GetResourceOfType(url string, cred *RegistryAuth, bearerToken string, targe
 // PingArtifactoryServer takes in the specified URL with username & password and checks weather
 // it's a valid login for artifactory by pinging the server with various options and returns the correct URL
 func PingArtifactoryServer(url string, username string, password string) (*RegistryAuth, error) {
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: tr}
+
 	url = fmt.Sprintf("%s/api/system/ping", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error in pinging artifactory server %e", err)
 	}
 	req.SetBasicAuth(username, password)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

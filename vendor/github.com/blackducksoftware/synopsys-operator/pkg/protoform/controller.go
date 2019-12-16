@@ -22,6 +22,8 @@ under the License.
 package protoform
 
 import (
+	"crypto/x509/pkix"
+	"fmt"
 	"strings"
 
 	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
@@ -74,6 +76,14 @@ func NewController(configPath string, version string) (*Deployer, error) {
 			clusterType = soperator.OpenshiftClusterType
 		}
 
+		// generate self signed nginx certs
+		cert, key, err := util.GeneratePemSelfSignedCertificateAndKey(pkix.Name{
+			CommonName: fmt.Sprintf("synopsys-operator.%s.svc", config.Namespace),
+		})
+		if err != nil {
+			return nil, errors.Annotate(err, "couldn't generate certificate and key")
+		}
+
 		operatorConfig := soperator.SpecConfig{
 			Namespace:                     config.Namespace,
 			Expose:                        util.NONE,
@@ -87,12 +97,18 @@ func NewController(configPath string, version string) (*Deployer, error) {
 			TerminationGracePeriodSeconds: config.TerminationGracePeriodSeconds,
 			IsClusterScoped:               config.IsClusterScoped,
 			Crds:                          strings.Split(config.CrdNames, ","),
+			Certificate:                   cert,
+			CertificateKey:                key,
 		}
 		operatorCm, err := operatorConfig.GetOperatorConfigMap()
 		if err != nil {
 			return nil, errors.Annotate(err, "unable to create operator configmap")
 		}
 		deployer.AddComponent(horizonapi.ConfigMapComponent, operatorCm)
+
+		tlsSecret := operatorConfig.GetTLSCertificateSecret()
+		deployer.AddComponent(horizonapi.SecretComponent, tlsSecret)
+
 		deployer.Run()
 	}
 

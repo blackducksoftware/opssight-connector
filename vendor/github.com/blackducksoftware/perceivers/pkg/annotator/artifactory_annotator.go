@@ -22,6 +22,7 @@ under the License.
 package annotator
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -46,13 +47,17 @@ const (
 
 // ArtifactoryAnnotator handles annotating artifactory images with vulnerability and policy issues
 type ArtifactoryAnnotator struct {
+	client         *http.Client
 	scanResultsURL string
 	registryAuths  []*utils.RegistryAuth
 }
 
 // NewArtifactoryAnnotator creates a new ArtifactoryAnnotator object
 func NewArtifactoryAnnotator(perceptorURL string, registryAuths []*utils.RegistryAuth) *ArtifactoryAnnotator {
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: tr}
 	return &ArtifactoryAnnotator{
+		client:         client,
 		scanResultsURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.ScanResultsPath),
 		registryAuths:  registryAuths,
 	}
@@ -167,7 +172,7 @@ func (ia *ArtifactoryAnnotator) AnnotateImage(uri string, im *perceptorapi.Scann
 	}
 	req.SetBasicAuth(cred.User, cred.Password)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := ia.client.Do(req)
 	if err != nil {
 		log.Errorf("Annotator: Error in sending request %e", err)
 		return

@@ -106,7 +106,7 @@ func (specConfig *SpecConfig) GetComponents() (*api.ComponentList, error) {
 		Services:        specConfig.getOperatorService(),
 		ConfigMaps:      []*components.ConfigMap{configMap},
 		ServiceAccounts: []*components.ServiceAccount{specConfig.getOperatorServiceAccount()},
-		Secrets:         []*components.Secret{specConfig.getOperatorSecret(), specConfig.getTLSCertificateSecret()},
+		Secrets:         []*components.Secret{specConfig.getOperatorSecret(), specConfig.GetTLSCertificateSecret()},
 	}
 
 	if specConfig.IsClusterScoped {

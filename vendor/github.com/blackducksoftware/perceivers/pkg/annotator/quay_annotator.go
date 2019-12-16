@@ -23,6 +23,7 @@ package annotator
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -99,13 +100,17 @@ const (
 
 // QuayAnnotator handles annotating quay images with vulnerability and policy issues
 type QuayAnnotator struct {
+	client         *http.Client
 	scanResultsURL string
 	registryAuths  []*utils.RegistryAuth
 }
 
 // NewQuayAnnotator creates a new QuayAnnotator object
 func NewQuayAnnotator(perceptorURL string, registryAuths []*utils.RegistryAuth) *QuayAnnotator {
+	tr := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: tr}
 	return &QuayAnnotator{
+		client:         client,
 		scanResultsURL: fmt.Sprintf("%s/%s", perceptorURL, perceptorapi.ScanResultsPath),
 		registryAuths:  registryAuths,
 	}
@@ -172,7 +177,7 @@ func (qa *QuayAnnotator) addAnnotationsToImages(results perceptorapi.ScanResults
 	imgs := 0
 
 	for _, registry := range qa.registryAuths {
-		auth, err := PingQuayServer("https://"+registry.URL, registry.User, registry.Password, registry.Token)
+		auth, err := qa.PingQuayServer("https://"+registry.URL, registry.User, registry.Password, registry.Token)
 
 		if err != nil {
 			log.Debugf("Annotator: URL %s either not a valid quay repository or incorrect token: %e", registry.URL, err)
@@ -247,14 +252,14 @@ func (qa *QuayAnnotator) UpdateAnnotation(url string, labelKey string, newValue 
 
 	for _, label := range labelList.Labels {
 		deleteURL := fmt.Sprintf("%s/%s", url, label.ID)
-		err = DeleteQuayLabel(deleteURL, quayToken, label.ID)
+		err = qa.DeleteQuayLabel(deleteURL, quayToken, label.ID)
 		if err != nil {
 			log.Errorf("Error in deleting label %s at URL %s: %e", label.Key, deleteURL, err)
 			log.Errorf("Images may contain duplicate labels!")
 		}
 	}
 
-	err = AddQuayLabel(url, quayToken, labelKey, newValue)
+	err = qa.AddQuayLabel(url, quayToken, labelKey, newValue)
 	if err != nil {
 		log.Errorf("Error in adding label %s at URL %s after deleting: %e", labelKey, url, err)
 		return
@@ -266,7 +271,7 @@ func (qa *QuayAnnotator) UpdateAnnotation(url string, labelKey string, newValue 
 
 // PingQuayServer takes in the specified URL with access token and checks weather
 // it's a valid token for quay by pinging the server
-func PingQuayServer(url string, user string, password string, accessToken string) (*utils.RegistryAuth, error) {
+func (qa *QuayAnnotator) PingQuayServer(url string, user string, password string, accessToken string) (*utils.RegistryAuth, error) {
 	url = fmt.Sprintf("%s/api/v1/user", url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -275,9 +280,9 @@ func PingQuayServer(url string, user string, password string, accessToken string
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := qa.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error in pinging quay server %e", err)
+		return nil, fmt.Errorf("Error in pinging quay server %+v, response: %+v", err, resp)
 	}
 
 	defer resp.Body.Close()
@@ -287,7 +292,7 @@ func PingQuayServer(url string, user string, password string, accessToken string
 			url = strings.Replace(url, "https://", "http://", -1)
 			// Reset to baseURL
 			url = strings.Replace(url, "/api/v1/user", "", -1)
-			return PingQuayServer(url, user, password, accessToken)
+			return qa.PingQuayServer(url, user, password, accessToken)
 		}
 
 		return nil, fmt.Errorf("Error in pinging quay server supposed to get %d response code got %d", http.StatusOK, resp.StatusCode)
@@ -299,7 +304,7 @@ func PingQuayServer(url string, user string, password string, accessToken string
 }
 
 // AddQuayLabel takes the specific Quay URL and adds the properties/annotations given by BD
-func AddQuayLabel(url string, accessToken string, labelKey string, labelValue string) error {
+func (qa *QuayAnnotator) AddQuayLabel(url string, accessToken string, labelKey string, labelValue string) error {
 	quayLabel := QuayNewLabel{MediaType: "text/plain", Value: labelValue, Key: labelKey}
 	buffer := new(bytes.Buffer)
 	json.NewEncoder(buffer).Encode(quayLabel)
@@ -310,7 +315,7 @@ func AddQuayLabel(url string, accessToken string, labelKey string, labelValue st
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := qa.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error in adding label %e", err)
 	}
@@ -323,7 +328,7 @@ func AddQuayLabel(url string, accessToken string, labelKey string, labelValue st
 }
 
 // DeleteQuayLabel takes the specific Quay URL and deletes the properties/annotations given by BD
-func DeleteQuayLabel(url string, accessToken string, labelID string) error {
+func (qa *QuayAnnotator) DeleteQuayLabel(url string, accessToken string, labelID string) error {
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
 		return fmt.Errorf("Error in deleting label request %e", err)
@@ -331,7 +336,7 @@ func DeleteQuayLabel(url string, accessToken string, labelID string) error {
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := qa.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("Error in deleting label %e", err)
 	}
