@@ -31,7 +31,6 @@ import (
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // ReplicationController stores the configuration to add or delete the replication controller object
@@ -141,11 +140,6 @@ func (r *ReplicationController) remove() error {
 // replicationControllerComparator used to compare Replication controller attributes
 type replicationControllerComparator struct {
 	Image          string
-	Replicas       *int32
-	MinCPU         *resource.Quantity
-	MaxCPU         *resource.Quantity
-	MinMem         *resource.Quantity
-	MaxMem         *resource.Quantity
 	EnvFrom        []corev1.EnvFromSource
 	ServiceAccount string
 }
@@ -153,11 +147,6 @@ type replicationControllerComparator struct {
 // patch patches the replication controller
 func (r *ReplicationController) patch(rc interface{}, isPatched bool) (bool, error) {
 	replicationController := rc.(*components.ReplicationController)
-
-	// if the replicas changed, then set the isUpdateReplica to true
-	if *r.oldReplicationControllers[replicationController.GetName()].Spec.Replicas != *r.newReplicationControllers[replicationController.GetName()].Spec.Replicas {
-		return r.patchRC(r.oldReplicationControllers[replicationController.GetName()], *r.newReplicationControllers[replicationController.GetName()], true)
-	}
 
 	// if there is any configuration change, irrespective of comparing any changes, patch the replication controller
 	if isPatched && !r.config.dryRun {
@@ -172,24 +161,18 @@ func (r *ReplicationController) patch(rc interface{}, isPatched bool) (bool, err
 				(!reflect.DeepEqual(
 					replicationControllerComparator{
 						Image:          oldContainer.Image,
-						Replicas:       r.oldReplicationControllers[replicationController.GetName()].Spec.Replicas,
-						MinCPU:         oldContainer.Resources.Requests.Cpu(),
-						MaxCPU:         oldContainer.Resources.Limits.Cpu(),
-						MinMem:         oldContainer.Resources.Requests.Memory(),
-						MaxMem:         oldContainer.Resources.Limits.Memory(),
 						EnvFrom:        oldContainer.EnvFrom,
 						ServiceAccount: r.oldReplicationControllers[replicationController.GetName()].Spec.Template.Spec.ServiceAccountName,
 					},
 					replicationControllerComparator{
 						Image:          newContainer.Image,
-						Replicas:       r.newReplicationControllers[replicationController.GetName()].Spec.Replicas,
-						MinCPU:         newContainer.Resources.Requests.Cpu(),
-						MaxCPU:         newContainer.Resources.Limits.Cpu(),
-						MinMem:         newContainer.Resources.Requests.Memory(),
-						MaxMem:         newContainer.Resources.Limits.Memory(),
 						EnvFrom:        newContainer.EnvFrom,
 						ServiceAccount: r.newReplicationControllers[replicationController.GetName()].Spec.Template.Spec.ServiceAccountName,
 					}) ||
+					!(oldContainer.Resources.Requests.Cpu().Cmp(*newContainer.Resources.Requests.Cpu()) == 0) ||
+					!(oldContainer.Resources.Limits.Cpu().Cmp(*newContainer.Resources.Limits.Cpu()) == 0) ||
+					!(oldContainer.Resources.Requests.Memory().Cmp(*newContainer.Resources.Requests.Memory()) == 0) ||
+					!(oldContainer.Resources.Limits.Memory().Cmp(*newContainer.Resources.Limits.Memory()) == 0) ||
 					!reflect.DeepEqual(sortEnvs(oldContainer.Env), sortEnvs(newContainer.Env)) ||
 					!reflect.DeepEqual(sortVolumeMounts(oldContainer.VolumeMounts), sortVolumeMounts(newContainer.VolumeMounts)) ||
 					!compareVolumes(sortVolumes(r.oldReplicationControllers[replicationController.GetName()].Spec.Template.Spec.Volumes), sortVolumes(r.newReplicationControllers[replicationController.GetName()].Spec.Template.Spec.Volumes)) ||
@@ -209,6 +192,12 @@ func (r *ReplicationController) patch(rc interface{}, isPatched bool) (bool, err
 	if isChanged {
 		return r.patchRC(r.oldReplicationControllers[replicationController.GetName()], *r.newReplicationControllers[replicationController.GetName()], false)
 	}
+
+	// if the replicas changed, then set the isUpdateReplica to true
+	if *r.oldReplicationControllers[replicationController.GetName()].Spec.Replicas != *r.newReplicationControllers[replicationController.GetName()].Spec.Replicas {
+		return r.patchRC(r.oldReplicationControllers[replicationController.GetName()], *r.newReplicationControllers[replicationController.GetName()], true)
+	}
+
 	return false, nil
 }
 

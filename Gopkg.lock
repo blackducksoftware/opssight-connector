@@ -99,7 +99,7 @@
   revision = "f1fdde519aec5ce540e9a42440fcce9bd641644a"
 
 [[projects]]
-  digest = "1:faa471df9ebad07be19b9a319dbda8f71587ac60510fef7e77a441c2c4904bf5"
+  digest = "1:b300b3dd3f9d0768d56ddf70615261f7b0e644550f883e0bb8d0eb2c7e45355c"
   name = "github.com/blackducksoftware/perceivers"
   packages = [
     "cmd/artifactory-perceiver/app",
@@ -118,7 +118,7 @@
     "pkg/webhook",
   ]
   pruneopts = "UT"
-  revision = "b40a59d83a4cfa947e3f285ee89acbfbb5ac5690"
+  revision = "8c136e97cae5b2711bdbfa06913208d936a06383"
   version = "v2.2.4"
 
 [[projects]]
@@ -167,7 +167,7 @@
 
 [[projects]]
   branch = "release-2019.11.x"
-  digest = "1:69edaa6a04c63dc050855ca527dee31519d4df2e91457bbd4a081641f24ead8b"
+  digest = "1:87b8c9bb09589ca6ce41d0d54eeb527ed99c3dc91d920ce2f6ba10a00a58ca7d"
   name = "github.com/blackducksoftware/synopsys-operator"
   packages = [
     "pkg/alert/client/clientset/versioned",
@@ -180,25 +180,20 @@
     "pkg/api/blackduck/v1",
     "pkg/api/opssight",
     "pkg/api/opssight/v1",
-    "pkg/apps/util",
     "pkg/blackduck/client/clientset/versioned",
     "pkg/blackduck/client/clientset/versioned/scheme",
     "pkg/blackduck/client/clientset/versioned/typed/blackduck/v1",
     "pkg/crds",
     "pkg/crdupdater",
-    "pkg/opssight",
     "pkg/opssight/client/clientset/versioned",
     "pkg/opssight/client/clientset/versioned/scheme",
     "pkg/opssight/client/clientset/versioned/typed/opssight/v1",
-    "pkg/opssight/client/informers/externalversions/internalinterfaces",
-    "pkg/opssight/client/informers/externalversions/opssight/v1",
-    "pkg/opssight/client/listers/opssight/v1",
     "pkg/protoform",
     "pkg/soperator",
     "pkg/util",
   ]
   pruneopts = "UT"
-  revision = "071b58244796d90df20fe79fa7e825e63b211061"
+  revision = "e69406af3478b27da2bddf8a01b2d5431f70879c"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -395,14 +390,6 @@
   pruneopts = "UT"
   revision = "1afb36080aec31e0d1528973ebe6721b191b0369"
   version = "v0.3.8"
-
-[[projects]]
-  digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
 
 [[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
@@ -643,14 +630,6 @@
   pruneopts = "UT"
   revision = "8c9545af88b134710ab1cd196795e7f2388358d7"
   version = "v1.3.0"
-
-[[projects]]
-  digest = "1:e096613fb7cf34743d49af87d197663cfccd61876e2219853005a57baedfa562"
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "f2b07da1e2c38d5f12845a4f607e2e1018cbb1f5"
-  version = "v0.0.5"
 
 [[projects]]
   digest = "1:1b753ec16506f5864d26a28b43703c58831255059644351bbcb019b843950900"
@@ -1100,7 +1079,6 @@
     "github.com/blackducksoftware/perceptor-skyfire/pkg/report",
     "github.com/blackducksoftware/perceptor/pkg/core",
     "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1",
-    "github.com/blackducksoftware/synopsys-operator/pkg/opssight",
     "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned",
     "github.com/blackducksoftware/synopsys-operator/pkg/protoform",
     "github.com/blackducksoftware/synopsys-operator/pkg/util",

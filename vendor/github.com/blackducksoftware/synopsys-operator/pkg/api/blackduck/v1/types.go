@@ -78,6 +78,7 @@ type BlackduckSpec struct {
 	AdminPassword         string                     `json:"adminPassword"`
 	UserPassword          string                     `json:"userPassword"`
 	PostgresPassword      string                     `json:"postgresPassword"`
+	SealKey               string                     `json:"sealKey"`
 }
 
 // Environs will hold the list of Environment variables
