@@ -18,6 +18,7 @@ endif
 OUTDIR=_output
 BUILDDIR=build
 LOCAL_TARGET=local
+COV_TARGET=coverity
 FEDERATOR:=federator
 OPSSIGHT_CORE:=opssight-core
 
@@ -35,9 +36,13 @@ build: ${OUTDIR} $(BINARY)
 
 ${LOCAL_TARGET}: ${OUTDIR} $(BINARY)
 
+${COV_TARGET}: ${OUTDIR} $(BINARY)
+
 $(BINARY):
 ifeq ($(MAKECMDGOALS),${LOCAL_TARGET})
-	cd cmd/$@; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@
+	cd cmd/$@ && echo Starting build for $@ in `pwd` at `date` && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@
+else ifeq ($(MAKECMDGOALS),${COV_TARGET})
+	mkdir -p /go/src/github.com/blackducksoftware && ln -s `pwd` /go/src/github.com/blackducksoftware/opssight-connector && cd /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ && echo Starting build for $@ in `pwd` at `date` && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ; rm /go/src/github.com/blackducksoftware/opssight-connector
 else
 	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ golang:1.11 go build -o $@
 endif
