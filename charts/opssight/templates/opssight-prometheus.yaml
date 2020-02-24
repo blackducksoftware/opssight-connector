@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: prometheus
+    name: bd-ops
+  name: bd-ops-opssight-prometheus
+  namespace: bd-ops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opssight
+      component: prometheus
+      name: bd-ops
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opssight
+        component: prometheus
+        name: bd-ops
+      name: bd-ops-opssight-prometheus
+    spec:
+      containers:
+      - args:
+        - --log.level=debug
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/tmp/data/
+        - --storage.tsdb.retention=120d
+        - --web.listen-address=:3006
+        image: docker.io/prom/prometheus:v2.1.0
+        name: prometheus
+        ports:
+        - containerPort: 3006
+          name: web
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /etc/prometheus
+          name: prometheus
+      dnsPolicy: ClusterFirst
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-prometheus
+        name: prometheus
+      - emptyDir: {}
+        name: data
+status: {}
+---
+apiVersion: v1
+data:
+  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["bd-ops-opssight-core:3001","bd-ops-opssight-scanner:3003","bd-ops-opssight-image-getter:3004","bd-ops-opssight-pod-processor:3002"]}]}]}'
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: prometheus
+    name: bd-ops
+  name: bd-ops-opssight-prometheus
+  namespace: bd-ops
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: prometheus
+    name: bd-ops
+  name: bd-ops-opssight-prometheus
+  namespace: bd-ops
+spec:
+  ports:
+  - name: port-prometheus
+    port: 3006
+    protocol: TCP
+    targetPort: 3006
+  selector:
+    app: opssight
+    component: prometheus
+    name: bd-ops
+  type: ClusterIP
+status:
+  loadBalancer: {}

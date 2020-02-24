@@ -1,0 +1,146 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  name: bd-ops-opssight-scanner
+  namespace: bd-ops
+spec:
+  replicas: 1
+  selector:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opssight
+        component: scanner
+        name: bd-ops
+      name: bd-ops-opssight-scanner
+    spec:
+      containers:
+      - args:
+        - /etc/scanner/opssight.json
+        command:
+        - ./opssight-scanner
+        envFrom:
+        - secretRef:
+            name: bd-ops-opssight-blackduck
+        image: docker.io/blackducksoftware/opssight-scanner:2.2.5
+        name: scanner
+        ports:
+        - containerPort: 3003
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 300m
+            memory: 1300Mi
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - mountPath: /etc/scanner
+          name: scanner
+        - mountPath: /var/images
+          name: var-images
+      - args:
+        - /etc/image-getter/opssight.json
+        command:
+        - ./opssight-image-getter
+        envFrom:
+        - secretRef:
+            name: bd-ops-opssight-blackduck
+        image: docker.io/blackducksoftware/opssight-image-getter:2.2.5
+        name: image-getter
+        ports:
+        - containerPort: 3004
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 300m
+            memory: 1300Mi
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - mountPath: /etc/image-getter
+          name: image-getter
+        - mountPath: /var/images
+          name: var-images
+      dnsPolicy: ClusterFirst
+      serviceAccountName: bd-ops-opssight-image-getter
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-opssight
+        name: scanner
+      - emptyDir: {}
+        name: var-images
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-opssight
+        name: image-getter
+status:
+  replicas: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  name: bd-ops-opssight-scanner
+  namespace: bd-ops
+spec:
+  ports:
+  - name: port-scanner
+    port: 3003
+    protocol: TCP
+    targetPort: 3003
+  selector:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  name: bd-ops-opssight-image-getter
+  namespace: bd-ops
+spec:
+  ports:
+  - name: port-image-getter
+    port: 3004
+    protocol: TCP
+    targetPort: 3004
+  selector:
+    app: opssight
+    component: scanner
+    name: bd-ops
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: image-getter
+    name: bd-ops
+  name: bd-ops-opssight-image-getter
+  namespace: bd-ops

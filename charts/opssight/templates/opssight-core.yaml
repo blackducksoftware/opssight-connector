@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: core
+    name: bd-ops
+  name: bd-ops-opssight-core
+  namespace: bd-ops
+spec:
+  replicas: 1
+  selector:
+    app: opssight
+    component: core
+    name: bd-ops
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opssight
+        component: core
+        name: bd-ops
+      name: bd-ops-opssight-core
+    spec:
+      containers:
+      - args:
+        - /etc/core/opssight.json
+        command:
+        - ./opssight-core
+        envFrom:
+        - secretRef:
+            name: bd-ops-opssight-blackduck
+        image: docker.io/blackducksoftware/opssight-core:2.2.5
+        name: core
+        ports:
+        - containerPort: 3001
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 300m
+            memory: 1300Mi
+        volumeMounts:
+        - mountPath: /etc/core
+          name: core
+      dnsPolicy: ClusterFirst
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-opssight
+        name: core
+status:
+  replicas: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: core
+    name: bd-ops
+  name: bd-ops-opssight-core
+  namespace: bd-ops
+spec:
+  ports:
+  - name: port-core
+    port: 3001
+    protocol: TCP
+    targetPort: 3001
+  selector:
+    app: opssight
+    component: core
+    name: bd-ops
+  type: ClusterIP
+status:
+  loadBalancer: {}
