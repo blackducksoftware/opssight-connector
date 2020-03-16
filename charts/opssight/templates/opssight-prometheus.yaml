@@ -45,6 +45,8 @@ spec:
         - mountPath: /etc/prometheus
           name: prometheus
       dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: PULL_SECRET_NAME
       volumes:
       - configMap:
           defaultMode: 420

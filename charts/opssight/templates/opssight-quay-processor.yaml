@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: quay-processor
+    name: bd-ops
+  name: bd-ops-opssight-quay-processor
+  namespace: bd-ops
+spec:
+  replicas: 1
+  selector:
+    app: opssight
+    component: quay-processor
+    name: bd-ops
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opssight
+        component: quay-processor
+        name: bd-ops
+      name: bd-ops-opssight-quay-processor
+    spec:
+      containers:
+      - args:
+        - /etc/quay-processor/opssight.json
+        command:
+        - ./opssight-quay-processor
+        envFrom:
+        - secretRef:
+            name: bd-ops-opssight-blackduck
+        image: docker.io/gautambaghel/opssight-quay-processor:2.2.5
+        name: quay-processor
+        ports:
+        - containerPort: 3002
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 300m
+            memory: 1300Mi
+        volumeMounts:
+        - mountPath: /etc/quay-processor
+          name: quay-processor
+        - mountPath: /tmp
+          name: logs
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: PULL_SECRET_NAME
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-opssight
+        name: quay-processor
+      - emptyDir: {}
+        name: logs
+status:
+  replicas: 0

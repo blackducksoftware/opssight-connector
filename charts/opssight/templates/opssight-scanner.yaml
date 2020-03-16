@@ -70,7 +70,11 @@ spec:
           name: image-getter
         - mountPath: /var/images
           name: var-images
+        - mountPath: /var/run/docker.sock
+          name: dir-docker-socket
       dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: PULL_SECRET_NAME
       serviceAccountName: bd-ops-opssight-image-getter
       volumes:
       - configMap:
@@ -83,6 +87,10 @@ spec:
           defaultMode: 420
           name: bd-ops-opssight-opssight
         name: image-getter
+      - hostPath:
+          path: /var/run/docker.sock
+          type: ""
+        name: dir-docker-socket
 status:
   replicas: 0
 ---

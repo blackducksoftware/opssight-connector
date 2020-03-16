@@ -1,0 +1,65 @@
+apiVersion: v1
+data:
+  opssight.json: |-
+    {
+      "Perceiver": {
+        "Certificate": "",
+        "CertificateKey": "",
+        "AnnotationIntervalSeconds": 30,
+        "DumpIntervalMinutes": 30,
+        "Port": 3002,
+        "Pod": {
+          "NamespaceFilter": "demo"
+        },
+        "Image": {},
+        "Artifactory": {
+          "Dumper": true
+        }
+      },
+      "BlackDuck": {
+        "ConnectionsEnvironmentVariableName": "blackduck.json",
+        "TLSVerification": false
+      },
+      "Perceptor": {
+        "Timings": {
+          "CheckForStalledScansPauseHours": 1,
+          "StalledScanClientTimeoutHours": 2,
+          "ModelMetricsPauseSeconds": 60,
+          "UnknownImagePauseMilliseconds": 3000,
+          "ClientTimeoutMilliseconds": 5000
+        },
+        "UseMockMode": false,
+        "Host": "bd-ops-opssight-core",
+        "Port": 3001
+      },
+      "Scanner": {
+        "Port": 3003,
+        "ImageDirectory": "IMAGE_DIR",
+        "BlackDuckClientTimeoutSeconds": 4000
+      },
+      "ImageFacade": {
+        "Host": "localhost",
+        "Port": 3004,
+        "ImagePullerType": "docker",
+        "CreateImagesOnly": false
+      },
+      "Skyfire": {
+        "UseInClusterConfig": true,
+        "Port": 3005,
+        "PrometheusPort": 3006,
+        "BlackDuckClientTimeoutSeconds": 120,
+        "KubeDumpIntervalSeconds": 60,
+        "PerceptorDumpIntervalSeconds": 60,
+        "BlackDuckDumpPauseSeconds": 240
+      },
+      "LogLevel": "debug"
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: bd-ops-opssight-opssight
+    name: bd-ops
+  name: bd-ops-opssight-opssight
+  namespace: bd-ops

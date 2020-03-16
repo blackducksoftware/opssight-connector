@@ -4,32 +4,32 @@ metadata:
   creationTimestamp: null
   labels:
     app: opssight
-    component: pod-processor
+    component: image-processor
     name: bd-ops
-  name: bd-ops-opssight-pod-processor
+  name: bd-ops-opssight-image-processor
   namespace: bd-ops
 spec:
   replicas: 1
   selector:
     app: opssight
-    component: pod-processor
+    component: image-processor
     name: bd-ops
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
-        component: pod-processor
+        component: image-processor
         name: bd-ops
-      name: bd-ops-opssight-pod-processor
+      name: bd-ops-opssight-image-processor
     spec:
       containers:
       - args:
-        - /etc/pod-processor/opssight.json
+        - /etc/image-processor/opssight.json
         command:
-        - ./opssight-pod-processor
-        image: docker.io/blackducksoftware/opssight-pod-processor:2.2.5
-        name: pod-processor
+        - ./opssight-image-processor
+        image: docker.io/gautambaghel/opssight-image-processor:2.2.5
+        name: image-processor
         ports:
         - containerPort: 3002
           protocol: TCP
@@ -38,8 +38,8 @@ spec:
             cpu: 300m
             memory: 1300Mi
         volumeMounts:
-        - mountPath: /etc/pod-processor
-          name: pod-processor
+        - mountPath: /etc/image-processor
+          name: image-processor
         - mountPath: /tmp
           name: logs
       dnsPolicy: ClusterFirst
@@ -50,7 +50,7 @@ spec:
       - configMap:
           defaultMode: 420
           name: bd-ops-opssight-opssight
-        name: pod-processor
+        name: image-processor
       - emptyDir: {}
         name: logs
 status:
@@ -62,34 +62,23 @@ metadata:
   creationTimestamp: null
   labels:
     app: opssight
-    component: pod-processor
+    component: image-processor
     name: bd-ops
-  name: bd-ops-opssight-pod-processor
+  name: bd-ops-opssight-image-processor
   namespace: bd-ops
 spec:
   ports:
-  - name: port-pod-processor
+  - name: port-image-processor
     port: 3002
     protocol: TCP
     targetPort: 3002
   selector:
     app: opssight
-    component: pod-processor
+    component: image-processor
     name: bd-ops
   type: ClusterIP
 status:
   loadBalancer: {}
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  creationTimestamp: null
-  labels:
-    app: opssight
-    component: processor
-    name: bd-ops
-  name: bd-ops-opssight-processor
-  namespace: bd-ops
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -97,34 +86,14 @@ metadata:
   creationTimestamp: null
   labels:
     app: opssight
-    component: pod-processor
+    component: image-processor
     name: bd-ops
-  name: bd-ops-opssight-pod-processor
+  name: bd-ops-opssight-image-processor
 roleRef:
   apiGroup: ""
   kind: ClusterRole
-  name: bd-ops-opssight-pod-processor
+  name: bd-ops-opssight-image-processor
 subjects:
 - kind: ServiceAccount
   name: bd-ops-opssight-processor
   namespace: bd-ops
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  labels:
-    app: opssight
-    component: pod-processor
-    name: bd-ops
-  name: bd-ops-opssight-pod-processor
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - watch
-  - list
-  - update

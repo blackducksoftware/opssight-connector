@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: artifactory-processor
+    name: bd-ops
+  name: bd-ops-opssight-artifactory-processor
+  namespace: bd-ops
+spec:
+  replicas: 1
+  selector:
+    app: opssight
+    component: artifactory-processor
+    name: bd-ops
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: opssight
+        component: artifactory-processor
+        name: bd-ops
+      name: bd-ops-opssight-artifactory-processor
+    spec:
+      containers:
+      - args:
+        - /etc/artifactory-processor/opssight.json
+        command:
+        - ./opssight-artifactory-processor
+        envFrom:
+        - secretRef:
+            name: bd-ops-opssight-blackduck
+        image: docker.io/gautambaghel/opssight-artifactory-processor:2.2.5
+        name: artifactory-processor
+        ports:
+        - containerPort: 3002
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 256Mi
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /etc/artifactory-processor
+          name: artifactory-processor
+        - mountPath: /tmp
+          name: logs
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: PULL_SECRET_NAME
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: bd-ops-opssight-opssight
+        name: artifactory-processor
+      - emptyDir: {}
+        name: logs
+status:
+  replicas: 0
