@@ -5,51 +5,66 @@ metadata:
   labels:
     app: opssight
     component: pod-processor
-    name: bd-ops
-  name: bd-ops-opssight-pod-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
   replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     app: opssight
     component: pod-processor
-    name: bd-ops
+    name: {{ .Release.Name }}
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
         component: pod-processor
-        name: bd-ops
-      name: bd-ops-opssight-pod-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-pod-processor
     spec:
       containers:
       - args:
         - /etc/pod-processor/opssight.json
         command:
         - ./opssight-pod-processor
-        image: docker.io/blackducksoftware/opssight-pod-processor:2.2.5
+        {{- if .Values.podProcessor.registry }}
+          {{- if .Values.podProcessor.imageTag }}
+        image: {{ .Values.podProcessor.registry }}/opssight-pod-processor:{{ .Values.podProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.podProcessor.registry }}/opssight-pod-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.podProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-pod-processor:{{ .Values.podProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-pod-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: pod-processor
         ports:
         - containerPort: 3002
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.podProcessor.requestCpu }}
+            memory: {{ .Values.podProcessor.requestMemory }}
         volumeMounts:
         - mountPath: /etc/pod-processor
           name: pod-processor
         - mountPath: /tmp
           name: logs
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-      - name: PULL_SECRET_NAME
-      serviceAccountName: bd-ops-opssight-processor
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-processor
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: pod-processor
       - emptyDir: {}
         name: logs
@@ -63,9 +78,9 @@ metadata:
   labels:
     app: opssight
     component: pod-processor
-    name: bd-ops
-  name: bd-ops-opssight-pod-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-pod-processor
@@ -75,7 +90,7 @@ spec:
   selector:
     app: opssight
     component: pod-processor
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}
@@ -87,9 +102,9 @@ metadata:
   labels:
     app: opssight
     component: processor
-    name: bd-ops
-  name: bd-ops-opssight-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -98,16 +113,16 @@ metadata:
   labels:
     app: opssight
     component: pod-processor
-    name: bd-ops
-  name: bd-ops-opssight-pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
 roleRef:
   apiGroup: ""
   kind: ClusterRole
-  name: bd-ops-opssight-pod-processor
+  name: {{ .Release.Name }}-opssight-pod-processor
 subjects:
 - kind: ServiceAccount
-  name: bd-ops-opssight-processor
-  namespace: bd-ops
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -116,8 +131,8 @@ metadata:
   labels:
     app: opssight
     component: pod-processor
-    name: bd-ops
-  name: bd-ops-opssight-pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
 rules:
 - apiGroups:
   - ""

@@ -5,23 +5,27 @@ metadata:
   labels:
     app: opssight
     component: core
-    name: bd-ops
-  name: bd-ops-opssight-core
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-core
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
   replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     app: opssight
     component: core
-    name: bd-ops
+    name: {{ .Release.Name }}
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
         component: core
-        name: bd-ops
-      name: bd-ops-opssight-core
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-core
     spec:
       containers:
       - args:
@@ -30,16 +34,28 @@ spec:
         - ./opssight-core
         envFrom:
         - secretRef:
-            name: bd-ops-opssight-blackduck
-        image: docker.io/blackducksoftware/opssight-core:2.2.5
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.core.registry }}
+          {{- if .Values.core.imageTag }}
+        image: {{ .Values.core.registry }}/opssight-core:{{ .Values.core.imageTag }}
+          {{- else }}
+        image: {{ .Values.core.registry }}/opssight-core:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.core.imageTag }}
+        image: {{ .Values.registry }}/opssight-core:{{ .Values.core.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-core:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: core
         ports:
         - containerPort: 3001
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.core.requestCpu }}
+            memory: {{ .Values.core.requestMemory }}
         volumeMounts:
         - mountPath: /etc/core
           name: core
@@ -47,7 +63,7 @@ spec:
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: core
 status:
   replicas: 0
@@ -59,9 +75,9 @@ metadata:
   labels:
     app: opssight
     component: core
-    name: bd-ops
-  name: bd-ops-opssight-core
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-core
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-core
@@ -71,7 +87,7 @@ spec:
   selector:
     app: opssight
     component: core
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}

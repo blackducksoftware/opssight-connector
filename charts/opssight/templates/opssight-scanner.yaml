@@ -5,23 +5,27 @@ metadata:
   labels:
     app: opssight
     component: scanner
-    name: bd-ops
-  name: bd-ops-opssight-scanner
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-scanner
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
   replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     app: opssight
     component: scanner
-    name: bd-ops
+    name: {{ .Release.Name }}
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
         component: scanner
-        name: bd-ops
-      name: bd-ops-opssight-scanner
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-scanner
     spec:
       containers:
       - args:
@@ -30,16 +34,28 @@ spec:
         - ./opssight-scanner
         envFrom:
         - secretRef:
-            name: bd-ops-opssight-blackduck
-        image: docker.io/blackducksoftware/opssight-scanner:2.2.5
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.scanner.registry }}
+          {{- if .Values.scanner.imageTag }}
+        image: {{ .Values.scanner.registry }}/opssight-scanner:{{ .Values.scanner.imageTag }}
+          {{- else }}
+        image: {{ .Values.scanner.registry }}/opssight-scanner:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.scanner.imageTag }}
+        image: {{ .Values.registry }}/opssight-scanner:{{ .Values.scanner.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-scanner:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: scanner
         ports:
         - containerPort: 3003
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.scanner.requestCpu }}
+            memory: {{ .Values.scanner.requestMemory }}
         securityContext:
           privileged: false
         volumeMounts:
@@ -53,16 +69,28 @@ spec:
         - ./opssight-image-getter
         envFrom:
         - secretRef:
-            name: bd-ops-opssight-blackduck
-        image: docker.io/blackducksoftware/opssight-image-getter:2.2.5
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.imageGetter.registry }}
+          {{- if .Values.imageGetter.imageTag }}
+        image: {{ .Values.imageGetter.registry }}/opssight-image-getter:{{ .Values.imageGetter.imageTag }}
+          {{- else }}
+        image: {{ .Values.imageGetter.registry }}/opssight-image-getter:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.imageGetter.imageTag }}
+        image: {{ .Values.registry }}/opssight-image-getter:{{ .Values.imageGetter.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-image-getter:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: image-getter
         ports:
         - containerPort: 3004
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.imageGetter.requestCpu }}
+            memory: {{ .Values.imageGetter.requestMemory }}
         securityContext:
           privileged: false
         volumeMounts:
@@ -70,27 +98,20 @@ spec:
           name: image-getter
         - mountPath: /var/images
           name: var-images
-        - mountPath: /var/run/docker.sock
-          name: dir-docker-socket
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-      - name: PULL_SECRET_NAME
-      serviceAccountName: bd-ops-opssight-image-getter
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-image-getter
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: scanner
       - emptyDir: {}
         name: var-images
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: image-getter
-      - hostPath:
-          path: /var/run/docker.sock
-          type: ""
-        name: dir-docker-socket
 status:
   replicas: 0
 ---
@@ -101,9 +122,9 @@ metadata:
   labels:
     app: opssight
     component: scanner
-    name: bd-ops
-  name: bd-ops-opssight-scanner
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-scanner
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-scanner
@@ -113,7 +134,7 @@ spec:
   selector:
     app: opssight
     component: scanner
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}
@@ -125,9 +146,9 @@ metadata:
   labels:
     app: opssight
     component: scanner
-    name: bd-ops
-  name: bd-ops-opssight-image-getter
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-getter
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-image-getter
@@ -137,7 +158,7 @@ spec:
   selector:
     app: opssight
     component: scanner
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}
@@ -149,6 +170,6 @@ metadata:
   labels:
     app: opssight
     component: image-getter
-    name: bd-ops
-  name: bd-ops-opssight-image-getter
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-getter
+  namespace: {{ .Release.Namespace }}

@@ -5,23 +5,31 @@ metadata:
   labels:
     app: opssight
     component: quay-processor
-    name: bd-ops
-  name: bd-ops-opssight-quay-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-quay-processor
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
+    {{- if .Values.enableQuayProcessor }}
   replicas: 1
+    {{- else }}
+  replicas: 0
+    {{- end }}
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     app: opssight
     component: quay-processor
-    name: bd-ops
+    name: {{ .Release.Name }}
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
         component: quay-processor
-        name: bd-ops
-      name: bd-ops-opssight-quay-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-quay-processor
     spec:
       containers:
       - args:
@@ -30,30 +38,87 @@ spec:
         - ./opssight-quay-processor
         envFrom:
         - secretRef:
-            name: bd-ops-opssight-blackduck
-        image: docker.io/gautambaghel/opssight-quay-processor:2.2.5
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.quayProcessor.registry }}
+          {{- if .Values.quayProcessor.imageTag }}
+        image: {{ .Values.quayProcessor.registry }}/opssight-quay-processor:{{ .Values.quayProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.quayProcessor.registry }}/opssight-quay-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.quayProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-quay-processor:{{ .Values.quayProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-quay-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: quay-processor
         ports:
         - containerPort: 3002
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.quayProcessor.requestCpu }}
+            memory: {{ .Values.quayProcessor.requestMemory }}
         volumeMounts:
         - mountPath: /etc/quay-processor
           name: quay-processor
         - mountPath: /tmp
           name: logs
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-      - name: PULL_SECRET_NAME
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: quay-processor
       - emptyDir: {}
         name: logs
 status:
   replicas: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: quay-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-quay-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-quay-processor
+    port: 3002
+    protocol: TCP
+    targetPort: 3002
+  selector:
+    app: opssight
+    component: quay-processor
+    name: {{ .Release.Name }}
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-opssight-quay-processor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: opssight
+    component: quay-processor-exposed
+    name: {{ .Release.Name }}
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host: {{ .Release.Name }}-opssight-quay-processor-ops.apps.bizdev.synopsys-alliances.com
+  subdomain: ''
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-opssight-quay-processor
+    weight: 100
+  port:
+    targetPort: port-quay-processor
+  wildcardPolicy: None

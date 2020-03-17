@@ -5,51 +5,70 @@ metadata:
   labels:
     app: opssight
     component: image-processor
-    name: bd-ops
-  name: bd-ops-opssight-image-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
+    {{- if .Values.enableImageProcessor }}
   replicas: 1
+    {{- else }}
+  replicas: 0
+    {{- end }}
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     app: opssight
     component: image-processor
-    name: bd-ops
+    name: {{ .Release.Name }}
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: opssight
         component: image-processor
-        name: bd-ops
-      name: bd-ops-opssight-image-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-image-processor
     spec:
       containers:
       - args:
         - /etc/image-processor/opssight.json
         command:
         - ./opssight-image-processor
-        image: docker.io/gautambaghel/opssight-image-processor:2.2.5
+        {{- if .Values.imageProcessor.registry }}
+          {{- if .Values.imageProcessor.imageTag }}
+        image: {{ .Values.imageProcessor.registry }}/opssight-image-processor:{{ .Values.imageProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.imageProcessor.registry }}/opssight-image-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.imageProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-image-processor:{{ .Values.imageProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-image-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
         name: image-processor
         ports:
         - containerPort: 3002
           protocol: TCP
         resources:
           requests:
-            cpu: 300m
-            memory: 1300Mi
+            cpu: {{ .Values.imageProcessor.requestCpu }}
+            memory: {{ .Values.imageProcessor.requestMemory }}
         volumeMounts:
         - mountPath: /etc/image-processor
           name: image-processor
         - mountPath: /tmp
           name: logs
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-      - name: PULL_SECRET_NAME
-      serviceAccountName: bd-ops-opssight-processor
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-processor
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-opssight
+          name: {{ .Release.Name }}-opssight-opssight
         name: image-processor
       - emptyDir: {}
         name: logs
@@ -63,9 +82,9 @@ metadata:
   labels:
     app: opssight
     component: image-processor
-    name: bd-ops
-  name: bd-ops-opssight-image-processor
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-image-processor
@@ -75,7 +94,7 @@ spec:
   selector:
     app: opssight
     component: image-processor
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}
@@ -87,13 +106,13 @@ metadata:
   labels:
     app: opssight
     component: image-processor
-    name: bd-ops
-  name: bd-ops-opssight-image-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
 roleRef:
   apiGroup: ""
   kind: ClusterRole
-  name: bd-ops-opssight-image-processor
+  name: {{ .Release.Name }}-opssight-image-processor
 subjects:
 - kind: ServiceAccount
-  name: bd-ops-opssight-processor
-  namespace: bd-ops
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}

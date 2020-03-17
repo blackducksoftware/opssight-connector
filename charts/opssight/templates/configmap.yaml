@@ -59,7 +59,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: opssight
-    component: bd-ops-opssight-opssight
-    name: bd-ops
-  name: bd-ops-opssight-opssight
-  namespace: bd-ops
+    component: {{ .Release.Name }}-opssight-opssight
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-opssight
+  namespace: {{ .Release.Namespace }}

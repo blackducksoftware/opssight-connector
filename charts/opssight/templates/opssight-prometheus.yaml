@@ -5,16 +5,20 @@ metadata:
   labels:
     app: opssight
     component: prometheus
-    name: bd-ops
-  name: bd-ops-opssight-prometheus
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
 spec:
+  {{- if eq .Values.status "Running" }}
   replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
   selector:
     matchLabels:
       app: opssight
       component: prometheus
-      name: bd-ops
+      name: {{ .Release.Name }}
   strategy: {}
   template:
     metadata:
@@ -22,8 +26,8 @@ spec:
       labels:
         app: opssight
         component: prometheus
-        name: bd-ops
-      name: bd-ops-opssight-prometheus
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-prometheus
     spec:
       containers:
       - args:
@@ -32,7 +36,11 @@ spec:
         - --storage.tsdb.path=/tmp/data/
         - --storage.tsdb.retention=120d
         - --web.listen-address=:3006
-        image: docker.io/prom/prometheus:v2.1.0
+        {{- if .Values.prometheus.registry }}
+        image: {{ .Values.prometheus.registry }}/prometheus:{{ .Values.prometheus.imageTag }}
+        {{- else }}
+        image: {{ .Values.init.registry }}/prometheus:{{ .Values.init.imageTag }}
+        {{- end}}
         name: prometheus
         ports:
         - containerPort: 3006
@@ -45,12 +53,11 @@ spec:
         - mountPath: /etc/prometheus
           name: prometheus
       dnsPolicy: ClusterFirst
-      imagePullSecrets:
-      - name: PULL_SECRET_NAME
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
       volumes:
       - configMap:
           defaultMode: 420
-          name: bd-ops-opssight-prometheus
+          name: {{ .Release.Name }}-opssight-prometheus
         name: prometheus
       - emptyDir: {}
         name: data
@@ -65,9 +72,9 @@ metadata:
   labels:
     app: opssight
     component: prometheus
-    name: bd-ops
-  name: bd-ops-opssight-prometheus
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: v1
 kind: Service
@@ -78,9 +85,9 @@ metadata:
   labels:
     app: opssight
     component: prometheus
-    name: bd-ops
-  name: bd-ops-opssight-prometheus
-  namespace: bd-ops
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: port-prometheus
@@ -90,7 +97,7 @@ spec:
   selector:
     app: opssight
     component: prometheus
-    name: bd-ops
+    name: {{ .Release.Name }}
   type: ClusterIP
 status:
   loadBalancer: {}

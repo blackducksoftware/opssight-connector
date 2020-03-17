@@ -11,3 +11,88 @@ imageTag: 2.2.5
 
 # Docker registry to pull Black Duck images
 registry: docker.io/blackducksoftware
+
+# image pull secret to download the Black Duck images (mostly applicable for air gapped customers)
+imagePullSecrets: [] # array of strings delimited by comma
+
+sealKey: abcdefghijklmnopqrstuvwxyz123456 # length of 32 characters - to be used to encrypt the master key for source code upload
+
+# enable Persistent Storage for containers
+enablePersistentStorage: true
+storageClass: # it will apply to all PVC's storage class but it can be override at container level
+
+# enable Image Processor
+enableImageProcessor: false
+
+# enable Quay Processor
+enableQuayProcessor: false
+
+# enable Artifactory Processor
+enableArtifactoryProcessor: false
+
+# This is used to start or stop the app. Set to Running to start, or Stopped to stop.
+status: Running
+
+# Secrets base64 encoded
+secret:
+  externalHub: eyJiZC1ibGFja2R1Y2stYmQuYXBwcy5iaXpkZXYuc3lub3BzeXMtYWxsaWFuY2VzLmNvbSI6eyJzY2hlbWUiOiJodHRwcyIsImRvbWFpbiI6ImJkLWJsYWNrZHVjay1iZC5hcHBzLmJpemRldi5zeW5vcHN5cy1hbGxpYW5jZXMuY29tIiwicG9ydCI6NDQzLCJ1c2VyIjoic3lzYWRtaW4iLCJwYXNzd29yZCI6ImJsYWNrZHVjayIsImNvbmN1cnJlbnRTY2FuTGltaXQiOjJ9fQ==
+  securedRegistries: eyJzYWxlc2FmLmJsYWNrZHVja3NvZnR3YXJlLmNvbTo0NDMiOnsiVXJsIjoic2FsZXNhZi5ibGFja2R1Y2tzb2Z0d2FyZS5jb206NDQzIiwidXNlciI6ImdhdXRhbWIiLCJwYXNzd29yZCI6IlZpY2U5LmNpdHkiLCJ0b2tlbiI6IiJ9LCJxdWF5LmlvIjp7IlVybCI6InF1YXkuaW8iLCJ1c2VyIjoiZ2F1dGFtIiwicGFzc3dvcmQiOiJWaWNlOS5jaXR5IiwidG9rZW4iOiIifX0=
+
+init:
+  registry: # override the docker registry at container level
+  imageTag: 1.0.0
+  securityContext: {}
+
+prometheus:
+  registry: docker.io/prom # override the docker registry at container level
+  imageTag: v2.1.0
+  limitMemory: 640Mi
+  requestCpu: "1000m"
+  requestMemory: 640Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+podProcessor:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+scanner:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+imageGetter:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+core:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+imageProcessor:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+quayProcessor:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
+
+artifactoryProcessor:
+  registry:
+  imageTag:
+  requestCpu: 300m
+  requestMemory: 1300Mi
