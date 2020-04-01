@@ -50,7 +50,7 @@ spec:
         {{- end}}
         name: core
         ports:
-        - containerPort: 3001
+        - containerPort: {{ .Values.spec.perceptor.port }}
           protocol: TCP
         resources:
           requests:
@@ -81,9 +81,9 @@ metadata:
 spec:
   ports:
   - name: port-core
-    port: 3001
+    port: {{ .Values.spec.perceptor.port }}
     protocol: TCP
-    targetPort: 3001
+    targetPort: {{ .Values.spec.perceptor.port }}
   selector:
     app: opssight
     component: core

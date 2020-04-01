@@ -1,3 +1,4 @@
+{{- if .Values.spec.perceiver.enableQuayProcessor }}
 apiVersion: v1
 kind: ReplicationController
 metadata:
@@ -10,11 +11,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- if eq .Values.status "Running" }}
-    {{- if .Values.enableQuayProcessor }}
   replicas: 1
-    {{- else }}
-  replicas: 0
-    {{- end }}
   {{- else }}
   replicas: 0
   {{- end }}
@@ -54,7 +51,7 @@ spec:
         {{- end}}
         name: quay-processor
         ports:
-        - containerPort: 3002
+        - containerPort: {{ .Values.spec.perceiver.port }}
           protocol: TCP
         resources:
           requests:
@@ -90,9 +87,9 @@ metadata:
 spec:
   ports:
   - name: port-quay-processor
-    port: 3002
+    port: {{ .Values.spec.perceiver.port }}
     protocol: TCP
-    targetPort: 3002
+    targetPort: {{ .Values.spec.perceiver.port }}
   selector:
     app: opssight
     component: quay-processor
@@ -101,19 +98,43 @@ spec:
 status:
   loadBalancer: {}
 ---
+{{- if or (eq .Values.spec.perceiver.exposeQuayProcessor "NodePort") (eq .Values.spec.perceiver.exposeQuayProcessor "LoadBalancer") }}
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: quay-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-quay-exposed
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-quay-exposed
+    port: {{ .Values.spec.perceiver.port }}
+    protocol: TCP
+    targetPort: {{ .Values.spec.perceiver.port }}
+  selector:
+    app: opssight
+    component: quay-processor
+    name: {{ .Release.Name }}
+  type: {{ .Values.spec.perceiver.exposeQuayProcessor }}
+status:
+  loadBalancer: {}
+{{ else if eq .Values.spec.perceiver.exposeQuayProcessor "OpenShift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: {{ .Release.Name }}-opssight-quay-processor
+  name: {{ .Release.Name }}-opssight-quay-exposed
   namespace: {{ .Release.Namespace }}
   labels:
     app: opssight
-    component: quay-processor-exposed
+    component: quay-processor
     name: {{ .Release.Name }}
   annotations:
     openshift.io/host.generated: 'true'
 spec:
-  host: {{ .Release.Name }}-opssight-quay-processor-ops.apps.bizdev.synopsys-alliances.com
   subdomain: ''
   to:
     kind: Service
@@ -122,3 +143,6 @@ spec:
   port:
     targetPort: port-quay-processor
   wildcardPolicy: None
+{{ else }}
+{{ end }}
+{{- end }}

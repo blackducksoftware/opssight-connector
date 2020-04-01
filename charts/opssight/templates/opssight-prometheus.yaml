@@ -1,3 +1,4 @@
+{{- if .Values.spec.enableMetrics }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,3 +102,54 @@ spec:
   type: ClusterIP
 status:
   loadBalancer: {}
+---
+{{- if or (eq .Values.spec.exposeMetrics "NodePort") (eq .Values.spec.exposeMetrics "LoadBalancer") }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus-exposed
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-prometheus-exposed
+    port: 3006
+    protocol: TCP
+    targetPort: 3006
+  selector:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  type: {{ .Values.spec.exposeMetrics }}
+status:
+  loadBalancer: {}
+{{ else if eq .Values.spec.exposeMetrics "OpenShift" }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-opssight-prometheus-exposed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  subdomain: ''
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-opssight-prometheus
+    weight: 100
+  port:
+    targetPort: port-prometheus
+  wildcardPolicy: None
+{{ else }}
+{{ end }}
+{{- end }}

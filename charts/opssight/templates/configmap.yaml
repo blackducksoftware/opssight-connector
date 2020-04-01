@@ -3,56 +3,46 @@ data:
   opssight.json: |-
     {
       "Perceiver": {
-        "Certificate": "",
-        "CertificateKey": "",
-        "AnnotationIntervalSeconds": 30,
-        "DumpIntervalMinutes": 30,
-        "Port": 3002,
+        "Certificate": {{ .Values.spec.perceiver.certificate | quote }},
+        "CertificateKey": {{ .Values.spec.perceiver.certificateKey | quote }},
+        "AnnotationIntervalSeconds": {{ .Values.spec.perceiver.annotationIntervalSeconds }},
+        "DumpIntervalMinutes": {{ .Values.spec.perceiver.dumpIntervalMinutes }},
+        "Port": {{ .Values.spec.perceiver.port }},
         "Pod": {
-          "NamespaceFilter": "demo"
+          "NamespaceFilter": {{ .Values.spec.perceiver.podPerceiver.nameSpaceFilter | quote }}
         },
-        "Image": {},
         "Artifactory": {
-          "Dumper": true
+          "Dumper": {{ .Values.spec.perceiver.enableArtifactoryProcessorDumper }}
         }
       },
       "BlackDuck": {
-        "ConnectionsEnvironmentVariableName": "blackduck.json",
-        "TLSVerification": false
+        "ConnectionsEnvironmentVariableName": {{ .Values.spec.blackduck.connectionsEnvironmentVariableName | toString | quote }},
+        "TLSVerification": {{ .Values.spec.blackduck.tlsVerification }}
       },
       "Perceptor": {
         "Timings": {
-          "CheckForStalledScansPauseHours": 1,
-          "StalledScanClientTimeoutHours": 2,
-          "ModelMetricsPauseSeconds": 60,
-          "UnknownImagePauseMilliseconds": 3000,
-          "ClientTimeoutMilliseconds": 5000
+          "CheckForStalledScansPauseHours": {{ .Values.spec.perceptor.timings.checkForStalledScansPauseHours }},
+          "StalledScanClientTimeoutHours": {{ .Values.spec.perceptor.timings.stalledScanClientTimeoutHours }},
+          "ModelMetricsPauseSeconds": {{ .Values.spec.perceptor.timings.modelMetricsPauseSeconds }},
+          "UnknownImagePauseMilliseconds": {{ .Values.spec.perceptor.timings.unknownImagePauseMilliseconds }},
+          "ClientTimeoutMilliseconds": {{ .Values.spec.perceptor.timings.clientTimeoutMilliseconds }}
         },
-        "UseMockMode": false,
-        "Host": "bd-ops-opssight-core",
-        "Port": 3001
+        "UseMockMode": {{ .Values.spec.perceptor.useMockMode }},
+        "Host": "{{ .Release.Name }}-opssight-core",
+        "Port": {{ .Values.spec.perceptor.port }}
       },
       "Scanner": {
-        "Port": 3003,
-        "ImageDirectory": "IMAGE_DIR",
-        "BlackDuckClientTimeoutSeconds": 4000
+        "Port": {{ .Values.spec.scannerPod.scanner.port }},
+        "ImageDirectory": {{ .Values.spec.scannerPod.scanner.imageDirectory  | toString | quote }},
+        "BlackDuckClientTimeoutSeconds":  {{ .Values.spec.scannerPod.scanner.blackDuckClientTimeoutSeconds }}
       },
       "ImageFacade": {
-        "Host": "localhost",
-        "Port": 3004,
-        "ImagePullerType": "docker",
-        "CreateImagesOnly": false
+        "Host": {{ .Values.spec.scannerPod.imageFacade.host  | toString | quote }},
+        "Port": {{ .Values.spec.scannerPod.imageFacade.port }},
+        "ImagePullerType": {{ .Values.spec.scannerPod.imageFacade.imagePullerType  | toString | quote }},
+        "CreateImagesOnly": {{ .Values.spec.scannerPod.imageFacade.createImagesOnly }}
       },
-      "Skyfire": {
-        "UseInClusterConfig": true,
-        "Port": 3005,
-        "PrometheusPort": 3006,
-        "BlackDuckClientTimeoutSeconds": 120,
-        "KubeDumpIntervalSeconds": 60,
-        "PerceptorDumpIntervalSeconds": 60,
-        "BlackDuckDumpPauseSeconds": 240
-      },
-      "LogLevel": "debug"
+      "LogLevel": {{ .Values.spec.logLevel | toString | quote }}
     }
 kind: ConfigMap
 metadata:

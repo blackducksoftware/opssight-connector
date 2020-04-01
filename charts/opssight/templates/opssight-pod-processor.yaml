@@ -47,7 +47,7 @@ spec:
         {{- end}}
         name: pod-processor
         ports:
-        - containerPort: 3002
+        - containerPort: {{ .Values.spec.perceiver.port }}
           protocol: TCP
         resources:
           requests:
@@ -84,9 +84,9 @@ metadata:
 spec:
   ports:
   - name: port-pod-processor
-    port: 3002
+    port: {{ .Values.spec.perceiver.port }}
     protocol: TCP
-    targetPort: 3002
+    targetPort: {{ .Values.spec.perceiver.port }}
   selector:
     app: opssight
     component: pod-processor

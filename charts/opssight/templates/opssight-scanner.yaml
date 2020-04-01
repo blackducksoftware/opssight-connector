@@ -10,7 +10,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- if eq .Values.status "Running" }}
-  replicas: 1
+  replicas: {{ .Values.spec.scannerPod.scannerReplicaCount }}
   {{- else }}
   replicas: 0
   {{- end }}
@@ -50,7 +50,7 @@ spec:
         {{- end}}
         name: scanner
         ports:
-        - containerPort: 3003
+        - containerPort: {{ .Values.spec.scannerPod.scanner.port }}
           protocol: TCP
         resources:
           requests:
@@ -85,7 +85,7 @@ spec:
         {{- end}}
         name: image-getter
         ports:
-        - containerPort: 3004
+        - containerPort: {{ .Values.spec.scannerPod.imageFacade.port }}
           protocol: TCP
         resources:
           requests:
@@ -128,9 +128,9 @@ metadata:
 spec:
   ports:
   - name: port-scanner
-    port: 3003
+    port: {{ .Values.spec.scannerPod.scanner.port }}
     protocol: TCP
-    targetPort: 3003
+    targetPort: {{ .Values.spec.scannerPod.scanner.port }}
   selector:
     app: opssight
     component: scanner
@@ -152,9 +152,9 @@ metadata:
 spec:
   ports:
   - name: port-image-getter
-    port: 3004
+    port: {{ .Values.spec.scannerPod.imageFacade.port }}
     protocol: TCP
-    targetPort: 3004
+    targetPort: {{ .Values.spec.scannerPod.imageFacade.port }}
   selector:
     app: opssight
     component: scanner
