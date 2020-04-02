@@ -1,5 +1,5 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
@@ -15,9 +15,11 @@ spec:
   replicas: 0
   {{- end }}
   selector:
-    app: opssight
-    component: scanner
-    name: {{ .Release.Name }}
+    matchLabels:
+      app: opssight
+      component: scanner
+      name: {{ .Release.Name }}
+  strategy: {}
   template:
     metadata:
       creationTimestamp: null
@@ -53,9 +55,7 @@ spec:
         - containerPort: {{ .Values.spec.scannerPod.scanner.port }}
           protocol: TCP
         resources:
-          requests:
-            cpu: {{ .Values.scanner.requestCpu }}
-            memory: {{ .Values.scanner.requestMemory }}
+          {{- toYaml .Values.scanner.resources | nindent 12 }}
         securityContext:
           privileged: false
         volumeMounts:
@@ -88,9 +88,7 @@ spec:
         - containerPort: {{ .Values.spec.scannerPod.imageFacade.port }}
           protocol: TCP
         resources:
-          requests:
-            cpu: {{ .Values.imageGetter.requestCpu }}
-            memory: {{ .Values.imageGetter.requestMemory }}
+          {{- toYaml .Values.imageGetter.resources | nindent 12 }}
         securityContext:
           privileged: false
         volumeMounts:
@@ -160,8 +158,7 @@ spec:
     component: scanner
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
+status: {}
 ---
 apiVersion: v1
 kind: ServiceAccount

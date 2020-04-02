@@ -1,6 +1,6 @@
 {{- if .Values.spec.perceiver.enableImageProcessor }}
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
@@ -16,9 +16,11 @@ spec:
   replicas: 0
   {{- end }}
   selector:
-    app: opssight
-    component: image-processor
-    name: {{ .Release.Name }}
+    matchLabels:
+      app: opssight
+      component: image-processor
+      name: {{ .Release.Name }}
+  strategy: {}
   template:
     metadata:
       creationTimestamp: null
@@ -51,9 +53,7 @@ spec:
         - containerPort: {{ .Values.spec.perceiver.port }}
           protocol: TCP
         resources:
-          requests:
-            cpu: {{ .Values.imageProcessor.requestCpu }}
-            memory: {{ .Values.imageProcessor.requestMemory }}
+          {{- toYaml .Values.imageProcessor.resources | nindent 12 }}
         volumeMounts:
         - mountPath: /etc/image-processor
           name: image-processor
@@ -69,8 +69,7 @@ spec:
         name: image-processor
       - emptyDir: {}
         name: logs
-status:
-  replicas: 0
+status: {}
 ---
 apiVersion: v1
 kind: Service

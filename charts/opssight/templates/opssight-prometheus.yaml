@@ -65,19 +65,6 @@ spec:
 status: {}
 ---
 apiVersion: v1
-data:
-  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["bd-ops-opssight-core:3001","bd-ops-opssight-scanner:3003","bd-ops-opssight-image-getter:3004","bd-ops-opssight-pod-processor:3002"]}]}]}'
-kind: ConfigMap
-metadata:
-  creationTimestamp: null
-  labels:
-    app: opssight
-    component: prometheus
-    name: {{ .Release.Name }}
-  name: {{ .Release.Name }}-opssight-prometheus
-  namespace: {{ .Release.Namespace }}
----
-apiVersion: v1
 kind: Service
 metadata:
   annotations:
@@ -152,4 +139,17 @@ spec:
   wildcardPolicy: None
 {{ else }}
 {{ end }}
+---
+apiVersion: v1
+data:
+  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["{{ .Release.Name }}-opssight-core:{{ .Values.spec.perceptor.port }}","{{ .Release.Name }}-opssight-scanner:{{ .Values.spec.scannerPod.scanner.port }}","{{ .Release.Name }}-opssight-image-getter:{{ .Values.spec.scannerPod.imageFacade.port }}","{{ .Release.Name }}-opssight-pod-processor:{{ .Values.spec.perceiver.port }}","{{ .Release.Name }}-opssight-quay-processor:{{ .Values.spec.perceiver.port }}","{{ .Release.Name }}-opssight-artifactory-processor:{{ .Values.spec.perceiver.port }}"]}]}]}'
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
 {{- end }}

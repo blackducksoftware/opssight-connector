@@ -5,21 +5,12 @@
 nameOverride: ""
 fullnameOverride: ""
 
-isKubernetes: true
-
 # Docker registry to pull Black Duck images
 registry: docker.io/blackducksoftware
-
 imageTag: 2.2.5
 
 # image pull secret to download the Black Duck images (mostly applicable for air gapped customers)
 imagePullSecrets: [] # array of strings delimited by comma
-
-sealKey: abcdefghijklmnopqrstuvwxyz123456 # length of 32 characters - to be used to encrypt the master key for source code upload
-
-# enable Persistent Storage for containers
-enablePersistentStorage: true
-storageClass: # it will apply to all PVC's storage class but it can be override at container level
 
 # This is used to start or stop the app. Set to Running to start, or Stopped to stop.
 status: Running
@@ -33,7 +24,7 @@ secret:
 spec:
   logLevel: "debug"
   enableMetrics: true
-  exposeMetrics: "NONE"
+  exposeMetrics: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
   blackduck:
     connectionsEnvironmentVariableName: "blackduck.json"
     tlsVerification: false
@@ -46,7 +37,7 @@ spec:
       unknownImagePauseMilliseconds: 15000
       clientTimeoutMilliseconds: 100000
     useMockMode: false
-    expose: "NONE"
+    expose: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
   perceiver:
     port: 3002
     certificate: ""
@@ -57,11 +48,11 @@ spec:
       nameSpaceFilter: ""
     enableArtifactoryProcessor: true
     enableArtifactoryProcessorDumper: false
-    exposeArtifactoryProcessor: "OPENSHIFT"
+    exposeArtifactoryProcessor: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
     enableImageProcessor: true
     enablePodProcessor: true
     enableQuayProcessor: true
-    exposeQuayProcessor: "NONE"
+    exposeQuayProcessor: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
   scannerPod:
     scanner:
       port: 3003
@@ -94,41 +85,55 @@ prometheus:
 podProcessor:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 scanner:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 imageGetter:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 core:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 imageProcessor:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 quayProcessor:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
 
 artifactoryProcessor:
   registry:
   imageTag:
-  requestCpu: 300m
-  requestMemory: 1300Mi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi

@@ -1,6 +1,6 @@
 {{- if .Values.spec.perceiver.enableArtifactoryProcessor }}
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   creationTimestamp: null
   labels:
@@ -16,9 +16,11 @@ spec:
   replicas: 0
   {{- end }}
   selector:
-    app: opssight
-    component: artifactory-processor
-    name: {{ .Release.Name }}
+    matchLabels:
+      app: opssight
+      component: artifactory-processor
+      name: {{ .Release.Name }}
+  strategy: {}
   template:
     metadata:
       creationTimestamp: null
@@ -54,9 +56,7 @@ spec:
         - containerPort: {{ .Values.spec.perceiver.port }}
           protocol: TCP
         resources:
-          requests:
-            cpu: {{ .Values.artifactoryProcessor.requestCpu }}
-            memory: {{ .Values.artifactoryProcessor.requestMemory }}
+          {{- toYaml .Values.artifactoryProcessor.resources | nindent 12 }}
         volumeMounts:
         - mountPath: /etc/artifactory-processor
           name: artifactory-processor
@@ -71,8 +71,7 @@ spec:
         name: artifactory-processor
       - emptyDir: {}
         name: logs
-status:
-  replicas: 0
+status: {}
 ---
 apiVersion: v1
 kind: Service
