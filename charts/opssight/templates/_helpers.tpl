@@ -65,16 +65,6 @@ name: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-Security Context if Kubernetes
-*/}}
-{{- define "ops.podSecurityContext" -}}
-{{- if .Values.isKubernetes -}}
-securityContext:
-  fsGroup: 0
-{{- end -}}
-{{- end -}}
-
-{{/*
 Image pull secrets to pull the image
 */}}
 {{- define "ops.imagePullSecrets" }}
@@ -83,14 +73,3 @@ imagePullSecrets:
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- end }}
-
-{{/*
-Enable Binary Scanner
-*/}}
-{{- define "enableBinaryScanner" -}}
-{{- if .Values.enableBinaryScanner -}}
-USE_BINARY_UPLOADS: "1"
-{{- else -}}
-USE_BINARY_UPLOADS: "0"
-{{- end -}}
-{{- end -}}
