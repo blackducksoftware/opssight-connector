@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: scanner
@@ -10,7 +9,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   {{- if eq .Values.status "Running" }}
-  replicas: {{ .Values.spec.scannerPod.scannerReplicaCount }}
+  replicas: {{ .Values.scanner.replicas }}
   {{- else }}
   replicas: 0
   {{- end }}
@@ -22,7 +21,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: scanner
@@ -52,7 +50,7 @@ spec:
         {{- end}}
         name: scanner
         ports:
-        - containerPort: {{ .Values.spec.scannerPod.scanner.port }}
+        - containerPort: {{ .Values.scanner.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.scanner.resources | nindent 12 }}
@@ -85,7 +83,7 @@ spec:
         {{- end}}
         name: image-getter
         ports:
-        - containerPort: {{ .Values.spec.scannerPod.imageFacade.port }}
+        - containerPort: {{ .Values.imageGetter.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.imageGetter.resources | nindent 12 }}
@@ -116,7 +114,6 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: scanner
@@ -126,9 +123,9 @@ metadata:
 spec:
   ports:
   - name: port-scanner
-    port: {{ .Values.spec.scannerPod.scanner.port }}
+    port: {{ .Values.scanner.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.scannerPod.scanner.port }}
+    targetPort: {{ .Values.scanner.port }}
   selector:
     app: opssight
     component: scanner
@@ -140,7 +137,6 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: scanner
@@ -150,9 +146,9 @@ metadata:
 spec:
   ports:
   - name: port-image-getter
-    port: {{ .Values.spec.scannerPod.imageFacade.port }}
+    port: {{ .Values.imageGetter.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.scannerPod.imageFacade.port }}
+    targetPort: {{ .Values.imageGetter.port }}
   selector:
     app: opssight
     component: scanner
@@ -163,7 +159,6 @@ status: {}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: image-getter

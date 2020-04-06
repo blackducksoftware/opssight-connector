@@ -1,7 +1,7 @@
+{{- if .Values.podProcessor.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: pod-processor
@@ -22,7 +22,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: pod-processor
@@ -49,7 +48,7 @@ spec:
         {{- end}}
         name: pod-processor
         ports:
-        - containerPort: {{ .Values.spec.perceiver.port }}
+        - containerPort: {{ .Values.processor.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.podProcessor.resources | nindent 12 }}
@@ -73,7 +72,6 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: pod-processor
@@ -83,9 +81,9 @@ metadata:
 spec:
   ports:
   - name: port-pod-processor
-    port: {{ .Values.spec.perceiver.port }}
+    port: {{ .Values.processor.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceiver.port }}
+    targetPort: {{ .Values.processor.port }}
   selector:
     app: opssight
     component: pod-processor
@@ -97,7 +95,6 @@ status:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: processor
@@ -108,7 +105,6 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: pod-processor
@@ -126,7 +122,6 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: pod-processor
@@ -142,3 +137,4 @@ rules:
   - watch
   - list
   - update
+{{- end }}

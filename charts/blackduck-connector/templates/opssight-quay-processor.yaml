@@ -1,8 +1,7 @@
-{{- if .Values.spec.perceiver.enableQuayProcessor }}
+{{- if .Values.quayProcessor.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: quay-processor
@@ -23,7 +22,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: quay-processor
@@ -53,7 +51,7 @@ spec:
         {{- end}}
         name: quay-processor
         ports:
-        - containerPort: {{ .Values.spec.perceiver.port }}
+        - containerPort: {{ .Values.processor.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.quayProcessor.resources | nindent 12 }}
@@ -76,7 +74,6 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: quay-processor
@@ -86,9 +83,9 @@ metadata:
 spec:
   ports:
   - name: port-quay-processor
-    port: {{ .Values.spec.perceiver.port }}
+    port: {{ .Values.processor.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceiver.port }}
+    targetPort: {{ .Values.processor.port }}
   selector:
     app: opssight
     component: quay-processor
@@ -97,11 +94,10 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.spec.perceiver.exposeQuayProcessor "NodePort") (eq .Values.spec.perceiver.exposeQuayProcessor "LoadBalancer") }}
+{{- if or (eq .Values.quayProcessor.expose "NodePort") (eq .Values.quayProcessor.expose "LoadBalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: quay-processor
@@ -111,17 +107,17 @@ metadata:
 spec:
   ports:
   - name: port-quay-exposed
-    port: {{ .Values.spec.perceiver.port }}
+    port: {{ .Values.processor.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceiver.port }}
+    targetPort: {{ .Values.processor.port }}
   selector:
     app: opssight
     component: quay-processor
     name: {{ .Release.Name }}
-  type: {{ .Values.spec.perceiver.exposeQuayProcessor }}
+  type: {{ .Values.quayProcessor.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.spec.perceiver.exposeQuayProcessor "OpenShift" }}
+{{ else if eq .Values.quayProcessor.expose "OpenShift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
@@ -142,6 +138,5 @@ spec:
   port:
     targetPort: port-quay-processor
   wildcardPolicy: None
-{{ else }}
 {{ end }}
 {{- end }}

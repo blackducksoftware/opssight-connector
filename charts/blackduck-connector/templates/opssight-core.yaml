@@ -1,7 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: core
@@ -22,7 +21,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: core
@@ -52,7 +50,7 @@ spec:
         {{- end}}
         name: core
         ports:
-        - containerPort: {{ .Values.spec.perceptor.port }}
+        - containerPort: {{ .Values.core.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.core.resources | nindent 12 }}
@@ -70,7 +68,6 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: core
@@ -80,9 +77,9 @@ metadata:
 spec:
   ports:
   - name: port-core
-    port: {{ .Values.spec.perceptor.port }}
+    port: {{ .Values.core.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceptor.port }}
+    targetPort: {{ .Values.core.port }}
   selector:
     app: opssight
     component: core
@@ -91,11 +88,10 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.spec.perceptor.expose "NodePort") (eq .Values.spec.perceptor.expose "LoadBalancer") }}
+{{- if or (eq .Values.core.expose "NodePort") (eq .Values.core.expose "LoadBalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: core
@@ -105,17 +101,17 @@ metadata:
 spec:
   ports:
   - name: port-core-exposed
-    port: {{ .Values.spec.perceptor.port }}
+    port: {{ .Values.core.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceptor.port }}
+    targetPort: {{ .Values.core.port }}
   selector:
     app: opssight
     component: core
     name: {{ .Release.Name }}
-  type: {{ .Values.spec.perceptor.expose }}
+  type: {{ .Values.core.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.spec.perceptor.expose "OpenShift" }}
+{{ else if eq .Values.core.expose "OpenShift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
@@ -136,5 +132,4 @@ spec:
   port:
     targetPort: port-core
   wildcardPolicy: None
-{{ else }}
 {{ end }}

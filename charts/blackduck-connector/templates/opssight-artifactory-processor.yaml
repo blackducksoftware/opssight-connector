@@ -1,8 +1,7 @@
-{{- if .Values.spec.perceiver.enableArtifactoryProcessor }}
+{{- if .Values.artifactoryProcessor.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: artifactory-processor
@@ -23,7 +22,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: artifactory-processor
@@ -53,7 +51,7 @@ spec:
         {{- end}}
         name: artifactory-processor
         ports:
-        - containerPort: {{ .Values.spec.perceiver.port }}
+        - containerPort: {{ .Values.processor.port }}
           protocol: TCP
         resources:
           {{- toYaml .Values.artifactoryProcessor.resources | nindent 12 }}
@@ -76,7 +74,6 @@ status: {}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: artifactory-processor
@@ -86,9 +83,9 @@ metadata:
 spec:
   ports:
   - name: port-artifactory-processor
-    port: {{ .Values.spec.perceiver.port }}
+    port: {{ .Values.processor.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceiver.port }}
+    targetPort: {{ .Values.processor.port }}
   selector:
     app: opssight
     component: artifactory-processor
@@ -97,11 +94,10 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.spec.perceiver.exposeArtifactoryProcessor "NodePort") (eq .Values.spec.perceiver.exposeArtifactoryProcessor "LoadBalancer") }}
+{{- if or (eq .Values.artifactoryProcessor.expose "NodePort") (eq .Values.artifactoryProcessor.expose "LoadBalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: artifactory-processor
@@ -111,17 +107,17 @@ metadata:
 spec:
   ports:
   - name: port-artifactory-exposed
-    port: {{ .Values.spec.perceiver.port }}
+    port: {{ .Values.processor.port }}
     protocol: TCP
-    targetPort: {{ .Values.spec.perceiver.port }}
+    targetPort: {{ .Values.processor.port }}
   selector:
     app: opssight
     component: artifactory-processor
     name: {{ .Release.Name }}
-  type: {{ .Values.spec.perceiver.exposeArtifactoryProcessor }}
+  type: {{ .Values.artifactoryProcessor.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.spec.perceiver.exposeArtifactoryProcessor "OpenShift" }}
+{{ else if eq .Values.artifactoryProcessor.expose "OpenShift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
@@ -142,6 +138,5 @@ spec:
   port:
     targetPort: port-artifactory-processor
   wildcardPolicy: None
-{{ else }}
 {{ end }}
 {{- end }}

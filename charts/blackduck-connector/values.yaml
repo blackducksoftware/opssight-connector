@@ -17,17 +17,43 @@ status: Running
 
 logLevel: "debug"
 
+# External Hub ~>
+#  {
+#   "<BLACK_DUCK_URL>": 
+#     {
+#         "scheme":"https",
+#         "domain":"<BLACK_DUCK_URL>",
+#         "port":443,
+#         "user":"<BLACK_DUCK_USERNAME>",
+#         "password":"<BLACK_DUCK_PASSWORD>",
+#         "concurrentScanLimit":3
+#     }
+#   }
+
+# Secured Registries ~> 
+# {
+#   "<EXTERNAL_REGISTRY_URL>": 
+#   {
+#       "Url": "<EXTERNAL_REGISTRY_URL>",
+#       "user": "<EXTERNAL_REGISTRY_USERNAME>",
+#       "password": "<EXTERNAL_REGISTRY_PASSWORD>",
+#       "token": ""
+#   }
+# }
+
+secret:
+  externalHub: {}
+  securedRegistries: {}
+
 blackduck:
   connectionsEnvironmentVariableName: "blackduck.json"
   tlsVerification: false
-  externalHub: {}
-  securedRegistries: {}
 
 prometheus:
   enabled: true
   registry: docker.io/prom # override the docker registry at container level
   imageTag: v2.1.0
-  expose: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
   resources:
     requests:
       cpu: 300m
@@ -38,10 +64,27 @@ prometheus:
   podSecurityContext: {}
   securityContext: {}
 
+core:
+  registry:
+  imageTag:
+  port: 3001
+  timings:
+    checkForStalledScansPauseHours: 999999
+    stalledScanClientTimeoutHours: 999999
+    modelMetricsPauseSeconds: 15
+    unknownImagePauseMilliseconds: 15000
+    clientTimeoutMilliseconds: 100000
+  useMockMode: false
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
 processor:
-  certificate:
-  certificateKey:
   port: 3002
+  certificate: ""
+  certificateKey: ""
   annotationIntervalSeconds: 30
   dumpIntervalMinutes: 30
 
@@ -79,25 +122,8 @@ imageGetter:
       cpu: 300m
       memory: 1300Mi
 
-core:
-  registry:
-  imageTag:
-  port: 3001
-  timings:
-    checkForStalledScansPauseHours: 999999
-    stalledScanClientTimeoutHours: 999999
-    modelMetricsPauseSeconds: 15
-    unknownImagePauseMilliseconds: 15000
-    clientTimeoutMilliseconds: 100000
-  useMockMode: false
-  expose: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
-  resources:
-    requests:
-      cpu: 300m
-      memory: 1300Mi
-
 imageProcessor:
-  enabled: true
+  enabled: false
   registry:
   imageTag:
   resources:
@@ -106,20 +132,20 @@ imageProcessor:
       memory: 1300Mi
 
 quayProcessor:
-  enabled: true
+  enabled: false
   registry:
   imageTag:
-  expose: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
   resources:
     requests:
       cpu: 300m
       memory: 1300Mi
 
 artifactoryProcessor:
-  enabled: true
+  enabled: false
   registry:
   imageTag:
-  expose: "OpenShift" #[None|LoadBalancer|NodePort|OpenShift]
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
   dumper: false
   resources:
     requests:

@@ -1,8 +1,7 @@
-{{- if .Values.spec.enableMetrics }}
+{{- if .Values.prometheus.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: prometheus
@@ -23,7 +22,6 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: opssight
         component: prometheus
@@ -69,7 +67,6 @@ kind: Service
 metadata:
   annotations:
     prometheus.io/scrape: "true"
-  creationTimestamp: null
   labels:
     app: opssight
     component: prometheus
@@ -90,13 +87,12 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.spec.exposeMetrics "NodePort") (eq .Values.spec.exposeMetrics "LoadBalancer") }}
+{{- if or (eq .Values.prometheus.expose "NodePort") (eq .Values.prometheus.expose "LoadBalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
   annotations:
     prometheus.io/scrape: "true"
-  creationTimestamp: null
   labels:
     app: opssight
     component: prometheus
@@ -113,10 +109,10 @@ spec:
     app: opssight
     component: prometheus
     name: {{ .Release.Name }}
-  type: {{ .Values.spec.exposeMetrics }}
+  type: {{ .Values.prometheus.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.spec.exposeMetrics "OpenShift" }}
+{{ else if eq .Values.prometheus.expose "OpenShift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
@@ -137,15 +133,13 @@ spec:
   port:
     targetPort: port-prometheus
   wildcardPolicy: None
-{{ else }}
 {{ end }}
 ---
 apiVersion: v1
 data:
-  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["{{ .Release.Name }}-opssight-core:{{ .Values.spec.perceptor.port }}","{{ .Release.Name }}-opssight-scanner:{{ .Values.spec.scannerPod.scanner.port }}","{{ .Release.Name }}-opssight-image-getter:{{ .Values.spec.scannerPod.imageFacade.port }}","{{ .Release.Name }}-opssight-pod-processor:{{ .Values.spec.perceiver.port }}","{{ .Release.Name }}-opssight-quay-processor:{{ .Values.spec.perceiver.port }}","{{ .Release.Name }}-opssight-artifactory-processor:{{ .Values.spec.perceiver.port }}"]}]}]}'
+  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["{{ .Release.Name }}-opssight-core:{{ .Values.core.port }}","{{ .Release.Name }}-opssight-scanner:{{ .Values.scanner.port }}","{{ .Release.Name }}-opssight-image-getter:{{ .Values.imageGetter.port }}","{{ .Release.Name }}-opssight-pod-processor:{{ .Values.processor.port }}","{{ .Release.Name }}-opssight-quay-processor:{{ .Values.processor.port }}","{{ .Release.Name }}-opssight-artifactory-processor:{{ .Values.processor.port }}"]}]}]}'
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   labels:
     app: opssight
     component: prometheus
