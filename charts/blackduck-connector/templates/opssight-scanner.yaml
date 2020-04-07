@@ -59,7 +59,7 @@ spec:
         volumeMounts:
         - mountPath: /etc/scanner
           name: scanner
-        - mountPath: /var/images
+        - mountPath: {{ .Values.scanner.imageDirectory }}
           name: var-images
       - args:
         - /etc/image-getter/opssight.json
@@ -92,7 +92,7 @@ spec:
         volumeMounts:
         - mountPath: /etc/image-getter
           name: image-getter
-        - mountPath: /var/images
+        - mountPath: {{ .Values.scanner.imageDirectory }}
           name: var-images
       dnsPolicy: ClusterFirst
       {{- include "ops.imagePullSecrets" . | nindent 6 }}

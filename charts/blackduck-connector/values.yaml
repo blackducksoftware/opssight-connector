@@ -17,7 +17,7 @@ status: Running
 
 logLevel: "debug"
 
-# External Hub ~>
+# External Black Duck~>
 #  {
 #   "<BLACK_DUCK_URL>": 
 #     {
@@ -41,8 +41,9 @@ logLevel: "debug"
 #   }
 # }
 
+# Secrets
 secret:
-  externalHub: {}
+  externalBlackDuck: {}
   securedRegistries: {}
 
 blackduck:
@@ -115,7 +116,7 @@ imageGetter:
   imageTag:
   port: 3004
   host: "localhost"
-  imagePullerType: "docker"
+  imagePullerType: "skopeo"
   createImagesOnly: false
   resources:
     requests:
