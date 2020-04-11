@@ -17,34 +17,21 @@ status: Running
 
 logLevel: "debug"
 
-# External Black Duck~>
-#  {
-#   "<BLACK_DUCK_URL>": 
-#     {
-#         "scheme":"https",
-#         "domain":"<BLACK_DUCK_URL>",
-#         "port":443,
-#         "user":"<BLACK_DUCK_USERNAME>",
-#         "password":"<BLACK_DUCK_PASSWORD>",
-#         "concurrentScanLimit":3
-#     }
-#   }
+# externalBlackDuck: 
+#   - scheme: "https"
+#     domain: "<BLACKDUCK_URL>"
+#     port: 443
+#     user: "<BLACKDUCK_USER>"
+#     password: "<BLACKDUCK_PASSWORD>"
+#     concurrentScanLimit: 3
+# securedRegistries: 
+#   - url: "<EXTERNAL_REGISTRY_URL>"
+#     user: "<EXTERNAL_REGISTRY_USERNAME>"
+#     password: "<EXTERNAL_REGISTRY_PASSWORD>"
+#     token: "<EXTERNAL_REGISTRY_TOKEN_IF_APPLICABLE>"
 
-# Secured Registries ~> 
-# {
-#   "<EXTERNAL_REGISTRY_URL>": 
-#   {
-#       "Url": "<EXTERNAL_REGISTRY_URL>",
-#       "user": "<EXTERNAL_REGISTRY_USERNAME>",
-#       "password": "<EXTERNAL_REGISTRY_PASSWORD>",
-#       "token": ""
-#   }
-# }
-
-# Secrets
-secret:
-  externalBlackDuck: {}
-  securedRegistries: {}
+externalBlackDuck:
+securedRegistries:
 
 blackduck:
   connectionsEnvironmentVariableName: "blackduck.json"

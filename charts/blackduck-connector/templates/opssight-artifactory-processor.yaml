@@ -94,7 +94,7 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.artifactoryProcessor.expose "NodePort") (eq .Values.artifactoryProcessor.expose "LoadBalancer") }}
+{{- if or (eq (lower .Values.artifactoryProcessor.expose) "nodeport") (eq (lower .Values.artifactoryProcessor.expose) "loadbalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -117,7 +117,7 @@ spec:
   type: {{ .Values.artifactoryProcessor.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.artifactoryProcessor.expose "OpenShift" }}
+{{ else if eq (lower .Values.artifactoryProcessor.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:

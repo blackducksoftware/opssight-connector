@@ -87,7 +87,7 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.prometheus.expose "NodePort") (eq .Values.prometheus.expose "LoadBalancer") }}
+{{- if or (eq (lower .Values.prometheus.expose) "nodeport") (eq (lower .Values.prometheus.expose) "loadbalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -112,7 +112,7 @@ spec:
   type: {{ .Values.prometheus.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.prometheus.expose "OpenShift" }}
+{{ else if eq (lower .Values.prometheus.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:

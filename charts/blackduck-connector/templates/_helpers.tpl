@@ -73,3 +73,39 @@ imagePullSecrets:
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- end }}
+
+{{/*
+Add secured registries
+*/}}
+{{- define "ops.securedRegistries" -}}
+{ {{ range $index, $element := .Values.securedRegistries }}
+  {{- if $index -}},{{end}}
+  {{ .url | quote -}}:
+    {
+        "url":{{ .url | quote }},
+        "user":{{ .user | quote }},
+        "password":{{ .password | quote }},
+        "token":{{ .token | quote }}
+    }
+    {{- end }}
+}
+{{- end -}}
+
+{{/*
+Add external Black Duck
+*/}}
+{{- define "ops.externalBlackDuck" -}}
+{ {{ range $index, $element := .Values.externalBlackDuck }}
+  {{- if $index -}},{{end}}
+  {{ .domain | quote -}}:
+    {
+        "scheme":{{ .scheme | quote }},
+        "domain":{{ .domain | quote }},
+        "port":{{ .port }},
+        "user":{{ .user | quote }},
+        "password":{{ .password | quote }},
+        "concurrentScanLimit":{{ .concurrentScanLimit }}
+    }
+    {{- end }}
+}
+{{- end -}}

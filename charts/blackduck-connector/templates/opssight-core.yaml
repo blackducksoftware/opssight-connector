@@ -88,7 +88,7 @@ spec:
 status:
   loadBalancer: {}
 ---
-{{- if or (eq .Values.core.expose "NodePort") (eq .Values.core.expose "LoadBalancer") }}
+{{- if or (eq (lower .Values.core.expose) "nodeport") (eq (lower .Values.core.expose) "loadbalancer") }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -111,7 +111,7 @@ spec:
   type: {{ .Values.core.expose }}
 status:
   loadBalancer: {}
-{{ else if eq .Values.core.expose "OpenShift" }}
+{{ else if eq (lower .Values.core.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
