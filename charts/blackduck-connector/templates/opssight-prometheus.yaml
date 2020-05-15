@@ -60,7 +60,6 @@ spec:
         name: prometheus
       - emptyDir: {}
         name: data
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -84,8 +83,6 @@ spec:
     component: prometheus
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 {{- if or (eq (lower .Values.prometheus.expose) "nodeport") (eq (lower .Values.prometheus.expose) "loadbalancer") }}
 apiVersion: v1
@@ -110,8 +107,6 @@ spec:
     component: prometheus
     name: {{ .Release.Name }}
   type: {{ .Values.prometheus.expose }}
-status:
-  loadBalancer: {}
 {{ else if eq (lower .Values.prometheus.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1
