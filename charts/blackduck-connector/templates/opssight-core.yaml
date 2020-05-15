@@ -63,7 +63,6 @@ spec:
           defaultMode: 420
           name: {{ .Release.Name }}-opssight-opssight
         name: core
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -85,8 +84,6 @@ spec:
     component: core
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 {{- if or (eq (lower .Values.core.expose) "nodeport") (eq (lower .Values.core.expose) "loadbalancer") }}
 apiVersion: v1
@@ -109,8 +106,6 @@ spec:
     component: core
     name: {{ .Release.Name }}
   type: {{ .Values.core.expose }}
-status:
-  loadBalancer: {}
 {{ else if eq (lower .Values.core.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1

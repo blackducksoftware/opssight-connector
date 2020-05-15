@@ -69,7 +69,6 @@ spec:
         name: artifactory-processor
       - emptyDir: {}
         name: logs
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -91,8 +90,6 @@ spec:
     component: artifactory-processor
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 {{- if or (eq (lower .Values.artifactoryProcessor.expose) "nodeport") (eq (lower .Values.artifactoryProcessor.expose) "loadbalancer") }}
 apiVersion: v1
@@ -115,8 +112,6 @@ spec:
     component: artifactory-processor
     name: {{ .Release.Name }}
   type: {{ .Values.artifactoryProcessor.expose }}
-status:
-  loadBalancer: {}
 {{ else if eq (lower .Values.artifactoryProcessor.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1

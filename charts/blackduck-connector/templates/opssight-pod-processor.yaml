@@ -67,7 +67,6 @@ spec:
         name: pod-processor
       - emptyDir: {}
         name: logs
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -89,8 +88,6 @@ spec:
     component: pod-processor
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
