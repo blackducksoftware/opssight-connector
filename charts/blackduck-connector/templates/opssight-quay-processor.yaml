@@ -69,7 +69,6 @@ spec:
         name: quay-processor
       - emptyDir: {}
         name: logs
-status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -91,8 +90,6 @@ spec:
     component: quay-processor
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 {{- if or (eq (lower .Values.quayProcessor.expose) "nodeport" ) (eq (lower .Values.quayProcessor.expose) "loadbalancer") }}
 apiVersion: v1
@@ -115,8 +112,6 @@ spec:
     component: quay-processor
     name: {{ .Release.Name }}
   type: {{ .Values.quayProcessor.expose }}
-status:
-  loadBalancer: {}
 {{ else if eq (lower .Values.quayProcessor.expose) "openshift" }}
 kind: Route
 apiVersion: route.openshift.io/v1

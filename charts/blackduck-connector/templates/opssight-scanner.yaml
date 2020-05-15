@@ -88,12 +88,20 @@ spec:
         resources:
           {{- toYaml .Values.imageGetter.resources | nindent 12 }}
         securityContext:
+        {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+          privileged: true
+        {{- else }}
           privileged: false
+        {{- end }}
         volumeMounts:
         - mountPath: /etc/image-getter
           name: image-getter
         - mountPath: {{ .Values.scanner.imageDirectory }}
           name: var-images
+        {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+        - mountPath: /var/run/docker.sock
+          name: dir-docker-socket
+        {{- end }}
       dnsPolicy: ClusterFirst
       {{- include "ops.imagePullSecrets" . | nindent 6 }}
       serviceAccountName: {{ .Release.Name }}-opssight-image-getter
@@ -108,8 +116,12 @@ spec:
           defaultMode: 420
           name: {{ .Release.Name }}-opssight-opssight
         name: image-getter
-status:
-  replicas: 0
+      {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+      - hostPath:
+          path: /var/run/docker.sock
+          type: ""
+        name: dir-docker-socket
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -131,8 +143,6 @@ spec:
     component: scanner
     name: {{ .Release.Name }}
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 apiVersion: v1
 kind: Service
@@ -154,7 +164,6 @@ spec:
     component: scanner
     name: {{ .Release.Name }}
   type: ClusterIP
-status: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
