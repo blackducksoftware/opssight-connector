@@ -83,7 +83,13 @@ items:
               secretKeyRef:
                 name: opssight-cloud-auth
                 key: GCR_URL
-          image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.2-RC
+          - name: NAME
+            value: "<<OPSSIGHT_RELEASE_NAME>>"
+          - name: NAMESPACE
+            valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+          image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.6-RC
           imagePullPolicy: Always
           name: opssight-cloud-auth
           command:

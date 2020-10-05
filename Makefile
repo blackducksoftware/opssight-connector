@@ -44,7 +44,7 @@ ifeq ($(MAKECMDGOALS),${LOCAL_TARGET})
 else ifeq ($(MAKECMDGOALS),${COV_TARGET})
 	mkdir -p /go/src/github.com/blackducksoftware && ln -s `pwd` /go/src/github.com/blackducksoftware/opssight-connector && cd /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ && echo Starting build for $@ in `pwd` at `date` && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $@ ; rm /go/src/github.com/blackducksoftware/opssight-connector
 else
-	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -e GO111MODULE=off -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ golang:1.13 go build -o $@
+	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector/cmd/$@ golang:1.13 go build -o $@
 endif
 	mv cmd/$@/$@ ${OUTDIR}
 
@@ -75,7 +75,7 @@ push: container
 	)
 
 test:
-	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -e GO111MODULE=off -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.13 go test ./pkg/...
+	docker run --rm -e CGO_ENABLED=0 -e GOOS=linux -e GOARCH=amd64 -v "${CURRENT_DIR}":/go/src/github.com/blackducksoftware/opssight-connector -w /go/src/github.com/blackducksoftware/opssight-connector golang:1.13 go test ./pkg/...
 
 clean:
 	rm -rf ${OUTDIR} ${BUILDDIR}

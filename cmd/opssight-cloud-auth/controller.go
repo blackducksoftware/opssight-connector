@@ -30,12 +30,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	opssightapi "github.com/blackducksoftware/synopsys-operator/pkg/api/opssight/v1"
-	opssightclientset "github.com/blackducksoftware/synopsys-operator/pkg/opssight/client/clientset/versioned"
-	"github.com/blackducksoftware/synopsys-operator/pkg/util"
+	opssightapi "github.com/blackducksoftware/synopsysctl/pkg/api/opssight/v1"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -57,14 +54,6 @@ type controller struct {
 	kubeClient *kubernetes.Clientset
 	ecrClient  ecrInterface
 	gcrClient  gcrInterface
-}
-
-// RegistryAuth ...
-type RegistryAuth struct {
-	URL      string
-	User     string
-	Password string
-	Token    string
 }
 
 // getGCRAuthorizationKey will get the authorization key from Google Container Registry (GCR)
@@ -181,18 +170,27 @@ func (c *controller) getTokenPassword(tokenEndPoint string, tokenAccessToken str
 	return strdata, nil
 }
 
-func (c *controller) updateOpsSightWithAuthToken(opssightClient *opssightclientset.Clientset, opssight *opssightapi.OpsSight, tokens []AuthToken, tokenType string) error {
+func (c *controller) updateOpsSightWithAuthToken(tokens []AuthToken, tokenType string) error {
+	// get the current values from the cluster
+	helmRelease, err := GetWithHelm3(*name, *namespace)
+	if err != nil {
+		return fmt.Errorf("failed to get previous user defined values: %+v", err)
+	}
+
+	securedRegistries := GetValueFromRelease(helmRelease, []string{"securedRegistries"}).([]opssightapi.RegistryAuth)
+	log.Infof("securedRegistries: %+v", securedRegistries)
+
 	for _, token := range tokens {
 		endPoint := c.getTokenEndpoint(token.Endpoint)
-		for i := range opssight.Spec.ScannerPod.ImageFacade.InternalRegistries {
-			if strings.EqualFold(endPoint, opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL) {
+		for i := range securedRegistries {
+			if strings.EqualFold(endPoint, securedRegistries[i].URL) {
 				log.Infof("found %s url in opssight private registries", endPoint)
 				strdata, err := c.getTokenPassword(endPoint, token.AccessToken, tokenType)
 				if err != nil {
 					log.Errorf("unable to get the token password for %s because %+v", endPoint, err)
 					continue
 				}
-				opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].Password = strdata
+				securedRegistries[i].Password = strdata
 			}
 		}
 	}
@@ -202,57 +200,49 @@ func (c *controller) updateOpsSightWithAuthToken(opssightClient *opssightclients
 	// different account id than the used one
 
 	if strings.EqualFold(tokenType, "ECR") {
-		for i := range opssight.Spec.ScannerPod.ImageFacade.InternalRegistries {
+		for i := range securedRegistries {
 			isRegistryExists := false
 			for _, token := range tokens {
 				endPoint := c.getTokenEndpoint(token.Endpoint)
 
-				if strings.EqualFold(endPoint, opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL) {
+				if strings.EqualFold(endPoint, securedRegistries[i].URL) {
 					isRegistryExists = true
 					break
 				}
 			}
 
-			if !isRegistryExists && len(tokens) > 0 && strings.HasSuffix(opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].URL, "amazonaws.com") {
+			if !isRegistryExists && len(tokens) > 0 && strings.HasSuffix(securedRegistries[i].URL, "amazonaws.com") {
 				strdata, err := c.getTokenPassword(tokens[0].Endpoint, tokens[0].AccessToken, tokenType)
 				if err != nil {
 					log.Errorf("unable to get the token password for %s because %+v", tokens[0].Endpoint, err)
 					continue
 				}
-				opssight.Spec.ScannerPod.ImageFacade.InternalRegistries[i].Password = strdata
+				securedRegistries[i].Password = strdata
 			}
 		}
 	}
 
-	_, err := util.UpdateOpsSight(opssightClient, "", opssight)
+	// update the secured registries with the helm release configuration
+	SetHelmValueInMap(helmRelease.Config, []string{"securedRegistries"}, securedRegistries)
+
+	// run helm upgrade
+	err = UpdateWithHelm3(*name, *namespace, "/opt/blackduck-connector-2.2.5-1.tgz", helmRelease.Config)
 	return err
 }
 
 func (c *controller) updateAuthTokens() error {
 	log.Print("Refreshing credentials...")
 	tokenGenerators := c.getTokenGenerators()
-	opsSightClient, err := opssightclientset.NewForConfig(c.kubeConfig)
-	if err != nil {
-		return fmt.Errorf("error in creating the opssight client due to %+v", err)
-	}
-	opssights, err := util.ListOpsSights(opsSightClient, "", metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("error in getting the list of opssight due to %+v", err)
-	}
+
 	for _, tokenGenerator := range tokenGenerators {
 		newTokens, err := tokenGenerator.TokenGenFxn()
 		if err != nil {
-			log.Infof("error getting tokens for provider %s. Skipping cloud provider! [Err: %s]", tokenGenerator.Name, err)
+			log.Errorf("error getting tokens for provider %s. Skipping cloud provider! [Err: %s]", tokenGenerator.Name, err)
 			continue
 		}
-		for _, opssight := range opssights.Items {
-			log.Debugf("new tokens for %s provider is %+v", tokenGenerator.Name, newTokens)
-			err = c.updateOpsSightWithAuthToken(opsSightClient, &opssight, newTokens, tokenGenerator.Name)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-		}
+
+		log.Debugf("new tokens for %s provider is %+v", tokenGenerator.Name, newTokens)
+		c.updateOpsSightWithAuthToken(newTokens, tokenGenerator.Name)
 	}
 	return nil
 }

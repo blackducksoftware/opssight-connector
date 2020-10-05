@@ -32,11 +32,13 @@ import (
 )
 
 const (
-	refreshInMinutes = "REFRESH_IN_MINUTES"
-	awsAssumeRole    = "AWS_ASSUME_ROLE"
-	awsRegion        = "AWS_REGION"
-	awsAccountIds    = "AWS_ACCOUNT_IDS"
-	gcrURL           = "GCR_URL"
+	refreshInMinutes  = "REFRESH_IN_MINUTES"
+	awsAssumeRole     = "AWS_ASSUME_ROLE"
+	awsRegion         = "AWS_REGION"
+	awsAccountIds     = "AWS_ACCOUNT_IDS"
+	gcrURL            = "GCR_URL"
+	opsSightName      = "NAME"
+	opsSightNamespace = "NAMESPACE"
 )
 
 var (
