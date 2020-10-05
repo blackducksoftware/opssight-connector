@@ -28,8 +28,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/blackducksoftware/synopsys-operator/pkg/protoform"
+	"github.com/blackducksoftware/synopsysctl/dev-tests/testutils"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
 )
 
 var (
@@ -38,6 +39,8 @@ var (
 	argAWSRegion      = flags.String(awsRegion, "us-east-1", `Default AWS region`)
 	argAWSAssumeRole  = flags.String(awsAssumeRole, "", `If specified AWS will assume this role and use it to retrieve tokens`)
 	argRefreshMinutes = flags.Int(refreshInMinutes, 60, `Default time to wait before refreshing (60 minutes)`)
+	namespace         = flags.String(opsSightNamespace, "", `OpsSight namespace`)
+	name              = flags.String(opsSightName, "", `OpsSight name`)
 )
 
 func main() {
@@ -52,14 +55,16 @@ func main() {
 	log.Infof("Using AWS Region: %s", *argAWSRegion)
 	log.Infof("Using AWS Assume Role: %s", *argAWSAssumeRole)
 	log.Infof("Refresh Interval (minutes): %d", *argRefreshMinutes)
+	log.Infof("OpsSight namespace: %s", *namespace)
+	log.Infof("OpsSight name: %s", *name)
 
-	kubeConfig, err := protoform.GetKubeConfig("", false)
+	kubeConfig, err := testutils.GetKubeConfig("", false)
 	if err != nil {
 		log.Errorf("unable to create config for both in-cluster and external to cluster due to %+v", err)
 		os.Exit(1)
 	}
 
-	kubeClient, err := protoform.GetKubeClientSet(kubeConfig)
+	kubeClient, err := kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		log.Errorf("unable to create kubernetes client due to %+v", err)
 		os.Exit(1)
@@ -84,6 +89,8 @@ func validateParams() {
 	argAWSAssumeRoleEnv := os.Getenv(awsAssumeRole)
 	argRefreshMinutesEnv := os.Getenv(refreshInMinutes)
 	gcrURLEnv := os.Getenv(gcrURL)
+	releaseNamespace := os.Getenv(opsSightNamespace)
+	releaseName := os.Getenv(opsSightName)
 
 	if len(awsRegionEnv) > 0 {
 		argAWSRegion = &awsRegionEnv
@@ -106,5 +113,17 @@ func validateParams() {
 	if len(argRefreshMinutesEnv) > 0 {
 		refreshInterval, _ := strconv.Atoi(argRefreshMinutesEnv)
 		argRefreshMinutes = &refreshInterval
+	}
+
+	if len(releaseNamespace) > 0 {
+		namespace = &releaseNamespace
+	} else {
+		log.Fatal("OpsSight release namespace is mandatory!")
+	}
+
+	if len(releaseName) > 0 {
+		name = &releaseName
+	} else {
+		log.Fatal("OpsSight release name is mandatory!")
 	}
 }
