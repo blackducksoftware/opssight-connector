@@ -9,34 +9,17 @@ items:
     name: opssight-cloud-auth
     namespace: kube-system
 - apiVersion: rbac.authorization.k8s.io/v1
-  kind: ClusterRole
+  kind: Role
   metadata:
     name: opssight-cloud-auth
   rules:
-  - apiGroups:
-    - synopsys.com
-    resources:
-    - opssights
-    verbs:
-    - get
-    - list
   - apiGroups:
     - ""
     resources:
     - configmaps
     verbs:
     - get
-    - update
-  - apiGroups:
-    - ""
-    resources:
-    - replicationcontrollers
-    - replicationcontrollers/scale
-    verbs:
-    - get
-    - patch
-    - update
-- kind: ClusterRoleBinding
+- kind: RoleBinding
   apiVersion: rbac.authorization.k8s.io/v1beta1
   metadata:
     name: opssight-cloud-auth
@@ -45,7 +28,7 @@ items:
     name: opssight-cloud-auth
     namespace: kube-system
   roleRef:
-    kind: ClusterRole
+    kind: Role
     name: opssight-cloud-auth
     apiGroup: ""
 - apiVersion: v1
@@ -115,9 +98,7 @@ items:
           - name: NAME
             value: "<<OPSSIGHT_RELEASE_NAME>>"
           - name: NAMESPACE
-            valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
+            value: "<<OPSSIGHT_RELEASE_NAMESPACE>>"
           image: docker.io/blackducksoftware/opssight-cloud-auth:2.2.6-RC
           imagePullPolicy: Always
           name: opssight-cloud-auth
