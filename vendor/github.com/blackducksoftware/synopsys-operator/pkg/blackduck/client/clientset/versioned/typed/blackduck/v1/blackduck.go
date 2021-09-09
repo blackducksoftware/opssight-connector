@@ -19,6 +19,8 @@ limitations under the License.
 package v1
 
 import (
+	"time"
+
 	v1 "github.com/blackducksoftware/synopsys-operator/pkg/api/blackduck/v1"
 	scheme "github.com/blackducksoftware/synopsys-operator/pkg/blackduck/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,11 +77,16 @@ func (c *blackducks) Get(name string, options metav1.GetOptions) (result *v1.Bla
 
 // List takes label and field selectors, and returns the list of Blackducks that match those selectors.
 func (c *blackducks) List(opts metav1.ListOptions) (result *v1.BlackduckList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1.BlackduckList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("blackducks").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -87,11 +94,16 @@ func (c *blackducks) List(opts metav1.ListOptions) (result *v1.BlackduckList, er
 
 // Watch returns a watch.Interface that watches the requested blackducks.
 func (c *blackducks) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("blackducks").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -133,10 +145,15 @@ func (c *blackducks) Delete(name string, options *metav1.DeleteOptions) error {
 
 // DeleteCollection deletes a collection of objects.
 func (c *blackducks) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("blackducks").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

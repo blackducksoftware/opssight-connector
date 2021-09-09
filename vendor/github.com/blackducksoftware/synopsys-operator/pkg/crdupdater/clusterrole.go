@@ -24,6 +24,7 @@ package crdupdater
 import (
 	"reflect"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
@@ -48,7 +49,7 @@ func NewClusterRole(config *CommonConfig, clusterRoles []*components.ClusterRole
 	}
 	newClusterRoles := append([]*components.ClusterRole{}, clusterRoles...)
 	for i := 0; i < len(newClusterRoles); i++ {
-		if !isLabelsExist(config.expectedLabels, newClusterRoles[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newClusterRoles[i].Labels) {
 			newClusterRoles = append(newClusterRoles[:i], newClusterRoles[i+1:]...)
 			i--
 		}
@@ -76,11 +77,7 @@ func (c *ClusterRole) buildNewAndOldObject() error {
 
 	// build new cluster role
 	for _, newCr := range c.clusterRoles {
-		newClusterRoleKube, err := newCr.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert cluster role %s to kube %s", newCr.GetName(), c.config.namespace)
-		}
-		c.newClusterRoles[newCr.GetName()] = newClusterRoleKube.(*rbacv1.ClusterRole)
+		c.newClusterRoles[newCr.GetName()] = newCr.ClusterRole
 	}
 
 	return nil
@@ -91,8 +88,13 @@ func (c *ClusterRole) add(isPatched bool) (bool, error) {
 	isAdded := false
 	for _, clusterRole := range c.clusterRoles {
 		if _, ok := c.oldClusterRoles[clusterRole.GetName()]; !ok {
-			c.deployer.Deployer.AddClusterRole(clusterRole)
+			c.deployer.Deployer.AddComponent(horizonapi.ClusterRoleComponent, clusterRole)
 			isAdded = true
+		} else {
+			_, err := c.patch(clusterRole, isPatched)
+			if err != nil {
+				return false, errors.Annotatef(err, "patch cluster role:")
+			}
 		}
 	}
 	if isAdded && !c.config.dryRun {
@@ -140,7 +142,7 @@ func (c *ClusterRole) patch(cr interface{}, isPatched bool) (bool, error) {
 	clusterRoleName := clusterRole.GetName()
 	oldclusterRole := c.oldClusterRoles[clusterRoleName]
 	newClusterRole := c.newClusterRoles[clusterRoleName]
-	if !reflect.DeepEqual(oldclusterRole.Rules, newClusterRole.Rules) && !c.config.dryRun {
+	if !reflect.DeepEqual(sortPolicyRule(oldclusterRole.Rules), sortPolicyRule(newClusterRole.Rules)) && !c.config.dryRun {
 		log.Infof("updating the cluster role %s for %s namespace", clusterRoleName, c.config.namespace)
 		getCr, err := c.get(clusterRoleName)
 		if err != nil {

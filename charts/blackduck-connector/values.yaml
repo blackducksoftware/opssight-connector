@@ -1,0 +1,141 @@
+# Default values for Opssight.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Docker registry to pull Black Duck images
+registry: docker.io/blackducksoftware
+imageTag: 2.2.5
+
+# image pull secret to download the Black Duck images (mostly applicable for air gapped customers)
+imagePullSecrets: [] # array of strings delimited by comma
+
+# This is used to start or stop the app. Set to Running to start, or Stopped to stop.
+status: Running
+
+logLevel: "debug"
+
+# externalBlackDuck: 
+#   - scheme: "https"
+#     domain: "<BLACKDUCK_URL>"
+#     port: 443
+#     user: "<BLACKDUCK_USER>"
+#     password: "<BLACKDUCK_PASSWORD>"
+#     concurrentScanLimit: 3
+# securedRegistries: 
+#   - url: "<EXTERNAL_REGISTRY_URL>"
+#     user: "<EXTERNAL_REGISTRY_USERNAME>"
+#     password: "<EXTERNAL_REGISTRY_PASSWORD>"
+#     token: "<EXTERNAL_REGISTRY_TOKEN_IF_APPLICABLE>"
+
+externalBlackDuck:
+securedRegistries:
+
+blackduck:
+  connectionsEnvironmentVariableName: "blackduck.json"
+  tlsVerification: false
+
+prometheus:
+  enabled: true
+  registry: docker.io/prom # override the docker registry at container level
+  imageTag: v2.1.0
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+core:
+  registry:
+  imageTag:
+  port: 3001
+  timings:
+    checkForStalledScansPauseHours: 999999
+    stalledScanClientTimeoutHours: 999999
+    modelMetricsPauseSeconds: 15
+    unknownImagePauseMilliseconds: 15000
+    clientTimeoutMilliseconds: 100000
+  useMockMode: false
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+processor:
+  port: 3002
+  certificate: ""
+  certificateKey: ""
+  annotationIntervalSeconds: 30
+  dumpIntervalMinutes: 30
+
+podProcessor:
+  enabled: true
+  registry:
+  imageTag:
+  nameSpaceFilter: ""
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+scanner:
+  registry:
+  imageTag:
+  port: 3003
+  imageDirectory: "/var/images"
+  blackDuckClientTimeoutSeconds: 600
+  replicas: 1
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+imageGetter:
+  registry:
+  imageTag:
+  port: 3004
+  host: "localhost"
+  imagePullerType: "skopeo"
+  createImagesOnly: false
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+imageProcessor:
+  enabled: false
+  registry:
+  imageTag:
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+quayProcessor:
+  enabled: false
+  registry:
+  imageTag:
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi
+
+artifactoryProcessor:
+  enabled: false
+  registry:
+  imageTag:
+  expose: "None" #[None|LoadBalancer|NodePort|OpenShift]
+  dumper: false
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1300Mi

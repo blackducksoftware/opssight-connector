@@ -22,6 +22,7 @@ under the License.
 package v1
 
 import (
+	"github.com/blackducksoftware/synopsys-operator/pkg/api"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,32 +47,38 @@ type BlackduckView struct {
 	ContainerTags     []string          `json:"containerTags"`
 	Version           string            `json:"version"`
 	SupportedVersions []string          `json:"supportedVersions"`
+	NodeAffinities    string            `json:"nodeAffinities"`
 }
 
 // BlackduckSpec will be CRD Blackduck definition's Spec
 type BlackduckSpec struct {
-	Namespace         string                    `json:"namespace"`
-	Size              string                    `json:"size"`
-	Version           string                    `json:"version"`
-	ExposeService     string                    `json:"exposeService"`
-	DbPrototype       string                    `json:"dbPrototype,omitempty"`
-	ExternalPostgres  *PostgresExternalDBConfig `json:"externalPostgres,omitempty"`
-	PVCStorageClass   string                    `json:"pvcStorageClass,omitempty"`
-	LivenessProbes    bool                      `json:"livenessProbes"`
-	ScanType          string                    `json:"scanType,omitempty"`
-	PersistentStorage bool                      `json:"persistentStorage"`
-	PVC               []PVC                     `json:"pvc,omitempty"`
-	CertificateName   string                    `json:"certificateName"`
-	Certificate       string                    `json:"certificate,omitempty"`
-	CertificateKey    string                    `json:"certificateKey,omitempty"`
-	ProxyCertificate  string                    `json:"proxyCertificate,omitempty"`
-	AuthCustomCA      string                    `json:"authCustomCa"`
-	Type              string                    `json:"type,omitempty"`
-	DesiredState      string                    `json:"desiredState"`
-	Environs          []string                  `json:"environs,omitempty"`
-	ImageRegistries   []string                  `json:"imageRegistries,omitempty"`
-	ImageUIDMap       map[string]int64          `json:"imageUidMap,omitempty"`
-	LicenseKey        string                    `json:"licenseKey,omitempty"`
+	Namespace             string                     `json:"namespace"`
+	Size                  string                     `json:"size"`
+	Version               string                     `json:"version"`
+	ExposeService         string                     `json:"exposeService"`
+	DbPrototype           string                     `json:"dbPrototype,omitempty"`
+	ExternalPostgres      *PostgresExternalDBConfig  `json:"externalPostgres,omitempty"`
+	PVCStorageClass       string                     `json:"pvcStorageClass,omitempty"`
+	LivenessProbes        bool                       `json:"livenessProbes"`
+	ScanType              string                     `json:"scanType,omitempty"`
+	PersistentStorage     bool                       `json:"persistentStorage"`
+	PVC                   []PVC                      `json:"pvc,omitempty"`
+	NodeAffinities        map[string][]NodeAffinity  `json:"nodeAffinities,omitempty"`
+	CertificateName       string                     `json:"certificateName"`
+	Certificate           string                     `json:"certificate,omitempty"`
+	CertificateKey        string                     `json:"certificateKey,omitempty"`
+	ProxyCertificate      string                     `json:"proxyCertificate,omitempty"`
+	AuthCustomCA          string                     `json:"authCustomCa"`
+	Type                  string                     `json:"type,omitempty"`
+	DesiredState          string                     `json:"desiredState"`
+	Environs              []string                   `json:"environs,omitempty"`
+	ImageRegistries       []string                   `json:"imageRegistries,omitempty"`
+	LicenseKey            string                     `json:"licenseKey,omitempty"`
+	RegistryConfiguration *api.RegistryConfiguration `json:"registryConfiguration,omitempty"`
+	AdminPassword         string                     `json:"adminPassword"`
+	UserPassword          string                     `json:"userPassword"`
+	PostgresPassword      string                     `json:"postgresPassword"`
+	SealKey               string                     `json:"sealKey"`
 }
 
 // Environs will hold the list of Environment variables
@@ -86,6 +93,16 @@ type PVC struct {
 	Name         string `json:"name"`
 	Size         string `json:"size,omitempty"`
 	StorageClass string `json:"storageClass,omitempty"`
+	VolumeName   string `json:"volumeName,omitempty"`
+}
+
+// NodeAffinity will contain the specifications of a node affinity
+// TODO: currently, keeping it simple, but can be modified in the future to take in complex scenarios
+type NodeAffinity struct {
+	AffinityType string   `json:"affinityType"`
+	Key          string   `json:"key"`
+	Op           string   `json:"op"`
+	Values       []string `json:"values"`
 }
 
 // PostgresExternalDBConfig contain the external database configuration

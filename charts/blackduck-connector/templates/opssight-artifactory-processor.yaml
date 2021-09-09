@@ -1,0 +1,137 @@
+{{- if .Values.artifactoryProcessor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-artifactory-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: artifactory-processor
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: artifactory-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-artifactory-processor
+    spec:
+      containers:
+      - args:
+        - /etc/artifactory-processor/opssight.json
+        command:
+        - ./opssight-artifactory-processor
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.artifactoryProcessor.registry }}
+          {{- if .Values.artifactoryProcessor.imageTag }}
+        image: {{ .Values.artifactoryProcessor.registry }}/opssight-artifactory-processor:{{ .Values.artifactoryProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.artifactoryProcessor.registry }}/opssight-artifactory-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.artifactoryProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-artifactory-processor:{{ .Values.artifactoryProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-artifactory-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: artifactory-processor
+        ports:
+        - containerPort: {{ .Values.processor.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.artifactoryProcessor.resources | nindent 12 }}
+        volumeMounts:
+        - mountPath: /etc/artifactory-processor
+          name: artifactory-processor
+        - mountPath: /tmp
+          name: logs
+      dnsPolicy: ClusterFirst
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: artifactory-processor
+      - emptyDir: {}
+        name: logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-artifactory-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-artifactory-processor
+    port: {{ .Values.processor.port }}
+    protocol: TCP
+    targetPort: {{ .Values.processor.port }}
+  selector:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+{{- if or (eq (lower .Values.artifactoryProcessor.expose) "nodeport") (eq (lower .Values.artifactoryProcessor.expose) "loadbalancer") }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-artifactory-exposed
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-artifactory-exposed
+    port: {{ .Values.processor.port }}
+    protocol: TCP
+    targetPort: {{ .Values.processor.port }}
+  selector:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  type: {{ .Values.artifactoryProcessor.expose }}
+{{ else if eq (lower .Values.artifactoryProcessor.expose) "openshift" }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-opssight-artifactory-exposed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: opssight
+    component: artifactory-processor
+    name: {{ .Release.Name }}
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  subdomain: ''
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-opssight-artifactory-processor
+    weight: 100
+  port:
+    targetPort: port-artifactory-processor
+  wildcardPolicy: None
+{{ end }}
+{{- end }}

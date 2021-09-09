@@ -35,6 +35,7 @@ import (
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -63,6 +64,7 @@ type RegistryAuth struct {
 	URL      string
 	User     string
 	Password string
+	Token    string
 }
 
 // getGCRAuthorizationKey will get the authorization key from Google Container Registry (GCR)
@@ -222,7 +224,7 @@ func (c *controller) updateOpsSightWithAuthToken(opssightClient *opssightclients
 		}
 	}
 
-	_, err := util.UpdateOpsSight(opssightClient, opssight.Spec.Namespace, opssight)
+	_, err := util.UpdateOpsSight(opssightClient, "", opssight)
 	return err
 }
 
@@ -233,7 +235,7 @@ func (c *controller) updateAuthTokens() error {
 	if err != nil {
 		return fmt.Errorf("error in creating the opssight client due to %+v", err)
 	}
-	opssights, err := util.ListOpsSights(opsSightClient, "")
+	opssights, err := util.ListOpsSights(opsSightClient, "", metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("error in getting the list of opssight due to %+v", err)
 	}

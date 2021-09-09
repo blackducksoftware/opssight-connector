@@ -22,104 +22,63 @@ under the License.
 package components
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/blackducksoftware/horizon/pkg/api"
-	"github.com/blackducksoftware/horizon/pkg/util"
 
-	"github.com/koki/short/converter/converters"
-	"github.com/koki/short/types"
+	"k8s.io/api/core/v1"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/imdario/mergo"
 )
 
 // ReplicationController defines the replication controller component
 type ReplicationController struct {
-	obj *types.ReplicationController
+	*v1.ReplicationController
+	MetadataFuncs
+	PodFuncs
 }
 
 // NewReplicationController creates a ReplicationController object
 func NewReplicationController(config api.ReplicationControllerConfig) *ReplicationController {
-	rc := &types.ReplicationController{
-		Version:         config.APIVersion,
-		Name:            config.Name,
-		Cluster:         config.ClusterName,
-		Namespace:       config.Namespace,
-		Replicas:        config.Replicas,
-		MinReadySeconds: config.ReadySeconds,
+	version := "v1"
+	if len(config.APIVersion) > 0 {
+		version = config.APIVersion
 	}
 
-	return &ReplicationController{obj: rc}
+	rc := v1.ReplicationController{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ReplicationController",
+			APIVersion: version,
+		},
+		ObjectMeta: generateObjectMeta(config.Name, config.Namespace, config.ClusterName),
+		Spec: v1.ReplicationControllerSpec{
+			Replicas:        config.Replicas,
+			MinReadySeconds: config.ReadySeconds,
+		},
+	}
+
+	return &ReplicationController{&rc, MetadataFuncs{&rc}, PodFuncs{&rc}}
 }
 
-// GetObj returns the replication controller object in a format the deployer can use
-func (rc *ReplicationController) GetObj() *types.ReplicationController {
-	return rc.obj
+// AddSelectors adds the given selectors to the replication controller
+func (rc *ReplicationController) AddSelectors(new map[string]string) {
+	mergo.Merge(&rc.Spec.Selector, new, mergo.WithOverride)
 }
 
-// GetName returns the name of the replication controller
-func (rc *ReplicationController) GetName() string {
-	return rc.obj.Name
-}
-
-// AddAnnotations adds annotations to the replication controller
-func (rc *ReplicationController) AddAnnotations(new map[string]string) {
-	rc.obj.Annotations = util.MapMerge(rc.obj.Annotations, new)
-}
-
-// RemoveAnnotations removes annotations from the replication controller
-func (rc *ReplicationController) RemoveAnnotations(remove []string) {
-	for _, k := range remove {
-		rc.obj.Annotations = util.RemoveElement(rc.obj.Annotations, k)
+// RemoveSelectors removes the given selectors from the replication controller
+func (rc *ReplicationController) RemoveSelectors(remove []string) {
+	for _, s := range remove {
+		delete(rc.Spec.Selector, s)
 	}
 }
 
-// AddLabels adds labels to the replication controller
-func (rc *ReplicationController) AddLabels(new map[string]string) {
-	rc.obj.Labels = util.MapMerge(rc.obj.Labels, new)
+// Deploy will deploy the replication controller to the cluster
+func (rc *ReplicationController) Deploy(res api.DeployerResources) error {
+	_, err := res.KubeClient.CoreV1().ReplicationControllers(rc.Namespace).Create(rc.ReplicationController)
+	return err
 }
 
-// RemoveLabels removes labels from the replication controller
-func (rc *ReplicationController) RemoveLabels(remove []string) {
-	for _, k := range remove {
-		rc.obj.Labels = util.RemoveElement(rc.obj.Labels, k)
-	}
-}
-
-// AddPod adds a pod to the replication controller
-func (rc *ReplicationController) AddPod(obj *Pod) error {
-	o := obj.GetObj()
-	rc.obj.TemplateMetadata = &o.PodTemplateMeta
-	rc.obj.PodTemplate = o.PodTemplate
-
-	return nil
-}
-
-// RemovePod removes a pod from the replication controller
-func (rc *ReplicationController) RemovePod(name string) error {
-	if strings.Compare(rc.obj.TemplateMetadata.Name, name) != 0 {
-		return fmt.Errorf("pod with name %s doesn't exist on replication controller", name)
-	}
-	rc.obj.TemplateMetadata = nil
-	rc.obj.PodTemplate = types.PodTemplate{}
-	return nil
-}
-
-// AddLabelSelectors adds the given label selectors to the replication controller
-func (rc *ReplicationController) AddLabelSelectors(new map[string]string) {
-	rc.obj.Selector = util.MapMerge(rc.obj.Selector, new)
-}
-
-// RemoveLabelSelectors removes the given label selectors from the replication controller
-func (rc *ReplicationController) RemoveLabelSelectors(remove []string) {
-	for _, k := range remove {
-		rc.obj.Selector = util.RemoveElement(rc.obj.Selector, k)
-	}
-}
-
-// ToKube returns the kubernetes version of the replication controller
-func (rc *ReplicationController) ToKube() (runtime.Object, error) {
-	wrapper := &types.ReplicationControllerWrapper{ReplicationController: *rc.obj}
-	return converters.Convert_Koki_ReplicationController_to_Kube_v1_ReplicationController(wrapper)
+// Undeploy will remove the replication controller from the cluster
+func (rc *ReplicationController) Undeploy(res api.DeployerResources) error {
+	return res.KubeClient.CoreV1().ReplicationControllers(rc.Namespace).Delete(rc.Name, &metav1.DeleteOptions{})
 }

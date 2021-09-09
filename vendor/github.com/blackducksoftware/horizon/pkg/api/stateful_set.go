@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Synopsys, Inc.
+Copyright (C) 2019 Synopsys, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -39,7 +39,7 @@ type StatefulSetConfig struct {
 type StatefulSetUpdateStrategyType int
 
 const (
-	StatefulSetUpdateStrategyRollingUpdate StatefulSetUpdateStrategyType = iota
+	StatefulSetUpdateStrategyRollingUpdate StatefulSetUpdateStrategyType = iota + 1
 	StatefulSetUpdateStrategyOnDelete
 )
 
@@ -47,6 +47,6 @@ const (
 type PodManagementPolicyType int
 
 const (
-	PodManagementPolicyOrdered PodManagementPolicyType = iota
+	PodManagementPolicyOrdered PodManagementPolicyType = iota + 1
 	PodManagementPolicyParallel
 )

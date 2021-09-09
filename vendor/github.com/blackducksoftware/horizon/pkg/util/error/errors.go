@@ -24,26 +24,26 @@ package error
 import (
 	"fmt"
 
-	"github.com/blackducksoftware/horizon/pkg/util"
+	"github.com/blackducksoftware/horizon/pkg/api"
 )
 
 // DeployErrors defines an object that contains multiple
 // errors across one or more components
 type DeployErrors interface {
 	error
-	Errors() map[util.ComponentType][]error
+	Errors() map[api.ComponentType][]error
 }
 
-type deployErrors map[util.ComponentType][]error
+type deployErrors map[api.ComponentType][]error
 
 // NewDeployErrors converts a map of ComponentType:[]error to
 // a DeployErrors interface
-func NewDeployErrors(errMap map[util.ComponentType][]error) DeployErrors {
+func NewDeployErrors(errMap map[api.ComponentType][]error) DeployErrors {
 	if len(errMap) == 0 {
 		return nil
 	}
 
-	errs := make(map[util.ComponentType][]error)
+	errs := make(map[api.ComponentType][]error)
 	for k, v := range errMap {
 		errs[k] = v
 	}
@@ -65,11 +65,12 @@ func (d deployErrors) Error() string {
 	return strErrors
 }
 
-func (d deployErrors) Errors() map[util.ComponentType][]error {
+func (d deployErrors) Errors() map[api.ComponentType][]error {
 	return d
 }
 
-func ComponentErrorCount(errs error, component util.ComponentType) int {
+// ComponentErrorCount returns the count by component
+func ComponentErrorCount(errs error, component api.ComponentType) int {
 	if errs == nil {
 		return 0
 	}

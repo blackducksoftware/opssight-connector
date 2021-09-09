@@ -1,0 +1,127 @@
+{{- if .Values.imageProcessor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: image-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: image-processor
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: image-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-image-processor
+    spec:
+      containers:
+      - args:
+        - /etc/image-processor/opssight.json
+        command:
+        - ./opssight-image-processor
+        {{- if .Values.imageProcessor.registry }}
+          {{- if .Values.imageProcessor.imageTag }}
+        image: {{ .Values.imageProcessor.registry }}/opssight-image-processor:{{ .Values.imageProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.imageProcessor.registry }}/opssight-image-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.imageProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-image-processor:{{ .Values.imageProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-image-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: image-processor
+        ports:
+        - containerPort: {{ .Values.processor.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.imageProcessor.resources | nindent 12 }}
+        volumeMounts:
+        - mountPath: /etc/image-processor
+          name: image-processor
+        - mountPath: /tmp
+          name: logs
+      dnsPolicy: ClusterFirst
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-processor
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: image-processor
+      - emptyDir: {}
+        name: logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: image-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-image-processor
+    port: {{ .Values.processor.port }}
+    protocol: TCP
+    targetPort: {{ .Values.processor.port }}
+  selector:
+    app: opssight
+    component: image-processor
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: opssight
+    component: image-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+roleRef:
+  apiGroup: ""
+  kind: ClusterRole
+  name: {{ .Release.Name }}-opssight-image-processor
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: opssight
+    component: image-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-processor
+rules:
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - images
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+{{- end }}

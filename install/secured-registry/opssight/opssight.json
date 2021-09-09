@@ -35,6 +35,8 @@
     },
     "perceiver": {
       "enableImagePerceiver": false,
+      "enableArtifactoryPerceiver": false,
+      "enableQuayPerceiver": false,
       "enablePodPerceiver": true,
       "port": 3002,
       "imagePerceiver": {
@@ -45,6 +47,15 @@
         "name": "opssight-pod-processor",
         "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-pod-processor:${TAG}",
         "namespaceFilter": ""
+      },
+      "artifactoryPerceiver": {
+        "name": "opssight-artifactory-processor",
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-artifactory-processor:${TAG}",
+        "dumper": "false"
+      },
+      "quayPerceiver": {
+        "name": "opssight-quay-processor",
+        "image": "${DOCKER_REGISTRY}/${DOCKER_REPO}/opssight-quay-processor:${TAG}"
       },
       "serviceAccount": "opssight-processor",
       "annotationIntervalSeconds": 30,

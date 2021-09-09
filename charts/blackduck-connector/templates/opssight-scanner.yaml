@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: scanner
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-scanner
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: {{ .Values.scanner.replicas }}
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: scanner
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: scanner
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-scanner
+    spec:
+      containers:
+      - args:
+        - /etc/scanner/opssight.json
+        command:
+        - ./opssight-scanner
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.scanner.registry }}
+          {{- if .Values.scanner.imageTag }}
+        image: {{ .Values.scanner.registry }}/opssight-scanner:{{ .Values.scanner.imageTag }}
+          {{- else }}
+        image: {{ .Values.scanner.registry }}/opssight-scanner:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.scanner.imageTag }}
+        image: {{ .Values.registry }}/opssight-scanner:{{ .Values.scanner.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-scanner:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: scanner
+        ports:
+        - containerPort: {{ .Values.scanner.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.scanner.resources | nindent 12 }}
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - mountPath: /etc/scanner
+          name: scanner
+        - mountPath: {{ .Values.scanner.imageDirectory }}
+          name: var-images
+      - args:
+        - /etc/image-getter/opssight.json
+        command:
+        - ./opssight-image-getter
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.imageGetter.registry }}
+          {{- if .Values.imageGetter.imageTag }}
+        image: {{ .Values.imageGetter.registry }}/opssight-image-getter:{{ .Values.imageGetter.imageTag }}
+          {{- else }}
+        image: {{ .Values.imageGetter.registry }}/opssight-image-getter:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.imageGetter.imageTag }}
+        image: {{ .Values.registry }}/opssight-image-getter:{{ .Values.imageGetter.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-image-getter:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: image-getter
+        ports:
+        - containerPort: {{ .Values.imageGetter.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.imageGetter.resources | nindent 12 }}
+        securityContext:
+        {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+          privileged: true
+        {{- else }}
+          privileged: false
+        {{- end }}
+        volumeMounts:
+        - mountPath: /etc/image-getter
+          name: image-getter
+        - mountPath: {{ .Values.scanner.imageDirectory }}
+          name: var-images
+        {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+        - mountPath: /var/run/docker.sock
+          name: dir-docker-socket
+        {{- end }}
+      dnsPolicy: ClusterFirst
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-image-getter
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: scanner
+      - emptyDir: {}
+        name: var-images
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: image-getter
+      {{- if eq .Values.imageGetter.imagePullerType "docker" }}
+      - hostPath:
+          path: /var/run/docker.sock
+          type: ""
+        name: dir-docker-socket
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: scanner
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-scanner
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-scanner
+    port: {{ .Values.scanner.port }}
+    protocol: TCP
+    targetPort: {{ .Values.scanner.port }}
+  selector:
+    app: opssight
+    component: scanner
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: scanner
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-getter
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-image-getter
+    port: {{ .Values.imageGetter.port }}
+    protocol: TCP
+    targetPort: {{ .Values.imageGetter.port }}
+  selector:
+    app: opssight
+    component: scanner
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: opssight
+    component: image-getter
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-image-getter
+  namespace: {{ .Release.Namespace }}

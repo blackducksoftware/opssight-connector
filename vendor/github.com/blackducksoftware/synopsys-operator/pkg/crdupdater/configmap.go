@@ -24,13 +24,12 @@ package crdupdater
 import (
 	"reflect"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // ConfigMap stores the configuration to add or delete the config map object
@@ -50,7 +49,7 @@ func NewConfigMap(config *CommonConfig, configMaps []*components.ConfigMap) (*Co
 	}
 	newConfigMaps := append([]*components.ConfigMap{}, configMaps...)
 	for i := 0; i < len(newConfigMaps); i++ {
-		if !isLabelsExist(config.expectedLabels, newConfigMaps[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newConfigMaps[i].Labels) {
 			newConfigMaps = append(newConfigMaps[:i], newConfigMaps[i+1:]...)
 			i--
 		}
@@ -78,13 +77,8 @@ func (c *ConfigMap) buildNewAndOldObject() error {
 
 	// build new config map
 	for _, newCm := range c.configMaps {
-		newConfigMapKube, err := newCm.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert config map %s to kube %s", newCm.GetName(), c.config.namespace)
-		}
-		c.newConfigMaps[newCm.GetName()] = newConfigMapKube.(*corev1.ConfigMap)
+		c.newConfigMaps[newCm.GetName()] = newCm.ConfigMap
 	}
-
 	return nil
 }
 
@@ -95,7 +89,7 @@ func (c *ConfigMap) add(isPatched bool) (bool, error) {
 	var err error
 	for _, configMap := range c.configMaps {
 		if _, ok := c.oldConfigMaps[configMap.GetName()]; !ok {
-			c.deployer.Deployer.AddConfigMap(configMap)
+			c.deployer.Deployer.AddComponent(horizonapi.ConfigMapComponent, configMap)
 			isAdded = true
 		} else {
 			isUpdated, err = c.patch(configMap, isPatched)
@@ -103,6 +97,7 @@ func (c *ConfigMap) add(isPatched bool) (bool, error) {
 				return false, errors.Annotatef(err, "patch config map:")
 			}
 		}
+		isPatched = isAdded || isUpdated || isPatched
 	}
 	if isAdded && !c.config.dryRun {
 		err = c.deployer.Deployer.Run()
@@ -110,7 +105,7 @@ func (c *ConfigMap) add(isPatched bool) (bool, error) {
 			return false, errors.Annotatef(err, "unable to deploy config map in %s", c.config.namespace)
 		}
 	}
-	return isAdded || isUpdated, nil
+	return isPatched, nil
 }
 
 // get gets the config map
@@ -159,41 +154,9 @@ func (c *ConfigMap) patch(cm interface{}, isPatched bool) (bool, error) {
 		oldLatestConfigMap := getCm.(*corev1.ConfigMap)
 		oldLatestConfigMap.Data = newConfigMap.Data
 		oldLatestConfigMap.BinaryData = newConfigMap.BinaryData
-		err = util.UpdateConfigMap(c.config.kubeClient, c.config.namespace, oldLatestConfigMap)
+		_, err = util.UpdateConfigMap(c.config.kubeClient, c.config.namespace, oldLatestConfigMap)
 		if err != nil {
 			return false, errors.Annotatef(err, "unable to update the config map %s in namespace %s", configMapName, c.config.namespace)
-		}
-		return true, nil
-	}
-	return false, nil
-}
-
-// UpdateConfigMap updates the config map by comparing the old and new config map data
-func UpdateConfigMap(kubeConfig *rest.Config, kubeClient *kubernetes.Clientset, namespace string, configMapName string, newConfig *components.ConfigMap) (bool, error) {
-	newConfigMapKube, err := newConfig.ToKube()
-	if err != nil {
-		return false, errors.Annotatef(err, "unable to convert config map %s to kube in namespace %s", configMapName, namespace)
-	}
-	newConfigMap := newConfigMapKube.(*corev1.ConfigMap)
-	newConfigMapData := newConfigMap.Data
-
-	// getting old configmap data
-	oldConfigMap, err := util.GetConfigMap(kubeClient, namespace, configMapName)
-	if err != nil {
-		// if configmap is not present, create the configmap
-		deployer, err := util.NewDeployer(kubeConfig)
-		deployer.Deployer.AddConfigMap(newConfig)
-		err = deployer.Deployer.Run()
-		return false, errors.Annotatef(err, "unable to create the config map %s in namespace %s", configMapName, namespace)
-	}
-	oldConfigMapData := oldConfigMap.Data
-
-	// compare for difference between old and new configmap data, if changed update the configmap
-	if !reflect.DeepEqual(newConfigMapData, oldConfigMapData) {
-		oldConfigMap.Data = newConfigMapData
-		err = util.UpdateConfigMap(kubeClient, namespace, oldConfigMap)
-		if err != nil {
-			return false, errors.Annotatef(err, "unable to update the config map %s in namespace %s", configMapName, namespace)
 		}
 		return true, nil
 	}

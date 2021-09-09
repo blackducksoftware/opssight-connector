@@ -1,0 +1,144 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: prometheus
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: prometheus
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-prometheus
+    spec:
+      containers:
+      - args:
+        - --log.level=debug
+        - --config.file=/etc/prometheus/prometheus.yml
+        - --storage.tsdb.path=/tmp/data/
+        - --storage.tsdb.retention=120d
+        - --web.listen-address=:3006
+        {{- if .Values.prometheus.registry }}
+        image: {{ .Values.prometheus.registry }}/prometheus:{{ .Values.prometheus.imageTag }}
+        {{- else }}
+        image: {{ .Values.init.registry }}/prometheus:{{ .Values.init.imageTag }}
+        {{- end}}
+        name: prometheus
+        ports:
+        - containerPort: 3006
+          name: web
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - mountPath: /data
+          name: data
+        - mountPath: /etc/prometheus
+          name: prometheus
+      dnsPolicy: ClusterFirst
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-prometheus
+        name: prometheus
+      - emptyDir: {}
+        name: data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-prometheus
+    port: 3006
+    protocol: TCP
+    targetPort: 3006
+  selector:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+{{- if or (eq (lower .Values.prometheus.expose) "nodeport") (eq (lower .Values.prometheus.expose) "loadbalancer") }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus-exposed
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-prometheus-exposed
+    port: 3006
+    protocol: TCP
+    targetPort: 3006
+  selector:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  type: {{ .Values.prometheus.expose }}
+{{ else if eq (lower .Values.prometheus.expose) "openshift" }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-opssight-prometheus-exposed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  subdomain: ''
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-opssight-prometheus
+    weight: 100
+  port:
+    targetPort: port-prometheus
+  wildcardPolicy: None
+{{ end }}
+---
+apiVersion: v1
+data:
+  prometheus.yml: '{"global":{"scrape_interval":"5s"},"scrape_configs":[{"job_name":"perceptor-scrape","scrape_interval":"5s","static_configs":[{"targets":["{{ .Release.Name }}-opssight-core:{{ .Values.core.port }}","{{ .Release.Name }}-opssight-scanner:{{ .Values.scanner.port }}","{{ .Release.Name }}-opssight-image-getter:{{ .Values.imageGetter.port }}","{{ .Release.Name }}-opssight-pod-processor:{{ .Values.processor.port }}","{{ .Release.Name }}-opssight-quay-processor:{{ .Values.processor.port }}","{{ .Release.Name }}-opssight-artifactory-processor:{{ .Values.processor.port }}"]}]}]}'
+kind: ConfigMap
+metadata:
+  labels:
+    app: opssight
+    component: prometheus
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-prometheus
+  namespace: {{ .Release.Namespace }}
+{{- end }}

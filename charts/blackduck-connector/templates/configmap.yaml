@@ -1,0 +1,54 @@
+apiVersion: v1
+data:
+  opssight.json: |-
+    {
+      "Perceiver": {
+        "Certificate": {{ .Values.processor.certificate | quote }},
+        "CertificateKey": {{ .Values.processor.certificateKey | quote }},
+        "AnnotationIntervalSeconds": {{ .Values.processor.annotationIntervalSeconds }},
+        "DumpIntervalMinutes": {{ .Values.processor.dumpIntervalMinutes }},
+        "Port": {{ .Values.processor.port }},
+        "Pod": {
+          "NamespaceFilter": {{ .Values.podProcessor.nameSpaceFilter | quote }}
+        },
+        "Artifactory": {
+          "Dumper": {{ .Values.artifactoryProcessor.dumper }}
+        }
+      },
+      "BlackDuck": {
+        "ConnectionsEnvironmentVariableName": {{ .Values.blackduck.connectionsEnvironmentVariableName | toString | quote }},
+        "TLSVerification": {{ .Values.blackduck.tlsVerification }}
+      },
+      "Perceptor": {
+        "Timings": {
+          "CheckForStalledScansPauseHours": {{ .Values.core.timings.checkForStalledScansPauseHours }},
+          "StalledScanClientTimeoutHours": {{ .Values.core.timings.stalledScanClientTimeoutHours }},
+          "ModelMetricsPauseSeconds": {{ .Values.core.timings.modelMetricsPauseSeconds }},
+          "UnknownImagePauseMilliseconds": {{ .Values.core.timings.unknownImagePauseMilliseconds }},
+          "ClientTimeoutMilliseconds": {{ .Values.core.timings.clientTimeoutMilliseconds }}
+        },
+        "UseMockMode": {{ .Values.core.useMockMode }},
+        "Host": "{{ .Release.Name }}-opssight-core",
+        "Port": {{ .Values.core.port }}
+      },
+      "Scanner": {
+        "Port": {{ .Values.scanner.port }},
+        "ImageDirectory": {{ .Values.scanner.imageDirectory  | toString | quote }},
+        "BlackDuckClientTimeoutSeconds":  {{ .Values.scanner.blackDuckClientTimeoutSeconds }}
+      },
+      "ImageFacade": {
+        "Host": {{ .Values.imageGetter.host  | toString | quote }},
+        "Port": {{ .Values.imageGetter.port }},
+        "ImagePullerType": {{ .Values.imageGetter.imagePullerType  | toString | quote }},
+        "CreateImagesOnly": {{ .Values.imageGetter.createImagesOnly }}
+      },
+      "LogLevel": {{ .Values.logLevel | toString | quote }}
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app: opssight
+    component: {{ .Release.Name }}-opssight-opssight
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-opssight
+  namespace: {{ .Release.Namespace }}
