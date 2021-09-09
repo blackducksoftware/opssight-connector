@@ -67,6 +67,7 @@ spec:
         name: pod-processor
       - emptyDir: {}
         name: logs
+status: {}
 ---
 apiVersion: v1
 kind: Service
@@ -88,6 +89,8 @@ spec:
     component: pod-processor
     name: {{ .Release.Name }}
   type: ClusterIP
+status:
+  loadBalancer: {}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -99,6 +102,43 @@ metadata:
   name: {{ .Release.Name }}-opssight-processor
   namespace: {{ .Release.Namespace }}
 ---
+{{- if .Values.podProcessor.nameSpaceFilter }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+roleRef:
+  apiGroup: ""
+  kind: Role
+  name: {{ .Release.Name }}-opssight-pod-processor
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+{{ else }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -134,4 +174,5 @@ rules:
   - watch
   - list
   - update
+{{- end }}
 {{- end }}
