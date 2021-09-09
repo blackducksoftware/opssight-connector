@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Synopsys, Inc.
+Copyright (C) 2019 Synopsys, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -27,7 +27,7 @@ type DaemonSetConfig struct {
 	ClusterName          string
 	Name                 string
 	Namespace            string
-	UpdateStrategy       DaemonSetUpdateStrategyType
+	Strategy             DaemonSetUpdateStrategyType
 	MaxUnavailable       string
 	MinReadySeconds      int32
 	RevisionHistoryLimit *int32
@@ -37,6 +37,6 @@ type DaemonSetConfig struct {
 type DaemonSetUpdateStrategyType int
 
 const (
-	DaemonSetUpdateStrategyRollingUpdate DaemonSetUpdateStrategyType = iota
+	DaemonSetUpdateStrategyRollingUpdate DaemonSetUpdateStrategyType = iota + 1
 	DaemonSetUpdateStrategyOnDelete
 )

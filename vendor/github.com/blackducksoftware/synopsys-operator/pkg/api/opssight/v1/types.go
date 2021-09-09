@@ -22,7 +22,8 @@ under the License.
 package v1
 
 import (
-	"github.com/blackducksoftware/synopsys-operator/pkg/api/blackduck/v1"
+	"github.com/blackducksoftware/synopsys-operator/pkg/api"
+	blackduckapi "github.com/blackducksoftware/synopsys-operator/pkg/api/blackduck/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -44,6 +45,7 @@ type RegistryAuth struct {
 	URL      string `json:"Url"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+	Token    string `json:"token"`
 }
 
 // Host configures the Black Duck hosts
@@ -60,30 +62,28 @@ type Host struct {
 type Blackduck struct {
 	ExternalHosts                      []*Host `json:"externalHosts"`
 	ConnectionsEnvironmentVariableName string  `json:"connectionsEnvironmentVariableName"`
+	BlackduckPassword                  string  `json:"blackduckPassword"`
 	TLSVerification                    bool    `json:"tlsVerification"`
 
 	// Auto scaling parameters
-	InitialCount                       int               `json:"initialCount"`
-	MaxCount                           int               `json:"maxCount"`
-	DeleteBlackduckThresholdPercentage int               `json:"deleteBlackduckThresholdPercentage"`
-	BlackduckSpec                      *v1.BlackduckSpec `json:"blackduckSpec"`
+	InitialCount                       int                         `json:"initialCount"`
+	MaxCount                           int                         `json:"maxCount"`
+	DeleteBlackduckThresholdPercentage int                         `json:"deleteBlackduckThresholdPercentage"`
+	BlackduckSpec                      *blackduckapi.BlackduckSpec `json:"blackduckSpec"`
 }
 
 // Perceptor stores the Perceptor configuration
 type Perceptor struct {
-	Name                           string `json:"name"`
-	Image                          string `json:"image"`
-	Port                           int    `json:"port"`
 	CheckForStalledScansPauseHours int    `json:"checkForStalledScansPauseHours"`
 	StalledScanClientTimeoutHours  int    `json:"stalledScanClientTimeoutHours"`
 	ModelMetricsPauseSeconds       int    `json:"modelMetricsPauseSeconds"`
 	UnknownImagePauseMilliseconds  int    `json:"unknownImagePauseMilliseconds"`
 	ClientTimeoutMilliseconds      int    `json:"clientTimeoutMilliseconds"`
+	Expose                         string `json:"expose"`
 }
 
 // ScannerPod stores the Perceptor scanner and Image Facade configuration
 type ScannerPod struct {
-	Name           string       `json:"name"`
 	Scanner        *Scanner     `json:"scanner"`
 	ImageFacade    *ImageFacade `json:"imageFacade"`
 	ReplicaCount   int          `json:"scannerReplicaCount"`
@@ -92,55 +92,37 @@ type ScannerPod struct {
 
 // Scanner stores the Perceptor scanner configuration
 type Scanner struct {
-	Name                 string `json:"name"`
-	Image                string `json:"image"`
-	Port                 int    `json:"port"`
-	ClientTimeoutSeconds int    `json:"clientTimeoutSeconds"`
+	ClientTimeoutSeconds int `json:"clientTimeoutSeconds"`
 }
 
 // ImageFacade stores the Image Facade configuration
 type ImageFacade struct {
-	Name               string          `json:"name"`
-	Image              string          `json:"image"`
-	Port               int             `json:"port"`
 	InternalRegistries []*RegistryAuth `json:"internalRegistries"`
 	ImagePullerType    string          `json:"imagePullerType"`
-	ServiceAccount     string          `json:"serviceAccount"`
-}
-
-// ImagePerceiver stores the Image Perceiver configuration
-type ImagePerceiver struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
 }
 
 // PodPerceiver stores the Pod Perceiver configuration
 type PodPerceiver struct {
-	Name            string `json:"name"`
-	Image           string `json:"image"`
 	NamespaceFilter string `json:"namespaceFilter,omitempty"`
 }
 
 // Perceiver stores the Perceiver configuration
 type Perceiver struct {
-	EnableImagePerceiver      bool            `json:"enableImagePerceiver"`
-	EnablePodPerceiver        bool            `json:"enablePodPerceiver"`
-	ImagePerceiver            *ImagePerceiver `json:"imagePerceiver,omitempty"`
-	PodPerceiver              *PodPerceiver   `json:"podPerceiver,omitempty"`
-	AnnotationIntervalSeconds int             `json:"annotationIntervalSeconds"`
-	DumpIntervalMinutes       int             `json:"dumpIntervalMinutes"`
-	ServiceAccount            string          `json:"serviceAccount"`
-	Port                      int             `json:"port"`
+	Certificate                      string        `json:"certificate,omitempty"`
+	CertificateKey                   string        `json:"certificateKey,omitempty"`
+	EnableImagePerceiver             bool          `json:"enableImagePerceiver"`
+	EnableArtifactoryPerceiver       bool          `json:"enableArtifactoryPerceiver"`
+	EnableArtifactoryPerceiverDumper bool          `json:"enableArtifactoryPerceiverDumper"`
+	EnableQuayPerceiver              bool          `json:"enableQuayPerceiver"`
+	EnablePodPerceiver               bool          `json:"enablePodPerceiver"`
+	PodPerceiver                     *PodPerceiver `json:"podPerceiver,omitempty"`
+	AnnotationIntervalSeconds        int           `json:"annotationIntervalSeconds"`
+	DumpIntervalMinutes              int           `json:"dumpIntervalMinutes"`
+	Expose                           string        `json:"expose"`
 }
 
 // Skyfire stores the Skyfire configuration
 type Skyfire struct {
-	Name           string `json:"name"`
-	Image          string `json:"image"`
-	Port           int    `json:"port"`
-	PrometheusPort int    `json:"prometheusPort"`
-	ServiceAccount string `json:"serviceAccount"`
-
 	HubClientTimeoutSeconds      int `json:"hubClientTimeoutSeconds"`
 	HubDumpPauseSeconds          int `json:"hubDumpPauseSeconds"`
 	KubeDumpIntervalSeconds      int `json:"kubeDumpIntervalSeconds"`
@@ -149,20 +131,17 @@ type Skyfire struct {
 
 // Prometheus container definition
 type Prometheus struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
-	Port  int    `json:"port"`
+	Expose string `json:"expose"`
 }
 
 // OpsSightSpec is the spec for a OpsSight resource
 type OpsSightSpec struct {
 	// OpsSight
-	Namespace     string      `json:"namespace"`
-	Perceptor     *Perceptor  `json:"perceptor"`
-	ScannerPod    *ScannerPod `json:"scannerPod"`
-	Perceiver     *Perceiver  `json:"perceiver"`
-	ConfigMapName string      `json:"configMapName"`
-	SecretName    string      `json:"secretName"`
+	Namespace  string      `json:"namespace"`
+	IsUpstream bool        `json:"isUpstream"`
+	Perceptor  *Perceptor  `json:"perceptor"`
+	ScannerPod *ScannerPod `json:"scannerPod"`
+	Perceiver  *Perceiver  `json:"perceiver"`
 
 	// CPU and memory configurations
 	DefaultCPU string `json:"defaultCpu,omitempty"` // Example: "300m"
@@ -185,6 +164,10 @@ type OpsSightSpec struct {
 	Blackduck *Blackduck `json:"blackduck"`
 
 	DesiredState string `json:"desiredState"`
+
+	// Image handler
+	ImageRegistries       []string                   `json:"imageRegistries,omitempty"`
+	RegistryConfiguration *api.RegistryConfiguration `json:"registryConfiguration,omitempty"`
 }
 
 // OpsSightStatus is the status for a OpsSight resource
@@ -200,6 +183,5 @@ type OpsSightStatus struct {
 type OpsSightList struct {
 	meta_v1.TypeMeta `json:",inline"`
 	meta_v1.ListMeta `json:"metadata"`
-
-	Items []OpsSight `json:"items"`
+	Items            []OpsSight `json:"items"`
 }

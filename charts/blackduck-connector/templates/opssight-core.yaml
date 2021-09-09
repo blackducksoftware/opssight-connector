@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-core
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: core
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: core
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-core
+    spec:
+      containers:
+      - args:
+        - /etc/core/opssight.json
+        command:
+        - ./opssight-core
+        envFrom:
+        - secretRef:
+            name: {{ .Release.Name }}-opssight-blackduck
+        {{- if .Values.core.registry }}
+          {{- if .Values.core.imageTag }}
+        image: {{ .Values.core.registry }}/opssight-core:{{ .Values.core.imageTag }}
+          {{- else }}
+        image: {{ .Values.core.registry }}/opssight-core:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.core.imageTag }}
+        image: {{ .Values.registry }}/opssight-core:{{ .Values.core.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-core:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: core
+        ports:
+        - containerPort: {{ .Values.core.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.core.resources | nindent 12 }}
+        volumeMounts:
+        - mountPath: /etc/core
+          name: core
+      dnsPolicy: ClusterFirst
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: core
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-core
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-core
+    port: {{ .Values.core.port }}
+    protocol: TCP
+    targetPort: {{ .Values.core.port }}
+  selector:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+{{- if or (eq (lower .Values.core.expose) "nodeport") (eq (lower .Values.core.expose) "loadbalancer") }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-core-exposed
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-core-exposed
+    port: {{ .Values.core.port }}
+    protocol: TCP
+    targetPort: {{ .Values.core.port }}
+  selector:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  type: {{ .Values.core.expose }}
+{{ else if eq (lower .Values.core.expose) "openshift" }}
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ .Release.Name }}-opssight-core-exposed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: opssight
+    component: core
+    name: {{ .Release.Name }}
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  subdomain: ''
+  to:
+    kind: Service
+    name: {{ .Release.Name }}-opssight-core
+    weight: 100
+  port:
+    targetPort: port-core
+  wildcardPolicy: None
+{{ end }}

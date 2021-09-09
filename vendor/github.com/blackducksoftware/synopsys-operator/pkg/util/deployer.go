@@ -51,13 +51,13 @@ func (i *DeployerHelper) addNS(ns string) {
 		Name: ns,
 	})
 
-	i.Deployer.AddNamespace(comp)
+	i.Deployer.AddComponent(horizonapi.NamespaceComponent, comp)
 }
 
 func (i *DeployerHelper) addRCs(list []*components.ReplicationController) {
 	if len(list) > 0 {
 		for _, rc := range list {
-			i.Deployer.AddReplicationController(rc)
+			i.Deployer.AddComponent(horizonapi.ReplicationControllerComponent, rc)
 		}
 	}
 }
@@ -65,7 +65,7 @@ func (i *DeployerHelper) addRCs(list []*components.ReplicationController) {
 func (i *DeployerHelper) addSvcs(list []*components.Service) {
 	if len(list) > 0 {
 		for _, svc := range list {
-			i.Deployer.AddService(svc)
+			i.Deployer.AddComponent(horizonapi.ServiceComponent, svc)
 		}
 	}
 }
@@ -73,7 +73,7 @@ func (i *DeployerHelper) addSvcs(list []*components.Service) {
 func (i *DeployerHelper) addCMs(list []*components.ConfigMap) {
 	if len(list) > 0 {
 		for _, cm := range list {
-			i.Deployer.AddConfigMap(cm)
+			i.Deployer.AddComponent(horizonapi.ConfigMapComponent, cm)
 		}
 	}
 }
@@ -81,7 +81,7 @@ func (i *DeployerHelper) addCMs(list []*components.ConfigMap) {
 func (i *DeployerHelper) addSAs(list []*components.ServiceAccount) {
 	if len(list) > 0 {
 		for _, sa := range list {
-			i.Deployer.AddServiceAccount(sa)
+			i.Deployer.AddComponent(horizonapi.ServiceAccountComponent, sa)
 		}
 	}
 }
@@ -89,7 +89,7 @@ func (i *DeployerHelper) addSAs(list []*components.ServiceAccount) {
 func (i *DeployerHelper) addCRs(list []*components.ClusterRole) {
 	if len(list) > 0 {
 		for _, cr := range list {
-			i.Deployer.AddClusterRole(cr)
+			i.Deployer.AddComponent(horizonapi.ClusterRoleComponent, cr)
 		}
 	}
 }
@@ -97,7 +97,7 @@ func (i *DeployerHelper) addCRs(list []*components.ClusterRole) {
 func (i *DeployerHelper) addCRBs(list []*components.ClusterRoleBinding) {
 	if len(list) > 0 {
 		for _, crb := range list {
-			i.Deployer.AddClusterRoleBinding(crb)
+			i.Deployer.AddComponent(horizonapi.ClusterRoleBindingComponent, crb)
 		}
 	}
 }
@@ -105,7 +105,7 @@ func (i *DeployerHelper) addCRBs(list []*components.ClusterRoleBinding) {
 func (i *DeployerHelper) addDeploys(list []*components.Deployment) {
 	if len(list) > 0 {
 		for _, d := range list {
-			i.Deployer.AddDeployment(d)
+			i.Deployer.AddComponent(horizonapi.DeploymentComponent, d)
 		}
 	}
 }
@@ -113,7 +113,7 @@ func (i *DeployerHelper) addDeploys(list []*components.Deployment) {
 func (i *DeployerHelper) addSecrets(list []*components.Secret) {
 	if len(list) > 0 {
 		for _, s := range list {
-			i.Deployer.AddSecret(s)
+			i.Deployer.AddComponent(horizonapi.SecretComponent, s)
 		}
 	}
 }
@@ -121,7 +121,7 @@ func (i *DeployerHelper) addSecrets(list []*components.Secret) {
 func (i *DeployerHelper) addPVCs(list []*components.PersistentVolumeClaim) {
 	if len(list) > 0 {
 		for _, p := range list {
-			i.Deployer.AddPVC(p)
+			i.Deployer.AddComponent(horizonapi.PersistentVolumeClaimComponent, p)
 		}
 	}
 }

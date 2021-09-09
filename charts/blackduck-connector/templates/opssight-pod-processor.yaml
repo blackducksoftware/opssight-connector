@@ -1,0 +1,137 @@
+{{- if .Values.podProcessor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if eq .Values.status "Running" }}
+  replicas: 1
+  {{- else }}
+  replicas: 0
+  {{- end }}
+  selector:
+    matchLabels:
+      app: opssight
+      component: pod-processor
+      name: {{ .Release.Name }}
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: opssight
+        component: pod-processor
+        name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-opssight-pod-processor
+    spec:
+      containers:
+      - args:
+        - /etc/pod-processor/opssight.json
+        command:
+        - ./opssight-pod-processor
+        {{- if .Values.podProcessor.registry }}
+          {{- if .Values.podProcessor.imageTag }}
+        image: {{ .Values.podProcessor.registry }}/opssight-pod-processor:{{ .Values.podProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.podProcessor.registry }}/opssight-pod-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- else }}
+          {{- if .Values.podProcessor.imageTag }}
+        image: {{ .Values.registry }}/opssight-pod-processor:{{ .Values.podProcessor.imageTag }}
+          {{- else }}
+        image: {{ .Values.registry }}/opssight-pod-processor:{{ .Values.imageTag }}
+          {{- end}}
+        {{- end}}
+        name: pod-processor
+        ports:
+        - containerPort: {{ .Values.processor.port }}
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.podProcessor.resources | nindent 12 }}
+        volumeMounts:
+        - mountPath: /etc/pod-processor
+          name: pod-processor
+        - mountPath: /tmp
+          name: logs
+      dnsPolicy: ClusterFirst
+      {{- include "ops.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ .Release.Name }}-opssight-processor
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ .Release.Name }}-opssight-opssight
+        name: pod-processor
+      - emptyDir: {}
+        name: logs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+  - name: port-pod-processor
+    port: {{ .Values.processor.port }}
+    protocol: TCP
+    targetPort: {{ .Values.processor.port }}
+  selector:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: opssight
+    component: processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+roleRef:
+  apiGroup: ""
+  kind: ClusterRole
+  name: {{ .Release.Name }}-opssight-pod-processor
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-opssight-processor
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: opssight
+    component: pod-processor
+    name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-opssight-pod-processor
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+  - update
+{{- end }}

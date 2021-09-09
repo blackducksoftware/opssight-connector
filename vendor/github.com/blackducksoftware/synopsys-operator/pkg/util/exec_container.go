@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-// CreateExecContainerRequest will create the request to exec into kubernetes pod
+// CreateExecContainerRequest will create the request to exec into Kubernetes pod
 func CreateExecContainerRequest(clientset *kubernetes.Clientset, pod *corev1.Pod, command string) *rest.Request {
 	return clientset.CoreV1().RESTClient().Post().
 		Resource("pods").

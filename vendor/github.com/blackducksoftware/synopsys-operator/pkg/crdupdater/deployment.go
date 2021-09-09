@@ -25,13 +25,13 @@ import (
 	"reflect"
 	"strings"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-	appsv1beta2 "k8s.io/api/apps/v1beta2"
-	"k8s.io/apimachinery/pkg/api/resource"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // Deployment stores the configuration to add or delete the deployment object
@@ -40,7 +40,7 @@ type Deployment struct {
 	deployer       *util.DeployerHelper
 	deployments    []*components.Deployment
 	oldDeployments map[string]appsv1.Deployment
-	newDeployments map[string]*appsv1beta2.Deployment
+	newDeployments map[string]*appsv1.Deployment
 }
 
 // NewDeployment returns the deployment
@@ -51,7 +51,7 @@ func NewDeployment(config *CommonConfig, deployments []*components.Deployment) (
 	}
 	newDeployments := append([]*components.Deployment{}, deployments...)
 	for i := 0; i < len(newDeployments); i++ {
-		if !isLabelsExist(config.expectedLabels, newDeployments[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newDeployments[i].Labels) {
 			newDeployments = append(newDeployments[:i], newDeployments[i+1:]...)
 			i--
 		}
@@ -61,7 +61,7 @@ func NewDeployment(config *CommonConfig, deployments []*components.Deployment) (
 		deployer:       deployer,
 		deployments:    newDeployments,
 		oldDeployments: make(map[string]appsv1.Deployment, 0),
-		newDeployments: make(map[string]*appsv1beta2.Deployment, 0),
+		newDeployments: make(map[string]*appsv1.Deployment, 0),
 	}, nil
 }
 
@@ -78,11 +78,7 @@ func (d *Deployment) buildNewAndOldObject() error {
 
 	// build new deployment
 	for _, newDp := range d.deployments {
-		newDeploymentKube, err := newDp.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert deployment %s to kube %s", newDp.GetName(), d.config.namespace)
-		}
-		d.newDeployments[newDp.GetName()] = newDeploymentKube.(*appsv1beta2.Deployment)
+		d.newDeployments[newDp.GetName()] = newDp.Deployment
 	}
 
 	return nil
@@ -93,7 +89,7 @@ func (d *Deployment) add(isPatched bool) (bool, error) {
 	isAdded := false
 	for _, deployment := range d.deployments {
 		if _, ok := d.oldDeployments[deployment.GetName()]; !ok {
-			d.deployer.Deployer.AddDeployment(deployment)
+			d.deployer.Deployer.AddComponent(horizonapi.DeploymentComponent, deployment)
 			isAdded = true
 		} else {
 			_, err := d.patch(deployment, isPatched)
@@ -143,12 +139,10 @@ func (d *Deployment) remove() error {
 
 // deploymentComparator used to compare deployment attributes
 type deploymentComparator struct {
-	Image    string
-	Replicas *int32
-	MinCPU   *resource.Quantity
-	MaxCPU   *resource.Quantity
-	MinMem   *resource.Quantity
-	MaxMem   *resource.Quantity
+	Image          string
+	Replicas       int32
+	EnvFrom        []corev1.EnvFromSource
+	ServiceAccount string
 }
 
 // patch patches the deployment
@@ -170,25 +164,35 @@ func (d *Deployment) patch(rc interface{}, isPatched bool) (bool, error) {
 	for _, oldContainer := range d.oldDeployments[deployment.GetName()].Spec.Template.Spec.Containers {
 		for _, newContainer := range d.newDeployments[deployment.GetName()].Spec.Template.Spec.Containers {
 			if strings.EqualFold(oldContainer.Name, newContainer.Name) && !d.config.dryRun &&
-				!reflect.DeepEqual(
+				(!reflect.DeepEqual(
 					deploymentComparator{
-						Image:    oldContainer.Image,
-						Replicas: d.oldDeployments[deployment.GetName()].Spec.Replicas,
-						MinCPU:   oldContainer.Resources.Requests.Cpu(),
-						MaxCPU:   oldContainer.Resources.Limits.Cpu(),
-						MinMem:   oldContainer.Resources.Requests.Memory(),
-						MaxMem:   oldContainer.Resources.Limits.Memory(),
+						Image:          oldContainer.Image,
+						Replicas:       *d.oldDeployments[deployment.GetName()].Spec.Replicas,
+						EnvFrom:        oldContainer.EnvFrom,
+						ServiceAccount: d.oldDeployments[deployment.GetName()].Spec.Template.Spec.ServiceAccountName,
 					},
 					deploymentComparator{
-						Image:    newContainer.Image,
-						Replicas: d.newDeployments[deployment.GetName()].Spec.Replicas,
-						MinCPU:   newContainer.Resources.Requests.Cpu(),
-						MaxCPU:   newContainer.Resources.Limits.Cpu(),
-						MinMem:   newContainer.Resources.Requests.Memory(),
-						MaxMem:   newContainer.Resources.Limits.Memory(),
-					}) {
+						Image:          newContainer.Image,
+						Replicas:       *d.newDeployments[deployment.GetName()].Spec.Replicas,
+						EnvFrom:        newContainer.EnvFrom,
+						ServiceAccount: d.newDeployments[deployment.GetName()].Spec.Template.Spec.ServiceAccountName,
+					}) ||
+					!(oldContainer.Resources.Requests.Cpu().Cmp(*newContainer.Resources.Requests.Cpu()) == 0) ||
+					!(oldContainer.Resources.Limits.Cpu().Cmp(*newContainer.Resources.Limits.Cpu()) == 0) ||
+					!(oldContainer.Resources.Requests.Memory().Cmp(*newContainer.Resources.Requests.Memory()) == 0) ||
+					!(oldContainer.Resources.Limits.Memory().Cmp(*newContainer.Resources.Limits.Memory()) == 0) ||
+					!reflect.DeepEqual(sortEnvs(oldContainer.Env), sortEnvs(newContainer.Env)) ||
+					!reflect.DeepEqual(sortVolumeMounts(oldContainer.VolumeMounts), sortVolumeMounts(newContainer.VolumeMounts)) ||
+					!compareVolumes(sortVolumes(d.oldDeployments[deployment.GetName()].Spec.Template.Spec.Volumes), sortVolumes(d.newDeployments[deployment.GetName()].Spec.Template.Spec.Volumes)) ||
+					!compareAffinities(d.oldDeployments[deployment.GetName()].Spec.Template.Spec.Affinity, d.newDeployments[deployment.GetName()].Spec.Template.Spec.Affinity) ||
+					!compareProbes(oldContainer.LivenessProbe, newContainer.LivenessProbe) ||
+					!compareProbes(oldContainer.ReadinessProbe, newContainer.ReadinessProbe)) {
 				isChanged = true
+				break
 			}
+		}
+		if isChanged {
+			break
 		}
 	}
 

@@ -22,31 +22,36 @@ under the License.
 package components
 
 import (
-	"fmt"
-	"net"
 	"strconv"
 	"strings"
 
 	"github.com/blackducksoftware/horizon/pkg/api"
 
-	"github.com/koki/short/types"
+	"k8s.io/api/core/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func createSELinuxObj(config api.SELinuxType) *types.SELinux {
-	s := types.SELinux{
+func createSELinux(config *api.SELinuxType) *v1.SELinuxOptions {
+	if config == nil {
+		return nil
+	}
+
+	return &v1.SELinuxOptions{
 		Level: config.Level,
 		Role:  config.Role,
 		Type:  config.Type,
 		User:  config.User,
 	}
-
-	return &s
 }
 
 func createIntOrStr(input string) *intstr.IntOrString {
 	var val intstr.IntOrString
+
+	if len(input) == 0 {
+		return nil
+	}
+
 	intVal, err := strconv.ParseInt(input, 10, 32)
 
 	if err == nil {
@@ -64,23 +69,33 @@ func createIntOrStr(input string) *intstr.IntOrString {
 	return &val
 }
 
-func appendIfMissing(new string, list []string) []string {
+func appendStringIfMissing(new string, list []string) []string {
 	for _, o := range list {
-		if strings.Compare(new, o) == 0 {
+		if strings.EqualFold(new, o) {
 			return list
 		}
 	}
 	return append(list, new)
 }
 
-func createIngressConfig(config api.LoadBalancerIngressConfig) (*types.LoadBalancerIngress, error) {
-	ip := net.ParseIP(config.IP)
-	if ip == nil {
-		return nil, fmt.Errorf("invalid ip: %s", config.IP)
+func appendint64IfMissing(new int64, list []int64) []int64 {
+	for _, o := range list {
+		if new == o {
+			return list
+		}
+	}
+	return append(list, new)
+}
+
+func convertProtocol(orig api.ProtocolType) v1.Protocol {
+	switch orig {
+	case api.ProtocolTCP:
+		return v1.ProtocolTCP
+	case api.ProtocolUDP:
+		return v1.ProtocolUDP
+	case api.ProtocolSCTP:
+		return v1.ProtocolSCTP
 	}
 
-	return &types.LoadBalancerIngress{
-		IP:       ip,
-		Hostname: config.Hostname,
-	}, nil
+	return v1.Protocol("")
 }

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Synopsys, Inc.
+Copyright (C) 2019 Synopsys, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -31,16 +31,20 @@ type IngressConfig struct {
 	ServicePort string
 }
 
+// IngressTLSConfig defines the configuration for TLS for the ingress
 type IngressTLSConfig struct {
 	Hosts      []string
 	SecretName string
 }
 
-type IngressRuleConfig struct {
+// IngressHostRuleConfig defines the rules mapping the paths under a specified host to
+// the related backend services
+type IngressHostRuleConfig struct {
 	Host  string
 	Paths []HTTPIngressPathConfig
 }
 
+// HTTPIngressPathConfig defines a collection of paths that map requests to backends
 type HTTPIngressPathConfig struct {
 	Path        string
 	ServiceName string

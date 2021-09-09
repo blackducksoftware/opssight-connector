@@ -24,6 +24,7 @@ package crdupdater
 import (
 	"reflect"
 
+	horizonapi "github.com/blackducksoftware/horizon/pkg/api"
 	"github.com/blackducksoftware/horizon/pkg/components"
 	"github.com/blackducksoftware/synopsys-operator/pkg/util"
 	"github.com/juju/errors"
@@ -48,7 +49,7 @@ func NewService(config *CommonConfig, services []*components.Service) (*Service,
 	}
 	newServices := append([]*components.Service{}, services...)
 	for i := 0; i < len(newServices); i++ {
-		if !isLabelsExist(config.expectedLabels, newServices[i].GetObj().Labels) {
+		if !isLabelsExist(config.expectedLabels, newServices[i].Labels) {
 			newServices = append(newServices[:i], newServices[i+1:]...)
 			i--
 		}
@@ -75,11 +76,7 @@ func (s *Service) buildNewAndOldObject() error {
 
 	// build new service
 	for _, newSvc := range s.services {
-		newServiceKube, err := newSvc.ToKube()
-		if err != nil {
-			return errors.Annotatef(err, "unable to convert service %s to kube %s", newSvc.GetName(), s.config.namespace)
-		}
-		s.newServices[newSvc.GetName()] = newServiceKube.(*corev1.Service)
+		s.newServices[newSvc.GetName()] = newSvc.Service
 	}
 
 	return nil
@@ -90,8 +87,13 @@ func (s *Service) add(isPatched bool) (bool, error) {
 	isAdded := false
 	for _, service := range s.services {
 		if _, ok := s.oldServices[service.GetName()]; !ok {
-			s.deployer.Deployer.AddService(service)
+			s.deployer.Deployer.AddComponent(horizonapi.ServiceComponent, service)
 			isAdded = true
+		} else {
+			_, err := s.patch(service, isPatched)
+			if err != nil {
+				return false, errors.Annotatef(err, "patch service:")
+			}
 		}
 	}
 	if isAdded && !s.config.dryRun {
@@ -139,7 +141,7 @@ func (s *Service) patch(svc interface{}, isPatched bool) (bool, error) {
 	serviceName := service.GetName()
 	oldService := s.oldServices[serviceName]
 	newService := s.newServices[serviceName]
-	if (!reflect.DeepEqual(newService.Spec.Ports, oldService.Spec.Ports) ||
+	if (!reflect.DeepEqual(sortPorts(newService.Spec.Ports), sortPorts(oldService.Spec.Ports)) ||
 		!reflect.DeepEqual(newService.Spec.Selector, oldService.Spec.Selector) ||
 		!reflect.DeepEqual(newService.Spec.Type, oldService.Spec.Type)) && !s.config.dryRun {
 		log.Infof("updating the service %s in %s namespace", serviceName, s.config.namespace)

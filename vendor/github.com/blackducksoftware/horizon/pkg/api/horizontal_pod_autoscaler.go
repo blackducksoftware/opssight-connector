@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018 Synopsys, Inc.
+Copyright (C) 2019 Synopsys, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements. See the NOTICE file
@@ -27,15 +27,10 @@ type HPAConfig struct {
 	ClusterName                    string
 	Name                           string
 	Namespace                      string
-	ScaleTargetRef                 CrossVersionObjectReference
 	MinReplicas                    *int32
 	MaxReplicas                    int32
 	TargetCPUUtilizationPercentage *int32
-}
-
-// CrossVersionObjectReference contains enough information to identify the referenced resource
-type CrossVersionObjectReference struct {
-	Kind       string
-	Name       string
-	APIVersion string
+	ScaleTargetKind                string
+	ScaleTargetName                string
+	ScaleTargetAPIVersion          string
 }

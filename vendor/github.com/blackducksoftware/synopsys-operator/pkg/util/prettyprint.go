@@ -27,7 +27,13 @@ import (
 )
 
 // PrettyPrint will print the interface in string format
-func PrettyPrint(v interface{}) {
-	b, _ := json.MarshalIndent(v, "", "  ")
+func PrettyPrint(v interface{}) (string, error) {
+	var b []byte
+	var err error
+	b, err = json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to convert struct to json. Struct: %+v", v)
+	}
 	fmt.Println(string(b))
+	return string(b), nil
 }
